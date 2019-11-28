@@ -32,37 +32,7 @@ $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)
 $unattendLocalPath = ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
 $administratorPassword = (New-Password);
 # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-$productKey = @{
-  'Windows 7' = @{
-    'Enterprise'   = '33PXH-7Y6KF-2VJC9-XBBR8-HVTHH';
-    'Professional' = 'FJ82H-XT6CR-J8D7P-XQJJ2-GPDD4';
-  };
-  'Windows 8.1' = @{
-    'Enterprise'   = 'MHF9N-XY6XB-WVXMC-BTDCT-MKKG7';
-    'Professional' = 'GCRJD-8NW9H-F2CDX-CCM8D-9D6T9';
-  };
-  'Windows 10' = @{
-    'Enterprise'   = 'NPPR9-FWDCX-D2C8J-H872K-2YT43';
-    'Professional' = 'W269N-WFGWX-YVC9B-4J6C9-T83GX';
-  };
-  'Windows Server 2012 R2' = @{
-    'Datacenter'   = 'W3GGN-FT8W3-Y4M27-J84CP-Q3VJ9';
-    'Standard'     = 'D2N9P-3P6X9-2R39C-7RTCD-MDVJX';
-  };
-  'Windows Server 2016' = @{
-    'Datacenter'   = 'CB7KF-BWN84-R7R2Y-793K2-8XDDG';
-    'Standard'     = 'WC2BQ-8NRM3-FDDYY-2BFGV-KHKQY';
-  };
-  'Windows Server 2019' = @{
-    'Datacenter'   = 'WMDGN-G9PQG-XVVXX-R3X43-63DFG';
-    'Standard'     = 'N69G4-B89J2-4G8F4-WWYCC-J464C';
-  };
-  # Windows Server Semi-Annual Channel versions 1809, 1903 and 1909:
-  'Windows Server' = @{
-    'Datacenter'   = '6NMRW-2C8FM-D24W7-TQWMY-CWH2D';
-    'Standard'     = 'N2KJX-J94YW-TQVFB-DG9YT-724CC';
-  };
-}[$os][$edition];
+$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)[$os][$edition];
 $drivers = @(@(
   @{
     'name'    = 'xenbus';
@@ -253,6 +223,7 @@ $disableWindowsService = @(@(
   $_.target.cloud.Contains($targetCloudPlatform)
 } | % { $_.name });
 
+Update-Module posh-minions-managed -RequiredVersion 0.0.20
 
 if (-not (Test-Path -Path $isoLocalPath -ErrorAction SilentlyContinue)) {
   Get-CloudBucketResource `
