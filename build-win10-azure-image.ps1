@@ -39,72 +39,7 @@ $drivers = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade
   $_.target.cloud.Contains($targetCloudPlatform) -and
   $_.target.gpu.Contains($gpu)
 });
-$disableWindowsService = @(@(
-  @{
-    'name'    = 'SecurityHealthService';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'Sense';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'WdBoot';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'WdFilter';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'WdNisDrv';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'WdNisSvc';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'WinDefend';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  },
-  @{
-    'name'    = 'wscsvc';
-    'target' = @{
-      'cloud'        = @('amazon', 'azure', 'google');
-      'os'           = @('Windows 10');
-      'architecture' = @('x86', 'x86-64');
-    };
-  }
-) | ? {
+$disableWindowsService = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/disable-windows-service.json' -UseBasicParsing | ConvertFrom-Json) | ? {
   $_.target.os.Contains($os) -and
   $_.target.architecture.Contains($architecture) -and
   $_.target.cloud.Contains($targetCloudPlatform)
