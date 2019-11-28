@@ -17,12 +17,12 @@ $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace
   $(if ($config.image.gpu) { '-gpu' } else { '' }),
   $config.image.type.ToLower(),
   $config.image.format.ToLower());
-$vhdLocalPath = ('{0}{1}{2}-{3}-{4}-{5}{6}-{7}.{8}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $imageName);
+$vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $imageName);
 $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
 $unattendLocalPath = ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
 $administratorPassword = (New-Password);
 # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)."$config.image.os"."$config.image.edition";
+$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)."${config.image.os}"."${config.image.edition}";
 $drivers = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/drivers.json' -UseBasicParsing | ConvertFrom-Json) | ? {
   $_.target.os.Contains($config.image.os) -and
   $_.target.architecture.Contains($config.image.architecture) -and
