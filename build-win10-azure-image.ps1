@@ -1,66 +1,60 @@
 # job settings. change these for the task at hand.
 $workFolder = ('{0}{1}azure-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar));
-$driverFolder = ('{0}{1}driver' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-$isoSource = @{
-  'platform' = 'amazon';
-  'bucket' = 'windows-ami-builder';
-  'key' = 'iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso';
-  'wimindex' = 5
-};
-$os = 'Windows 10';
-$edition = 'Professional';
-$language = 'en-US';
-$architecture = 'x86-64';
-$gpu = $false;
-$registeredOwner = 'Mozilla RelOps';
-$registeredOrganization = 'Mozilla Corporation';
 $targetCloudPlatform = 'azure';
+$workerType = ('gecko-t-win10-64-{0}' -f $targetCloudPlatform);
 
 # computed settings. these are probably ok as they are.
-$vhdPartitionStyle = 'MBR';
-$vhdType = $(if ($targetCloudPlatform.StartsWith('az')) { 'Fixed' } else { 'Dynamic' });
-$vhdFormat = 'VHD';
-$vhdLocalPath = ('{0}{1}{2}-{3}-{4}-{5}{6}-{7}.{8}' -f $workFolder,
-  ([IO.Path]::DirectorySeparatorChar),
-  $os.ToLower().Replace(' ', ''),
-  $edition.ToLower(),
-  $language.ToLower(),
-  $architecture, $(if ($gpu) { '-gpu' } else { '' }),
-  $vhdType.ToLower(),
-  $vhdFormat.ToLower());
-$isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $isoSource.key);
+$pmmModuleName = 'posh-minions-managed';
+$pmmModuleVersion = '0.0.20';
+$config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)[$workerType];
+$imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
+  $config.image.edition.ToLower(),
+  $config.image.language.ToLower(),
+  $config.image.architecture,
+  $(if ($config.image.gpu) { '-gpu' } else { '' }),
+  $config.image.type.ToLower(),
+  $config.image.format.ToLower());
+$vhdLocalPath = ('{0}{1}{2}-{3}-{4}-{5}{6}-{7}.{8}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $imageName);
+$isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
 $unattendLocalPath = ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
 $administratorPassword = (New-Password);
 # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)[$os][$edition];
+$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)[$config.image.os][$config.image.edition];
 $drivers = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/drivers.json' -UseBasicParsing | ConvertFrom-Json) | ? {
-  $_.target.os.Contains($os) -and
-  $_.target.architecture.Contains($architecture) -and
+  $_.target.os.Contains($config.image.os) -and
+  $_.target.architecture.Contains($config.image.architecture) -and
   $_.target.cloud.Contains($targetCloudPlatform) -and
-  $_.target.gpu.Contains($gpu)
+  $_.target.gpu.Contains($config.image.gpu)
 });
 $disableWindowsService = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/disable-windows-service.json' -UseBasicParsing | ConvertFrom-Json) | ? {
-  $_.target.os.Contains($os) -and
-  $_.target.architecture.Contains($architecture) -and
+  $_.target.os.Contains($config.image.os) -and
+  $_.target.architecture.Contains($config.image.architecture) -and
   $_.target.cloud.Contains($targetCloudPlatform)
 } | % { $_.name });
+$driverFolder = ('{0}{1}driver' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
 
-Update-Module posh-minions-managed -RequiredVersion 0.0.20
-
+$pmmModule = (Get-Module -Name $pmmModuleName -ErrorAction SilentlyContinue);
+if ($pmmModule) {
+  if ($pmmModule.Version -lt $pmmModuleVersion) {
+    Update-Module $pmmModuleName -RequiredVersion $pmmModuleVersion
+  }
+} else {
+  Install-Module $pmmModuleName -RequiredVersion $pmmModuleVersion
+}
 if (-not (Test-Path -Path $isoLocalPath -ErrorAction SilentlyContinue)) {
   Get-CloudBucketResource `
-    -platform $isoSource.platform `
-    -bucket $isoSource.bucket `
-    -key $isoSource.key `
+    -platform $config.iso.source.platform `
+    -bucket $config.iso.source.bucket `
+    -key $config.iso.source.key `
     -destination $isoLocalPath `
     -force;  
 }
 New-UnattendFile `
   -destinationPath $unattendLocalPath `
-  -uiLanguage $language `
+  -uiLanguage $config.image.language `
   -productKey $productKey `
-  -registeredOwner $registeredOwner `
-  -registeredOrganization $registeredOrganization `
+  -registeredOwner $config.image.owner `
+  -registeredOrganization $config.image.organization `
   -administratorPassword $administratorPassword;
 Remove-Item -Path $driverFolder -Force -Recurse -ErrorAction SilentlyContinue;
 foreach ($driver in $drivers) {
@@ -79,11 +73,11 @@ Convert-WindowsImage `
   -verbose:$true `
   -SourcePath $isoLocalPath `
   -VhdPath $vhdLocalPath `
-  -VhdFormat $vhdFormat `
-  -VhdType $vhdType `
-  -VhdPartitionStyle $vhdPartitionStyle `
-  -Edition $(if ($isoSource.wimindex) { $isoSource.wimindex } else { $edition }) -UnattendPath $unattendLocalPath `
+  -VhdFormat $config.image.format `
+  -VhdType $config.image.type `
+  -VhdPartitionStyle $config.image.partition `
+  -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
   -Driver @($drivers | % { '{0}{1}{2}' -f $driverFolder, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
   -RemoteDesktopEnable:$true `
   -DisableWindowsService $disableWindowsService `
-  -DisableNotificationCenter:($os -eq 'Windows 10');
+  -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
