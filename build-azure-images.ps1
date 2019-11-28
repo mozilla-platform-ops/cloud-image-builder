@@ -4,11 +4,11 @@
 # job settings. change these for the tasks at hand.
 $targetCloudPlatform = 'azure';
 $workFolder = ('{0}{1}{2}-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform);
-$workerTypes = @(
-  ('gecko-t-win10-64-{0}' -f $targetCloudPlatform),
-  ('gecko-t-win10-64-gpu-{0}' -f $targetCloudPlatform),
-  ('gecko-1-win2012-{0}' -f $targetCloudPlatform),
-  ('gecko-1-win2019-{0}' -f $targetCloudPlatform)
+$imageKeys = @(
+  ('win10-64-{0}' -f $targetCloudPlatform),
+  ('win10-64-gpu-{0}' -f $targetCloudPlatform),
+  ('win2012-{0}' -f $targetCloudPlatform),
+  ('win2019-{0}' -f $targetCloudPlatform)
  );
 
 # constants. these are probably ok as they are.
@@ -23,9 +23,9 @@ if ($pmmModule) {
   Install-Module $pmmModuleName -RequiredVersion $pmmModuleVersion
 }
 
-foreach ($workerType in $workerTypes) {
+foreach ($imageKey in $imageKeys) {
   # computed target specific settings. these are probably ok as they are.
-  $config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)."$workerType";
+  $config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)."$imageKey";
   $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
     $config.image.edition.ToLower(),
     $config.image.language.ToLower(),

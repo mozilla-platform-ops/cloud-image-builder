@@ -1,5 +1,5 @@
 {
-  "gecko-t-win10-64-azure": {
+  "win10-64-azure": {
     "image": {
       "os": "Windows 10",
       "edition": "Professional",
@@ -21,7 +21,7 @@
       "wimindex": 5
     }
   },
-  "gecko-t-win10-64-gpu-azure": {
+  "win10-64-gpu-azure": {
     "image": {
       "os": "Windows 10",
       "edition": "Professional",
@@ -43,7 +43,7 @@
       "wimindex": 5
     }
   },
-  "gecko-1-win2012-azure": {
+  "win2012-azure": {
     "image": {
       "os": "Windows Server 2012 R2",
       "edition": "Datacenter",
@@ -65,7 +65,7 @@
       "wimindex": 4
     }
   },
-  "gecko-1-win2019-azure": {
+  "win2019-azure": {
     "image": {
       "os": "Windows Server 2019",
       "edition": "Datacenter",
