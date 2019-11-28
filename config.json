@@ -21,7 +21,7 @@
       "wimindex": 5
     }
   },
-  "gecko-win10-64-gpu-azure": {
+  "gecko-t-win10-64-gpu-azure": {
     "image": {
       "os": "Windows 10",
       "edition": "Professional",

@@ -4,7 +4,7 @@
 # job settings. change these for the task at hand.
 $workFolder = ('{0}{1}azure-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar));
 $targetCloudPlatform = 'azure';
-$workerType = ('gecko-t-win10-64-{0}' -f $targetCloudPlatform);
+$workerType = ('gecko-t-win10-64-gpu-{0}' -f $targetCloudPlatform);
 
 # computed settings. these are probably ok as they are.
 $pmmModuleName = 'posh-minions-managed';
