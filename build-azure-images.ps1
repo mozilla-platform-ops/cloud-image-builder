@@ -11,7 +11,7 @@ $workerTypes = @(
   #('gecko-1-win2019-{0}' -f $targetCloudPlatform)
  );
 
-# computed settings. these are probably ok as they are.
+# constants. these are probably ok as they are.
 $pmmModuleName = 'posh-minions-managed';
 $pmmModuleVersion = '0.0.20';
 $pmmModule = (Get-Module -Name $pmmModuleName -ErrorAction SilentlyContinue);
@@ -24,7 +24,7 @@ if ($pmmModule) {
 }
 
 foreach ($workerType in $workerTypes) {
-  # worker type settings. these are probably ok as they are.
+  # computed target specific settings. these are probably ok as they are.
   $config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)."$workerType";
   $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
     $config.image.edition.ToLower(),
