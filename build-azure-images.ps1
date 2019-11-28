@@ -5,10 +5,10 @@
 $targetCloudPlatform = 'azure';
 $workFolder = ('{0}{1}{2}-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform);
 $workerTypes = @(
-  #('gecko-t-win10-64-{0}' -f $targetCloudPlatform),
-  #('gecko-t-win10-64-gpu-{0}' -f $targetCloudPlatform),
-  ('gecko-1-win2012-{0}' -f $targetCloudPlatform)#,
-  #('gecko-1-win2019-{0}' -f $targetCloudPlatform)
+  ('gecko-t-win10-64-{0}' -f $targetCloudPlatform),
+  ('gecko-t-win10-64-gpu-{0}' -f $targetCloudPlatform),
+  ('gecko-1-win2012-{0}' -f $targetCloudPlatform),
+  ('gecko-1-win2019-{0}' -f $targetCloudPlatform)
  );
 
 # constants. these are probably ok as they are.
