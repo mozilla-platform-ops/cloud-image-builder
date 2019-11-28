@@ -82,7 +82,8 @@
         "platform": "amazon",
         "bucket": "windows-ami-builder",
         "key": "iso/en_windows_server_2019_updated_sept_2019_x64_dvd_199664ce.iso"
-      }
+      },
+      "wimindex": 4
     }
   }
 }
