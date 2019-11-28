@@ -9,7 +9,7 @@ $workerType = ('gecko-t-win10-64-gpu-{0}' -f $targetCloudPlatform);
 # computed settings. these are probably ok as they are.
 $pmmModuleName = 'posh-minions-managed';
 $pmmModuleVersion = '0.0.20';
-$config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)[$workerType];
+$config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)."$workerType";
 $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
   $config.image.edition.ToLower(),
   $config.image.language.ToLower(),
@@ -22,7 +22,7 @@ $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)
 $unattendLocalPath = ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
 $administratorPassword = (New-Password);
 # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)[$config.image.os][$config.image.edition];
+$productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)."$config.image.os"."$config.image.edition";
 $drivers = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/drivers.json' -UseBasicParsing | ConvertFrom-Json) | ? {
   $_.target.os.Contains($config.image.os) -and
   $_.target.architecture.Contains($config.image.architecture) -and
