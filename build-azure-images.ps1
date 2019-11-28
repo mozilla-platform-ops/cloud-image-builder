@@ -7,8 +7,9 @@ $workFolder = ('{0}{1}{2}-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar), $tar
 $workerTypes = @(
   #('gecko-t-win10-64-{0}' -f $targetCloudPlatform),
   #('gecko-t-win10-64-gpu-{0}' -f $targetCloudPlatform),
-  ('gecko-1-win2012-{0}' -f $targetCloudPlatform),
-  ('gecko-1-win2019-{0}' -f $targetCloudPlatform));
+  ('gecko-1-win2012-{0}' -f $targetCloudPlatform)#,
+  #('gecko-1-win2019-{0}' -f $targetCloudPlatform)
+ );
 
 # computed settings. these are probably ok as they are.
 $pmmModuleName = 'posh-minions-managed';
