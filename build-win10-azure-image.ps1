@@ -1,3 +1,6 @@
+# usage:
+# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/build-win10-azure-image.ps1?{0}' -f [Guid]::NewGuid()))
+
 # job settings. change these for the task at hand.
 $workFolder = ('{0}{1}azure-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar));
 $targetCloudPlatform = 'azure';
