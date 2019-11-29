@@ -35,9 +35,9 @@ foreach ($imageKey in $imageKeys) {
     $config.image.format.ToLower());
   $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $imageName);
   $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
-  $unattendLocalPath = ('{0}{1}unattend-{2}-{3}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName);
-  $driversLocalPath = ('{0}{1}drivers-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName);
-  $packagesLocalPath = ('{0}{1}packages-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName);
+  $unattendLocalPath = ('{0}{1}unattend-{2}-{3}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
+  $driversLocalPath = ('{0}{1}drivers-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
+  $packagesLocalPath = ('{0}{1}packages-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
   $administratorPassword = (New-Password);
   # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
   $productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.json' -UseBasicParsing | ConvertFrom-Json)."$($config.image.os)"."$($config.image.edition)";
@@ -118,13 +118,12 @@ foreach ($imageKey in $imageKeys) {
     -VhdPartitionStyle $config.image.partition `
     -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
     -Driver @($drivers | % { '{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
-    -Package @($packages | % { '{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
     -RemoteDesktopEnable:$true `
     -DisableWindowsService $disableWindowsService `
     -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
 
 
-  $vhdMountPoint = (Join-Path -Path $workFolder -ChildPath ([System.Guid]::NewGuid().Guid.Substring(28)));
+  $vhdMountPoint = (Join-Path -Path $workFolder -ChildPath ([System.Guid]::NewGuid().Guid.Substring(24)));
   New-Item -Path $vhdMountPoint -ItemType directory -force;
   try {
     Mount-WindowsImage -ImagePath $vhdLocalPath -Path $vhdMountPoint -Index 1
