@@ -4,13 +4,12 @@
 # job settings. change these for the tasks at hand.
 $targetCloudPlatform = 'azure';
 $workFolder = ('{0}{1}{2}-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform);
-$imageKeys = @(
+$imagesToBuild = @(
   ('win10-64-{0}' -f $targetCloudPlatform),
   ('win10-64-gpu-{0}' -f $targetCloudPlatform),
   ('win2012-{0}' -f $targetCloudPlatform),
   ('win2019-{0}' -f $targetCloudPlatform)
  );
-
 # constants. these are probably ok as they are.
 $pmmModuleName = 'posh-minions-managed';
 $pmmModuleVersion = '0.0.21';
@@ -23,7 +22,7 @@ if ($pmmModule) {
   Install-Module $pmmModuleName -RequiredVersion $pmmModuleVersion
 }
 
-foreach ($imageKey in $imageKeys) {
+foreach ($imageKey in $imagesToBuild) {
   # computed target specific settings. these are probably ok as they are.
   $config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.json' -UseBasicParsing | ConvertFrom-Json)."$imageKey";
   $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
@@ -135,7 +134,7 @@ foreach ($imageKey in $imageKeys) {
   }
 
   foreach ($package in $packages) {
-    $packageLocalTempPath = ('{0}{1}{2}{3}' -f $packagesLocalPath, ([IO.Path]::DirectorySeparatorChar), $package.savepath, $(if (($package.extract) -and (-not $package.savepath.ToLower().EndsWith('.zip'))) { '.zip' } else { '' }));
+    $packageLocalTempPath = ('{0}{1}{2}{3}' -f $packagesLocalPath, ([IO.Path]::DirectorySeparatorChar), $package.name, $(if (($package.extract) -and (-not $package.savepath.ToLower().EndsWith('.zip'))) { '.zip' } else { '' }));
     $sourceIndex = $package.sources.Length;
     do {
       $source = $package.sources[(--$sourceIndex)];

@@ -1,5 +1,6 @@
 [
   {
+    "name": "StackdriverLogging-v1-9.exe",
     "savepath": "Windows\\Temp\\StackdriverLogging-v1-9.exe",
     "unattend": [
       {
@@ -40,6 +41,7 @@
     ]
   },
   {
+    "name": "nxlog-ce.msi",
     "savepath": "Windows\\Temp\\nxlog-ce.msi",
     "unattend": [
       {
@@ -98,6 +100,7 @@
     ]
   },
   {
+    "name": "papertrail-bundle.pem",
     "savepath": "Windows\\Temp\\papertrail-bundle.pem",
     "unattend": [
       {
@@ -130,6 +133,7 @@
     ]
   },
   {
+    "name": "papertrail-bundle.pem",
     "savepath": "Windows\\Temp\\papertrail-bundle.pem",
     "unattend": [
       {
@@ -168,6 +172,7 @@
     ]
   },
   {
+    "name": "nxlog.conf",
     "savepath": "Windows\\Temp\\nxlog.conf",
     "unattend": [
       {
@@ -200,6 +205,7 @@
     ]
   },
   {
+    "name": "nxlog.conf",
     "savepath": "Windows\\Temp\\nxlog.conf",
     "unattend": [
       {
@@ -232,6 +238,7 @@
     ]
   },
   {
+    "name": "nxlog.conf",
     "savepath": "Windows\\Temp\\nxlog.conf",
     "unattend": [
       {
@@ -264,6 +271,7 @@
     ]
   },
   {
+    "name": "nxlog.conf",
     "savepath": "Windows\\Temp\\nxlog.conf",
     "unattend": [
       {
@@ -296,6 +304,7 @@
     ]
   },
   {
+    "name": "nxlog.conf",
     "savepath": "Windows\\Temp\\nxlog.conf",
     "unattend": [
       {
@@ -328,6 +337,7 @@
     ]
   },
   {
+    "name": "EC2Install.zip",
     "savepath": "Windows\\Temp",
     "unattend": [
       {
@@ -367,6 +377,7 @@
     ]
   },
   {
+    "name": "Ec2ConfigurationSettings.xml",
     "savepath": "Windows\\Temp\\Ec2ConfigurationSettings.xml",
     "unattend": [
       {
@@ -405,6 +416,7 @@
     ]
   },
   {
+    "name": "WallpaperSettings.xml",
     "savepath": "Windows\\Temp\\WallpaperSettings.xml",
     "unattend": [
       {
@@ -443,6 +455,7 @@
     ]
   },
   {
+    "name": "WindowsAzureVmAgent.msi",
     "savepath": "Windows\\Temp\\WindowsAzureVmAgent.msi",
     "unattend": [
       {
