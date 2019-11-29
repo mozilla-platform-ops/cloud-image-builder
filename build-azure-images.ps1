@@ -125,7 +125,6 @@ foreach ($imageKey in $imagesToBuild) {
       -VhdPartitionStyle $config.image.partition `
       -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
       -Driver @($drivers | % { '{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
-      -Package @($packages | % { '{0}{1}{2}' -f $packagesLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.savepath }) `
       -RemoteDesktopEnable:$true `
       -DisableWindowsService $disableWindowsService `
       -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
