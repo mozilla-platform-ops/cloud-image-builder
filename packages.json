@@ -1,0 +1,505 @@
+[
+  {
+    "savepath": "Windows\\Temp\\StackdriverLogging-v1-9.exe",
+    "unattend": [
+      {
+        "description": "install stackdriver",
+        "command": "cmd /c start /wait C:\\Windows\\Temp\\StackdriverLogging-v1-9.exe /S"
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86",
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "amazon",
+        "bucket": "windows-ami-builder",
+        "key": "package/StackdriverLogging-v1-9.exe"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\nxlog-ce.msi",
+    "unattend": [
+      {
+        "description": "install nxlog",
+        "command": "cmd /c start /wait msiexec /i C:\\Windows\\Temp\\nxlog-ce.msi /quiet"
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86",
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "amazon",
+        "bucket": "windows-ami-builder",
+        "key": "package/nxlog-ce-2.10.2150.msi"
+      },
+      {
+        "platform": "google",
+        "bucket": "windows-ami-builder",
+        "key": "package/nxlog-ce-2.10.2150.msi"
+      },
+      {
+        "platform": "azure",
+        "bucket": "windows-ami-builder",
+        "key": "package/nxlog-ce-2.10.2150.msi"
+      },
+      {
+        "platform": "url",
+        "url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi"
+      },
+      {
+        "platform": "url",
+        "url": "https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/package/nxlog-ce-2.10.2150.msi"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\papertrail-bundle.pem",
+    "unattend": [
+      {
+        "description": "install papertrail certificate",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows 7"
+      ],
+      "architecture": [
+        "x86"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/papertrail-bundle.pem"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\papertrail-bundle.pem",
+    "unattend": [
+      {
+        "description": "install papertrail certificate",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/papertrail-bundle.pem"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\nxlog.conf",
+    "unattend": [
+      {
+        "description": "install nxlog configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files\\nxlog\\conf\\nxlog.conf\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows 7"
+      ],
+      "architecture": [
+        "x86"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win7.conf"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\nxlog.conf",
+    "unattend": [
+      {
+        "description": "install nxlog configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows 10"
+      ],
+      "architecture": [
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win10.conf"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\nxlog.conf",
+    "unattend": [
+      {
+        "description": "install nxlog configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows Server 2012 R2"
+      ],
+      "architecture": [
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2012.conf"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\nxlog.conf",
+    "unattend": [
+      {
+        "description": "install nxlog configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows Server 2016"
+      ],
+      "architecture": [
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2016.conf"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\nxlog.conf",
+    "unattend": [
+      {
+        "description": "install nxlog configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon",
+        "azure",
+        "google"
+      ],
+      "os": [
+        "Windows Server 2019"
+      ],
+      "architecture": [
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "url",
+        "url": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2016.conf"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp",
+    "unattend": [
+      {
+        "description": "install ec2config",
+        "command": "cmd /c start /wait C:\\Windows\\Temp\\Ec2Install.exe /quiet"
+      }
+    ],
+    "extract": true,
+    "target": {
+      "cloud": [
+        "amazon"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86",
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "amazon",
+        "bucket": "windows-ami-builder",
+        "key": "package/EC2Install.zip"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\Ec2ConfigurationSettings.xml",
+    "unattend": [
+      {
+        "description": "install ec2config configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\Ec2ConfigurationSettings.xml \"C:\\Program Files\\Amazon\\Ec2ConfigService\\Settings\\config.xml\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86",
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "amazon",
+        "bucket": "windows-ami-builder",
+        "key": "config/Ec2ConfigurationSettings.xml"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\WallpaperSettings.xml",
+    "unattend": [
+      {
+        "description": "install ec2 wallpaper configuration",
+        "command": "cmd /c move /y C:\\Windows\\Temp\\Ec2ConfigurationSettings.xml \"C:\\Program Files\\Amazon\\Ec2ConfigService\\Settings\\WallpaperSettings.xml\""
+      }
+    ],
+    "target": {
+      "cloud": [
+        "amazon"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86",
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "amazon",
+        "bucket": "windows-ami-builder",
+        "key": "config/WallpaperSettings.xml"
+      }
+    ]
+  },
+  {
+    "savepath": "Windows\\Temp\\WindowsAzureVmAgent.msi",
+    "unattend": [
+      {
+        "description": "install azure agent",
+        "command": "cmd /c start /wait msiexec /i C:\\Windows\\Temp\\WindowsAzureVmAgent.msi /quiet"
+      }
+    ],
+    "target": {
+      "cloud": [
+        "azure"
+      ],
+      "os": [
+        "Windows 7",
+        "Windows 8.1",
+        "Windows 10",
+        "Windows Server 2012 R2",
+        "Windows Server 2016",
+        "Windows Server 2019",
+        "Windows Server"
+      ],
+      "architecture": [
+        "x86",
+        "x86-64"
+      ],
+      "gpu": [
+        true,
+        false
+      ]
+    },
+    "sources": [
+      {
+        "platform": "amazon",
+        "bucket": "windows-ami-builder",
+        "key": "package/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi"
+      },
+      {
+        "platform": "google",
+        "bucket": "windows-ami-builder",
+        "key": "package/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi"
+      },
+      {
+        "platform": "azure",
+        "bucket": "windows-ami-builder",
+        "key": "package/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi"
+      },
+      {
+        "platform": "url",
+        "url": "https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/package/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi"
+      },
+      {
+        "platform": "url",
+        "url": "https://go.microsoft.com/fwlink/?LinkID=394789"
+      },
+      {
+        "platform": "url",
+        "url": "https://download.microsoft.com/download/3/4/3/3437907D-745F-46EF-8116-7FC025BBEBDB/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi"
+      }
+    ]
+  }
+]
