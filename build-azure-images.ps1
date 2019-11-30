@@ -49,6 +49,12 @@ foreach ($imageKey in $imagesToBuild) {
       $_.target.cloud.Contains($targetCloudPlatform) -and
       $_.target.gpu.Contains($config.image.gpu)
     });
+    $unattendCommands = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/unattend-commands.json' -UseBasicParsing | ConvertFrom-Json) | ? {
+      $_.target.os.Contains($config.image.os) -and
+      $_.target.architecture.Contains($config.image.architecture) -and
+      $_.target.cloud.Contains($targetCloudPlatform) -and
+      $_.target.gpu.Contains($config.image.gpu)
+    });
     $packages = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/packages.json' -UseBasicParsing | ConvertFrom-Json) | ? {
       $_.target.os.Contains($config.image.os) -and
       $_.target.architecture.Contains($config.image.architecture) -and
@@ -69,6 +75,7 @@ foreach ($imageKey in $imagesToBuild) {
         -force;  
     }
     do {
+      $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
       try {
         New-UnattendFile `
           -destinationPath $unattendLocalPath `
@@ -77,7 +84,7 @@ foreach ($imageKey in $imagesToBuild) {
           -registeredOwner $config.image.owner `
           -registeredOrganization $config.image.organization `
           -administratorPassword (New-Password) `
-          -commands @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
+          -commands $commands;
       } catch {
         Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('exception creating unattend: {0}. retrying... {1}' -f $unattendLocalPath, $_.Exception.Message) -severity 'warn';
       }
