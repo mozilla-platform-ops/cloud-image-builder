@@ -1,0 +1,167 @@
+---
+- name: xenbus
+  infpath: xenbus
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - azure
+    - google
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/aws-pv/xenbus.zip
+- name: xeniface
+  infpath: xeniface
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - azure
+    - google
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/aws-pv/xeniface.zip
+- name: xennet
+  infpath: xennet
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - azure
+    - google
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/aws-pv/xennet.zip
+- name: xenvbd
+  infpath: xenvbd
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - azure
+    - google
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/aws-pv/xenvbd.zip
+- name: xenvif
+  infpath: xenvif
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - azure
+    - google
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/aws-pv/xenvif.zip
+- name: AwsEnaNetworkDriver
+  infpath: "AwsEnaNetworkDriver\bin.10.0"
+  extract: true
+  target:
+    cloud:
+    - amazon
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/AwsEnaNetworkDriver.zip
+- name: 391.81_grid_win10_server2016_64bit_international
+  infpath: 391.81_grid_win10_server2016_64bit_international
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - google
+    os:
+    - Windows 10
+    - Windows Server 2016
+    architecture:
+    - x86-64
+    gpu:
+    - true
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: driver/391.81_grid_win10_server2016_64bit_international.zip
