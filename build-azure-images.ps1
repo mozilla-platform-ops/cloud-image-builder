@@ -194,4 +194,90 @@ foreach ($imageKey in $imagesToBuild) {
       Remove-Item -Path $vhdMountPoint -Force
     }
   }
+
+  foreach ($target in $config.target) {
+    switch ($target.platform) {
+      'azure' {
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image: {0} deployment to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+
+        $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
+
+        $diskConfig = (New-AzDiskConfig `
+          -SkuName $osDiskConfig.type `
+          -OsType 'Windows' `
+          -UploadSizeInBytes ((Get-Item -Path $vhdLocalPath).Length) `
+          -Location $target.region `
+          -CreateOption 'Upload');
+        $disk = New-AzDisk `
+          -ResourceGroupName $target.group `
+          -DiskName $osDiskConfig.source `
+          -Disk $diskConfig;
+        $diskAccess = Grant-AzDiskAccess `
+          -ResourceGroupName $target.group `
+          -DiskName $disk.Name `
+          -DurationInSecond 86400 `
+          -Access 'Write';
+        & AzCopy.exe @('copy', $vhdLocalPath, $diskAccess.AccessSAS, '--blob-type', 'PageBlob');
+        Revoke-AzDiskAccess `
+          -ResourceGroupName $target.group `
+          -DiskName $disk.Name;
+
+        switch ($target.hostname.slug.type) {
+          'uuid' {
+            $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
+            $instanceName = ($target.hostname.format -f $resourceId);
+            break;
+          }
+          default {
+            $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
+            $instanceName = ('vm-{0}' -f $resourceId);
+            break;
+          }
+        }
+
+        # networking
+        $virtualNetwork = (Get-AzVirtualNetwork -Name $target.network.name);
+        $networkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow[0]);
+        $publicIpAddress = New-AzPublicIpAddress `
+          -Name ('ip-{0}' -f $resourceId) `
+          -ResourceGroupName $target.group `
+          -Location $target.region `
+          -AllocationMethod 'Dynamic';
+
+        $networkInterface = New-AzNetworkInterface `
+          -Name ('ni-{0}' -f $resourceId) `
+          -ResourceGroupName $target.group `
+          -Location $target.region `
+          -SubnetId $virtualNetwork.Subnets[0].Id `
+          -PublicIpAddressId $publicIpAddress.Id `
+          -NetworkSecurityGroupId $networkSecurityGroup.Id;
+
+        # virtual machine
+        $vm = Add-AzVMNetworkInterface `
+          -VM (New-AzVMConfig -VMName $instanceName -VMSize $target.machine.type) `
+          -Id $networkInterface.Id;
+        $vm = Set-AzVMOSDisk `
+          -VM $vm `
+          -ManagedDiskId $disk.Id `
+          -StorageAccountType $osDiskConfig.type `
+          -DiskSizeInGB $osDiskConfig.size `
+          -CreateOption 'Attach' `
+          -Windows:$true;
+        New-AzVM `
+          -ResourceGroupName $target.group `
+          -Location $target.region `
+          -VM $vm;
+        Get-AzVM `
+          -ResourceGroupName $target.group
+          -Name $instanceName;
+
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image: {0} deployment to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        break;
+      }
+      default {
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('failed to load image: {0} with package: {1}' -f $imageName, $package.savepath) -severity 'warn';
+        break;
+      }
+    }
+  }
 }

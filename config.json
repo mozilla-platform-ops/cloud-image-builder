@@ -19,7 +19,38 @@
         "key": "iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso"
       },
       "wimindex": 5
-    }
+    },
+    "target": [
+      {
+        "platform": "azure",
+        "group": "gecko-t",
+        "region": "East US",
+        "hostname": {
+          "format": "vm-{0}",
+          "slug": {
+            "type": "uuid",
+            "length": 12
+          }
+        },
+        "machine": {
+          "type": "Standard_A2"
+        },
+        "disk": [
+          {
+            "os": true,
+            "source": "windows10-professional-en-us-x86-64-fixed",
+            "type": "StandardSSD_LRS",
+            "size": 64
+          }
+        ],
+        "network": {
+          "name": "gecko-t-vnet",
+          "flow": [
+            "vm-d3ff927c7414-nsg"
+          ]
+        }
+      }
+    ]
   },
   "win10-64-gpu-azure": {
     "image": {
@@ -41,7 +72,38 @@
         "key": "iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso"
       },
       "wimindex": 5
-    }
+    },
+    "target": [
+      {
+        "platform": "azure",
+        "group": "gecko-t",
+        "region": "East US",
+        "hostname": {
+          "format": "vm-{0}",
+          "slug": {
+            "type": "uuid",
+            "length": 12
+          }
+        },
+        "machine": {
+          "type": "Standard_A2"
+        },
+        "disk": [
+          {
+            "os": true,
+            "source": "windows10-professional-en-us-x86-64-gpu-fixed",
+            "type": "StandardSSD_LRS",
+            "size": 64
+          }
+        ],
+        "network": {
+          "name": "gecko-t-vnet",
+          "flow": [
+            "vm-d3ff927c7414-nsg"
+          ]
+        }
+      }
+    ]
   },
   "win2012-azure": {
     "image": {
@@ -63,7 +125,38 @@
         "key": "iso/en_windows_server_2012_r2_with_update_x64_dvd_6052708.iso"
       },
       "wimindex": 4
-    }
+    },
+    "target": [
+      {
+        "platform": "azure",
+        "group": "gecko-1",
+        "region": "East US",
+        "hostname": {
+          "format": "vm-{0}",
+          "slug": {
+            "type": "uuid",
+            "length": 12
+          }
+        },
+        "machine": {
+          "type": "Standard_A2"
+        },
+        "disk": [
+          {
+            "os": true,
+            "source": "windowsserver2012r2-datacenter-en-us-x86-64-fixed",
+            "type": "StandardSSD_LRS",
+            "size": 64
+          }
+        ],
+        "network": {
+          "name": "gecko-1-vnet",
+          "flow": [
+            "vm-d3ff927c7414-nsg"
+          ]
+        }
+      }
+    ]
   },
   "win2019-azure": {
     "image": {
@@ -85,6 +178,37 @@
         "key": "iso/en_windows_server_2019_updated_sept_2019_x64_dvd_199664ce.iso"
       },
       "wimindex": 4
-    }
+    },
+    "target": [
+      {
+        "platform": "azure",
+        "group": "relops",
+        "region": "East US",
+        "hostname": {
+          "format": "vm-{0}",
+          "slug": {
+            "type": "uuid",
+            "length": 12
+          }
+        },
+        "machine": {
+          "type": "Standard_A2"
+        },
+        "disk": [
+          {
+            "os": true,
+            "source": "windowsserver2019-datacenter-en-us-x86-64-fixed",
+            "type": "StandardSSD_LRS",
+            "size": 64
+          }
+        ],
+        "network": {
+          "name": "relops-vnet",
+          "flow": [
+            "vm-d3ff927c7414-nsg"
+          ]
+        }
+      }
+    ]
   }
 }
