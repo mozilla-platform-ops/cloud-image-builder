@@ -19,7 +19,6 @@ foreach ($rm in @(
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
   if ($module) {
     if ($module.Version -lt $rm.version) {
-      Remove-Module $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue
       Update-Module $rm.module -RequiredVersion $rm.version
     }
   } else {
