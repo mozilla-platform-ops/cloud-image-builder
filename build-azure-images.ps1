@@ -224,7 +224,7 @@ foreach ($imageKey in $imagesToBuild) {
           -DiskName $disk.Name `
           -DurationInSecond 86400 `
           -Access 'Write';
-        & AzCopy.exe @('copy', $vhdLocalPath, $diskAccess.AccessSAS, '--blob-type', 'PageBlob');
+        & AzCopy.exe @('copy', $vhdLocalPath, ($diskAccess.AccessSAS), '--blob-type', 'PageBlob');
         Revoke-AzDiskAccess `
           -ResourceGroupName $target.group `
           -DiskName $disk.Name;
