@@ -38,7 +38,7 @@
         "disk": [
           {
             "os": true,
-            "source": "windows10-professional-en-us-x86-64-fixed",
+            "source": "windows10-professional-en-us-x86-64",
             "type": "StandardSSD_LRS",
             "size": 64
           }
@@ -91,7 +91,7 @@
         "disk": [
           {
             "os": true,
-            "source": "windows10-professional-en-us-x86-64-gpu-fixed",
+            "source": "windows10-professional-en-us-x86-64-gpu",
             "type": "StandardSSD_LRS",
             "size": 64
           }
@@ -144,7 +144,7 @@
         "disk": [
           {
             "os": true,
-            "source": "windowsserver2012r2-datacenter-en-us-x86-64-fixed",
+            "source": "windowsserver2012r2-datacenter-en-us-x86-64",
             "type": "StandardSSD_LRS",
             "size": 64
           }
@@ -197,7 +197,7 @@
         "disk": [
           {
             "os": true,
-            "source": "windowsserver2019-datacenter-en-us-x86-64-fixed",
+            "source": "windowsserver2019-datacenter-en-us-x86-64",
             "type": "StandardSSD_LRS",
             "size": 64
           }
