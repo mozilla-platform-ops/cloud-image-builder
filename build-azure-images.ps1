@@ -12,6 +12,7 @@ $imagesToBuild = @(
  );
 
 # constants and script config. these are probably ok as they are.
+$revision = (Invoke-WebRequest -Uri 'https://api.github.com/gists/3f2fbc64e7210de136e7eb69aae63f81' -UseBasicParsing | ConvertFrom-Json).history[0].version;
 foreach ($rm in @(
   @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.21' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
@@ -29,8 +30,9 @@ foreach ($rm in @(
 
 foreach ($imageKey in $imagesToBuild) {
   # computed target specific settings. these are probably ok as they are.
-  $config = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/config.yaml' -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
-  $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
+  $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
+  $imageName = ('{0}-{1}-{2}-{3}-{4}{5}-{6}.{7}' -f $revision.Substring(0, 7)
+    $config.image.os.ToLower().Replace(' ', ''),
     $config.image.edition.ToLower(),
     $config.image.language.ToLower(),
     $config.image.architecture,
@@ -47,26 +49,26 @@ foreach ($imageKey in $imagesToBuild) {
     $driversLocalPath = ('{0}{1}drivers-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
     $packagesLocalPath = ('{0}{1}packages-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
     # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-    $productKey = (Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/product-keys.yaml' -UseBasicParsing | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
-    $drivers = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/drivers.yaml' -UseBasicParsing | ConvertFrom-Yaml) | ? {
+    $productKey = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/product-keys.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
+    $drivers = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/drivers.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
       $_.target.os.Contains($config.image.os) -and
       $_.target.architecture.Contains($config.image.architecture) -and
       $_.target.cloud.Contains($targetCloudPlatform) -and
       $_.target.gpu.Contains($config.image.gpu)
     });
-    $unattendCommands = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/unattend-commands.yaml' -UseBasicParsing | ConvertFrom-Yaml) | ? {
+    $unattendCommands = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/unattend-commands.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
       $_.target.os.Contains($config.image.os) -and
       $_.target.architecture.Contains($config.image.architecture) -and
       $_.target.cloud.Contains($targetCloudPlatform) -and
       $_.target.gpu.Contains($config.image.gpu)
     });
-    $packages = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/packages.yaml' -UseBasicParsing | ConvertFrom-Yaml) | ? {
+    $packages = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/packages.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
       $_.target.os.Contains($config.image.os) -and
       $_.target.architecture.Contains($config.image.architecture) -and
       $_.target.cloud.Contains($targetCloudPlatform) -and
       $_.target.gpu.Contains($config.image.gpu)
     });
-    $disableWindowsService = @((Invoke-WebRequest -Uri 'https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/disable-windows-service.yaml' -UseBasicParsing | ConvertFrom-Yaml) | ? {
+    $disableWindowsService = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/disable-windows-service.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
       $_.target.os.Contains($config.image.os) -and
       $_.target.architecture.Contains($config.image.architecture) -and
       $_.target.cloud.Contains($targetCloudPlatform)
