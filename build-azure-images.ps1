@@ -10,6 +10,7 @@ $imagesToBuild = @(
   ('win2012-{0}' -f $targetCloudPlatform),
   ('win2019-{0}' -f $targetCloudPlatform)
  );
+$instanceNameMap = @{};
 
 # constants and script config. these are probably ok as they are.
 $revision = (Invoke-WebRequest -Uri 'https://api.github.com/gists/3f2fbc64e7210de136e7eb69aae63f81' -UseBasicParsing | ConvertFrom-Json).history[0].version;
@@ -31,22 +32,22 @@ foreach ($rm in @(
 foreach ($imageKey in $imagesToBuild) {
   # computed target specific settings. these are probably ok as they are.
   $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
-  $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
+  $exportImageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
     $config.image.edition.ToLower(),
     $config.image.language.ToLower(),
     $config.image.architecture,
     $(if ($config.image.gpu) { '-gpu' } else { '' }),
     $config.image.type.ToLower(),
     $config.image.format.ToLower());
-  $vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName);
+  $vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName);
 
   if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('detected existing vhd: {0}, skipping image creation for {1}' -f $vhdLocalPath, $imageKey) -severity 'info';
   } else {
     $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
-    $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName.Replace('.', '-'));
-    $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName.Replace('.', '-'));
-    $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName.Replace('.', '-'));
+    $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
+    $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
+    $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
     # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
     $productKey = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/product-keys.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
     $drivers = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/drivers.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
@@ -193,7 +194,7 @@ foreach ($imageKey in $imagesToBuild) {
           Copy-Item -Path $packageLocalTempPath -Destination $packageLocalMountPath
         }
       } else {
-        Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('failed to load image: {0} with package: {1}' -f $imageName, $package.savepath) -severity 'warn';
+        Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('failed to load image: {0} with package: {1}' -f $exportImageName, $package.savepath) -severity 'warn';
       }
     }
     # dismount the vhd, save it and remove the mount point
@@ -211,7 +212,7 @@ foreach ($imageKey in $imagesToBuild) {
   foreach ($target in $config.target) {
     switch ($target.platform) {
       'azure' {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 
         $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
 
@@ -239,6 +240,7 @@ foreach ($imageKey in $imagesToBuild) {
           'uuid' {
             $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
             $instanceName = ($target.hostname.format -f $resourceId);
+            $instanceNameMap[$imageKey] = $instanceName;
             break;
           }
           default {
@@ -321,11 +323,11 @@ foreach ($imageKey in $imagesToBuild) {
           -ResourceGroupName $target.group `
           -Name $instanceName;
 
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
         break;
       }
       default {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image export: {0} in: {1} cloud platform (not implemented)' -f $imageName, $target.platform) -severity 'warn';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image export: {0} in: {1} cloud platform (not implemented)' -f $exportImageName, $target.platform) -severity 'warn';
         break;
       }
     }
@@ -335,23 +337,12 @@ foreach ($imageKey in $imagesToBuild) {
 foreach ($imageKey in $imagesToBuild) {
   $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
   # imagename will be (for example): gecko-t-win10-64
-  $imageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
+  $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
   foreach ($target in $config.target) {
     switch ($target.platform) {
       'azure' {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
-        switch ($target.hostname.slug.type) {
-          'uuid' {
-            $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
-            $instanceName = ($target.hostname.format -f $resourceId);
-            break;
-          }
-          default {
-            $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
-            $instanceName = ('vm-{0}' -f $resourceId);
-            break;
-          }
-        }
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
+        $instanceName = $instanceNameMap[$imageKey];
         Stop-AzVM `
           -ResourceGroupName $target.group `
           -Name $instanceName `
@@ -368,13 +359,13 @@ foreach ($imageKey in $imagesToBuild) {
           -SourceVirtualMachineId $vm.Id);
         $image = (New-AzImage `
           -Image $imageConfig `
-          -ImageName $imageName `
+          -ImageName $exportImageName `
           -ResourceGroupName $target.group);
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
         break;
       }
       default {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in: {1} cloud platform (not implemented)' -f $imageName, $target.platform) -severity 'warn';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in: {1} cloud platform (not implemented)' -f $importImageName, $target.platform) -severity 'warn';
         break;
       }
     }
