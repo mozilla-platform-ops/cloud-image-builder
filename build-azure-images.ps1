@@ -280,7 +280,7 @@ foreach ($imageKey in $imagesToBuild) {
           -Location $target.region `
           -VM $vm;
         Get-AzVM `
-          -ResourceGroupName $target.group
+          -ResourceGroupName $target.group `
           -Name $instanceName;
 
         Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image: {0} deployment to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
