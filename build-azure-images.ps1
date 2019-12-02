@@ -222,7 +222,43 @@ foreach ($imageKey in $imagesToBuild) {
       'azure' {
         Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 
+        switch ($target.hostname.slug.type) {
+          'uuid' {
+            $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
+            $instanceName = ($target.hostname.format -f $resourceId);
+            $instanceNameMap[$imageKey] = $instanceName;
+            break;
+          }
+          default {
+            $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
+            $instanceName = ('vm-{0}' -f $resourceId);
+            $instanceNameMap[$imageKey] = $instanceName;
+            break;
+          }
+        }
         $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
+        $tags = @{};
+        foreach ($tag in $target.tag) {
+          $tags[$tag.name] = $tag.value;
+        }
+
+        #New-CloudInstanceFromImageExport `
+        #  -platform $target.platform `
+        #  -localImagePath $vhdLocalPath `
+        #  -targetResourceId $resourceId `
+        #  -targetResourceGroupName $target.group `
+        #  -targetResourceRegion $target.region `
+        #  -targetInstanceCpuCount $target.machine.cpu `
+        #  -targetInstanceRamGb $target.machine.ram `
+        #  -targetInstanceName $instanceName `
+        #  -targetVirtualNetworkName ('vnet-{0}' -f $target.region.ToLower().Replace(' ', '-'), $target.group) `
+        #  -targetInstanceDiskVariant $osDiskConfig.variant `
+        #  -targetInstanceDiskSizeGb $osDiskConfig.size `
+        #  -targetInstanceTags $tags `
+        #  -targetVirtualNetworkAddressPrefix $target.virtual_network.address_prefix `
+        #  -targetVirtualNetworkDnsServers $target.virtual_network.dns `
+        #  -targetSubnetAddressPrefix $target.virtual_network.subnet.address_prefix `
+
 
         $diskConfig = (New-AzDiskConfig `
           -SkuName $osDiskConfig.type `
@@ -243,20 +279,6 @@ foreach ($imageKey in $imagesToBuild) {
         Revoke-AzDiskAccess `
           -ResourceGroupName $target.group `
           -DiskName $disk.Name;
-
-        switch ($target.hostname.slug.type) {
-          'uuid' {
-            $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
-            $instanceName = ($target.hostname.format -f $resourceId);
-            $instanceNameMap[$imageKey] = $instanceName;
-            break;
-          }
-          default {
-            $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
-            $instanceName = ('vm-{0}' -f $resourceId);
-            break;
-          }
-        }
 
         # networking
         $virtualNetwork = (Get-AzVirtualNetwork -Name $target.network.name);
