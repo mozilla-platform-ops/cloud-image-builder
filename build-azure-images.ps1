@@ -250,7 +250,7 @@ foreach ($imageKey in $imagesToBuild) {
       -targetInstanceCpuCount $target.machine.cpu `
       -targetInstanceRamGb $target.machine.ram `
       -targetInstanceName $instanceName `
-      -targetVirtualNetworkName ('vnet-{0}' -f $target.region.ToLower().Replace(' ', '-'), $target.group) `
+      -targetVirtualNetworkName ('vnet-{0}-{1}' -f $target.group, $target.region.ToLower().Replace(' ', '-')) `
       -targetInstanceDiskVariant $osDiskConfig.variant `
       -targetInstanceDiskSizeGb $osDiskConfig.size `
       -targetInstanceTags $tags `
