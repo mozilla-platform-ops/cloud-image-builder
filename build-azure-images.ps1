@@ -38,15 +38,15 @@ foreach ($imageKey in $imagesToBuild) {
     $(if ($config.image.gpu) { '-gpu' } else { '' }),
     $config.image.type.ToLower(),
     $config.image.format.ToLower());
-  $vhdLocalPath = ('{0}{1}{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $imageName);
+  $vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName);
 
   if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('detected existing vhd: {0}, skipping image creation for {1}' -f $vhdLocalPath, $imageKey) -severity 'info';
   } else {
     $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
-    $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $revision.Substring(0, 7), $imageName.Replace('.', '-'));
-    $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $revision.Substring(0, 7), $imageName.Replace('.', '-'));
-    $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $revision.Substring(0, 7), $imageName.Replace('.', '-'));
+    $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName.Replace('.', '-'));
+    $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName.Replace('.', '-'));
+    $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $imageName.Replace('.', '-'));
     # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
     $productKey = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/product-keys.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
     $drivers = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/drivers.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
