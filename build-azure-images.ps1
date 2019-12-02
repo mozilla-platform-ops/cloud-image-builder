@@ -31,7 +31,7 @@ foreach ($rm in @(
 foreach ($imageKey in $imagesToBuild) {
   # computed target specific settings. these are probably ok as they are.
   $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
-  $imageName = ('{0}-{1}-{2}-{3}-{4}{5}-{6}.{7}' -f $revision.Substring(0, 7)
+  $imageName = ('{0}-{1}-{2}-{3}-{4}{5}-{6}.{7}' -f $revision.Substring(0, 7),
     $config.image.os.ToLower().Replace(' ', ''),
     $config.image.edition.ToLower(),
     $config.image.language.ToLower(),
