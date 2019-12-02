@@ -15,7 +15,7 @@ $instanceNameMap = @{};
 # constants and script config. these are probably ok as they are.
 $revision = (Invoke-WebRequest -Uri 'https://api.github.com/gists/3f2fbc64e7210de136e7eb69aae63f81' -UseBasicParsing | ConvertFrom-Json).history[0].version;
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.24' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.25' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -84,16 +84,16 @@ foreach ($imageKey in $imagesToBuild) {
     do {
       $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
       try {
+        # todo: set processorArchitecture, computerName, administratorPassword
+        #-processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
+        #-computerName '*' `
+        #-administratorPassword (New-Password) `
         New-UnattendFile `
           -destinationPath $unattendLocalPath `
-          # todo: set processorArchitecture, computerName
-          #-processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
-          #-computerName '*' `
           -uiLanguage $config.image.language `
           -productKey $productKey `
           -registeredOwner $config.image.owner `
           -registeredOrganization $config.image.organization `
-          -administratorPassword (New-Password) `
           -commands $commands;
       } catch {
         Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('exception creating unattend: {0}. retrying... {1}' -f $unattendLocalPath, $_.Exception.Message) -severity 'warn';
