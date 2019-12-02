@@ -99,7 +99,11 @@ foreach ($imageKey in $imagesToBuild) {
     Remove-Item -Path $driversLocalPath -Force -Recurse -ErrorAction SilentlyContinue;
     foreach ($driver in $drivers) {
       $driverLocalPath = ('{0}{1}{2}{3}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $driver.name, $(if ($driver.extract) { '.zip' } else { '' }));
-      $sourceIndex = $driver.sources.Length;
+      try {
+        $sourceIndex = [int]$driver.sources.Length;
+      } catch {
+        $sourceIndex = 1;
+      }
       do {
         $source = $driver.sources[(--$sourceIndex)];
         if ($source.platform -eq 'url') {
@@ -157,7 +161,11 @@ foreach ($imageKey in $imagesToBuild) {
 
     foreach ($package in $packages) {
       $packageLocalTempPath = ('{0}{1}{2}{3}' -f $packagesLocalPath, ([IO.Path]::DirectorySeparatorChar), $package.name, $(if (($package.extract) -and (-not $package.savepath.ToLower().EndsWith('.zip'))) { '.zip' } else { '' }));
-      $sourceIndex = $package.sources.Length;
+      try {
+        $sourceIndex = [int]$package.sources.Length;
+      } catch {
+        $sourceIndex = 1;
+      }
       do {
         $source = $package.sources[(--$sourceIndex)];
         if ($source.platform -eq 'url') {
@@ -312,7 +320,7 @@ foreach ($imageKey in $imagesToBuild) {
           -Windows:$true;
         $tags = @{};
         foreach ($tag in $target.tag) {
-          $tags[$_.name] = $_.value;
+          $tags[$tag.name] = $tag.value;
         }
         New-AzVM `
           -ResourceGroupName $target.group `
