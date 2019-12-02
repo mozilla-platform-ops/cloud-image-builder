@@ -389,7 +389,7 @@ foreach ($imageKey in $imagesToBuild) {
           -SourceVirtualMachineId $vm.Id);
         $image = (New-AzImage `
           -Image $imageConfig `
-          -ImageName $exportImageName `
+          -ImageName $importImageName `
           -ResourceGroupName $target.group);
         Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
         break;
