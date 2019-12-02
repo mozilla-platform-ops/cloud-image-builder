@@ -36,7 +36,16 @@ win10-64-azure:
     network:
       name: gecko-t-vnet
       flow:
-      - vm-d3ff927c7414-nsg
+      - nsg-gecko-t
+    tag:
+    - name: workerType
+      value: gecko-t-win10-64-azure
+    - name: sourceOrganisation
+      value: mozilla-releng
+    - name: sourceRepository
+      value: OpenCloudConfig
+    - name: sourceRevision
+      value: azure
 win10-64-gpu-azure:
   image:
     os: Windows 10
@@ -74,7 +83,16 @@ win10-64-gpu-azure:
     network:
       name: gecko-t-vnet
       flow:
-      - vm-d3ff927c7414-nsg
+      - nsg-gecko-t
+    tag:
+    - name: workerType
+      value: gecko-t-win10-64-gpu-azure
+    - name: sourceOrganisation
+      value: mozilla-releng
+    - name: sourceRepository
+      value: OpenCloudConfig
+    - name: sourceRevision
+      value: azure
 win2012-azure:
   image:
     os: Windows Server 2012 R2
@@ -112,7 +130,16 @@ win2012-azure:
     network:
       name: gecko-1-vnet
       flow:
-      - vm-d3ff927c7414-nsg
+      - nsg-gecko-1
+    tag:
+    - name: workerType
+      value: gecko-1-b-win2012-azure
+    - name: sourceOrganisation
+      value: mozilla-releng
+    - name: sourceRepository
+      value: OpenCloudConfig
+    - name: sourceRevision
+      value: azure
 win2019-azure:
   image:
     os: Windows Server 2019
@@ -150,4 +177,13 @@ win2019-azure:
     network:
       name: relops-vnet
       flow:
-      - vm-d3ff927c7414-nsg
+      - nsg-relops
+    tag:
+    - name: workerType
+      value: gecko-1-b-win2019-azure
+    - name: sourceOrganisation
+      value: mozilla-releng
+    - name: sourceRepository
+      value: OpenCloudConfig
+    - name: sourceRevision
+      value: azure
