@@ -242,8 +242,7 @@
   savepath: Windows\Temp\Ec2ConfigurationSettings.xml
   unattend:
   - description: install ec2config configuration
-    command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program
-      Files\Amazon\Ec2ConfigService\Settings\config.xml"
+    command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\config.xml"
   target:
     cloud:
     - amazon
@@ -269,8 +268,7 @@
   savepath: Windows\Temp\WallpaperSettings.xml
   unattend:
   - description: install ec2 wallpaper configuration
-    command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program
-      Files\Amazon\Ec2ConfigService\Settings\WallpaperSettings.xml"
+    command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\WallpaperSettings.xml"
   target:
     cloud:
     - amazon
@@ -296,8 +294,7 @@
   savepath: Windows\Temp\WindowsAzureVmAgent.msi
   unattend:
   - description: install azure agent
-    command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi
-      /quiet
+    command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /quiet
   target:
     cloud:
     - azure
