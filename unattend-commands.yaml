@@ -1,8 +1,7 @@
 ---
 - unattend:
   - description: enable remote desktop firewall exception
-    command: cmd /c start /wait C:\Windows\System32\netsh.exe advfirewall firewall
-      set rule group="remote desktop" new enable=yes
+    command: cmd /c start /wait C:\Windows\System32\netsh.exe advfirewall firewall set rule group="remote desktop" new enable=yes
   target:
     cloud:
     - amazon
