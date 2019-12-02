@@ -211,7 +211,7 @@ foreach ($imageKey in $imagesToBuild) {
   foreach ($target in $config.target) {
     switch ($target.platform) {
       'azure' {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image: {0} deployment to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
 
         $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
 
@@ -250,7 +250,39 @@ foreach ($imageKey in $imagesToBuild) {
 
         # networking
         $virtualNetwork = (Get-AzVirtualNetwork -Name $target.network.name);
-        $networkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow[0]);
+        $networkSecurityGroup = (Get-AzNetworkSecurityGroup `
+          -Name $target.network.flow[0] `
+          -ResourceGroupName $target.group `
+          -ErrorAction SilentlyContinue);
+        if (-not ($networkSecurityGroup)) {
+          $rdpNetworkSecurityRuleConfig = (New-AzNetworkSecurityRuleConfig `
+            -Name 'rdp-only' `
+            -Description 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389' `
+            -Access 'Allow' `
+            -Protocol 'Tcp' `
+            -Direction 'Inbound' `
+            -Priority 110 `
+            -SourceAddressPrefix 'Internet' `
+            -SourcePortRange '*' `
+            -DestinationAddressPrefix '*' `
+            -DestinationPortRange 3389);
+          $sshNetworkSecurityRuleConfig = (New-AzNetworkSecurityRuleConfig `
+            -Name 'ssh-only' `
+            -Description 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22' `
+            -Access 'Allow' `
+            -Protocol 'Tcp' `
+            -Direction 'Inbound' `
+            -Priority 120 `
+            -SourceAddressPrefix 'Internet' `
+            -SourcePortRange '*' `
+            -DestinationAddressPrefix '*' `
+            -DestinationPortRange 22);
+          $networkSecurityGroup = New-AzNetworkSecurityGroup `
+            -Name $target.network.flow[0] `
+            -ResourceGroupName $target.group `
+            -Location $target.region `
+            -SecurityRules @($rdpNetworkSecurityRuleConfig, $sshNetworkSecurityRuleConfig);
+        }
         $publicIpAddress = New-AzPublicIpAddress `
           -Name ('ip-{0}' -f $resourceId) `
           -ResourceGroupName $target.group `
@@ -276,19 +308,73 @@ foreach ($imageKey in $imagesToBuild) {
           -DiskSizeInGB $osDiskConfig.size `
           -CreateOption 'Attach' `
           -Windows:$true;
+        $tags = @{};
+        foreach ($tag in $target.tag) {
+          $tags[$_.name] = $_.value;
+        }
         New-AzVM `
           -ResourceGroupName $target.group `
           -Location $target.region `
+          -Tag $tags `
           -VM $vm;
         Get-AzVM `
           -ResourceGroupName $target.group `
           -Name $instanceName;
 
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image: {0} deployment to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
         break;
       }
       default {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('failed to load image: {0} with package: {1}' -f $imageName, $package.savepath) -severity 'warn';
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image export: {0} in: {1} cloud platform (not implemented)' -f $imageName, $target.platform) -severity 'warn';
+        break;
+      }
+    }
+  }
+}
+
+foreach ($imageKey in $imagesToBuild) {
+  $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
+  # imagename will be (for example): gecko-t-win10-64
+  $imageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
+  foreach ($target in $config.target) {
+    switch ($target.platform) {
+      'azure' {
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        switch ($target.hostname.slug.type) {
+          'uuid' {
+            $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
+            $instanceName = ($target.hostname.format -f $resourceId);
+            break;
+          }
+          default {
+            $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
+            $instanceName = ('vm-{0}' -f $resourceId);
+            break;
+          }
+        }
+        Stop-AzVM `
+          -ResourceGroupName $target.group `
+          -Name $instanceName `
+          -Force
+        Set-AzVm `
+          -ResourceGroupName $target.group `
+          -Name $instanceName `
+          -Generalized
+        $vm = (Get-AzVM `
+          -ResourceGroupName $target.group `
+          -Name $instanceName);
+        $imageConfig = (New-AzImageConfig `
+          -Location $target.region `
+          -SourceVirtualMachineId $vm.Id);
+        $image = (New-AzImage `
+          -Image $imageConfig `
+          -ImageName $imageName `
+          -ResourceGroupName $target.group);
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $imageName, $target.platform) -severity 'info';
+        break;
+      }
+      default {
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in: {1} cloud platform (not implemented)' -f $imageName, $target.platform) -severity 'warn';
         break;
       }
     }

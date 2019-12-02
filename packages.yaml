@@ -328,3 +328,28 @@
     url: https://go.microsoft.com/fwlink/?LinkID=394789
   - platform: url
     url: https://download.microsoft.com/download/3/4/3/3437907D-745F-46EF-8116-7FC025BBEBDB/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
+- name: OpenCloudConfig
+  savepath: Windows\Temp\rundsc.ps1
+  unattend:
+  - description: trigger an occ run
+    command: cmd /c start /wait powershell -File C:\Windows\Temp\rundsc.ps1
+  target:
+    cloud:
+    - azure
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: url
+    url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1
