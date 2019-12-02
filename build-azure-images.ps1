@@ -1,5 +1,5 @@
 # usage:
-# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/build-azure-images.ps1?{0}' -f [Guid]::NewGuid()))
+# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/build-azure-images.ps1?{0}' -f [Guid]::NewGuid())) | Tee-Object -FilePath ('build-azure-images-{0}.log' -f ((Get-Date).ToUniversalTime().ToString('yyyyMMddHHmmss')))
 
 # job settings. change these for the tasks at hand.
 $targetCloudPlatform = 'azure';
@@ -31,23 +31,22 @@ foreach ($rm in @(
 foreach ($imageKey in $imagesToBuild) {
   # computed target specific settings. these are probably ok as they are.
   $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
-  $imageName = ('{0}-{1}-{2}-{3}-{4}{5}-{6}.{7}' -f $revision.Substring(0, 7),
-    $config.image.os.ToLower().Replace(' ', ''),
+  $imageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
     $config.image.edition.ToLower(),
     $config.image.language.ToLower(),
     $config.image.architecture,
     $(if ($config.image.gpu) { '-gpu' } else { '' }),
     $config.image.type.ToLower(),
     $config.image.format.ToLower());
-  $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $imageName);
+  $vhdLocalPath = ('{0}{1}{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $imageName);
 
   if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('detected existing vhd: {0}, skipping image creation for {1}' -f $vhdLocalPath, $imageKey) -severity 'info';
   } else {
     $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
-    $unattendLocalPath = ('{0}{1}unattend-{2}-{3}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
-    $driversLocalPath = ('{0}{1}drivers-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
-    $packagesLocalPath = ('{0}{1}packages-{2}-{3}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $imageName.Replace('.', '-'));
+    $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $revision.Substring(0, 7), $imageName.Replace('.', '-'));
+    $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $revision.Substring(0, 7), $imageName.Replace('.', '-'));
+    $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform, $revision.Substring(0, 7), $imageName.Replace('.', '-'));
     # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
     $productKey = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/product-keys.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
     $drivers = @((Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/drivers.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml) | ? {
@@ -224,7 +223,7 @@ foreach ($imageKey in $imagesToBuild) {
           -CreateOption 'Upload');
         $disk = New-AzDisk `
           -ResourceGroupName $target.group `
-          -DiskName $osDiskConfig.source `
+          -DiskName ('{0}-{1}' -f $revision.Substring(0, 7), $osDiskConfig.source) `
           -Disk $diskConfig;
         $diskAccess = Grant-AzDiskAccess `
           -ResourceGroupName $target.group `
