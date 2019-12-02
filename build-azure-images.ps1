@@ -86,8 +86,9 @@ foreach ($imageKey in $imagesToBuild) {
       try {
         New-UnattendFile `
           -destinationPath $unattendLocalPath `
-          -processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
-          -computerName '*' ` # todo: set computerName
+          # todo: set processorArchitecture, computerName
+          #-processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
+          #-computerName '*' `
           -uiLanguage $config.image.language `
           -productKey $productKey `
           -registeredOwner $config.image.owner `
