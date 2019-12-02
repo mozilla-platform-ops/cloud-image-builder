@@ -15,7 +15,7 @@ $instanceNameMap = @{};
 # constants and script config. these are probably ok as they are.
 $revision = (Invoke-WebRequest -Uri 'https://api.github.com/gists/3f2fbc64e7210de136e7eb69aae63f81' -UseBasicParsing | ConvertFrom-Json).history[0].version;
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.34' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.35' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -250,13 +250,14 @@ foreach ($imageKey in $imagesToBuild) {
       -targetInstanceCpuCount $target.machine.cpu `
       -targetInstanceRamGb $target.machine.ram `
       -targetInstanceName $instanceName `
-      -targetVirtualNetworkName ('vnet-{0}-{1}' -f $target.group, $target.region.ToLower().Replace(' ', '-')) `
       -targetInstanceDiskVariant $osDiskConfig.variant `
       -targetInstanceDiskSizeGb $osDiskConfig.size `
       -targetInstanceTags $tags `
-      -targetVirtualNetworkAddressPrefix $target.virtual_network.address_prefix `
-      -targetVirtualNetworkDnsServers $target.virtual_network.dns `
-      -targetSubnetAddressPrefix $target.virtual_network.subnet.address_prefix
+      -targetVirtualNetworkName $target.network.name `
+      -targetVirtualNetworkAddressPrefix $target.network.prefix `
+      -targetVirtualNetworkDnsServers $target.network.dns `
+      -targetSubnetName $target.network.subnet.name `
+      -targetSubnetAddressPrefix $target.network.subnet.prefix
   }
   Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 }
