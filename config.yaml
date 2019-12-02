@@ -43,7 +43,28 @@ win10-64-azure:
       subnet: 
         address_prefix: '10.0.1.0/24'
       flow:
-      - nsg-gecko-t
+        name: nsg-gecko-t
+        rules:
+        - name: allow-rdp
+          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 110
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 3389
+        - name: allow-ssh
+          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 111
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 22
     tag:
     - name: workerType
       value: gecko-t-win10-64-azure
@@ -97,7 +118,28 @@ win10-64-gpu-azure:
       subnet: 
         address_prefix: '10.0.1.0/24'
       flow:
-      - nsg-gecko-t
+        name: nsg-gecko-t
+        rules:
+        - name: allow-rdp
+          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 110
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 3389
+        - name: allow-ssh
+          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 111
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 22
     tag:
     - name: workerType
       value: gecko-t-win10-64-gpu-azure
@@ -151,7 +193,28 @@ win2012-azure:
       subnet: 
         address_prefix: '10.0.1.0/24'
       flow:
-      - nsg-gecko-1
+        name: nsg-gecko-1
+        rules:
+        - name: allow-rdp
+          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 110
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 3389
+        - name: allow-ssh
+          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 111
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 22
     tag:
     - name: workerType
       value: gecko-1-b-win2012-azure
@@ -205,7 +268,28 @@ win2019-azure:
       subnet: 
         address_prefix: '10.0.1.0/24'
       flow:
-      - nsg-relops
+        name: nsg-relops
+        rules:
+        - name: allow-rdp
+          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 110
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 3389
+        - name: allow-ssh
+          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          access: Allow
+          Protocol: Tcp
+          Direction: Inbound
+          Priority: 111
+          SourceAddressPrefix: Internet
+          SourcePortRange: '*'
+          DestinationAddressPrefix: '*'
+          DestinationPortRange: 22
     tag:
     - name: workerType
       value: gecko-1-b-win2019-azure
