@@ -69,7 +69,7 @@
   savepath: Windows\Temp\papertrail-bundle.pem
   unattend:
   - description: install papertrail certificate
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\cert\papertrail-bundle.pem"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\cert\papertrail-bundle.pem"
   target:
     cloud:
     - amazon
@@ -89,7 +89,7 @@
   savepath: Windows\Temp\papertrail-bundle.pem
   unattend:
   - description: install papertrail certificate
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
   target:
     cloud:
     - amazon
@@ -115,7 +115,7 @@
   savepath: Windows\Temp\nxlog.conf
   unattend:
   - description: install nxlog configuration
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
   target:
     cloud:
     - amazon
@@ -135,7 +135,7 @@
   savepath: Windows\Temp\nxlog.conf
   unattend:
   - description: install nxlog configuration
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
   target:
     cloud:
     - amazon
@@ -155,7 +155,7 @@
   savepath: Windows\Temp\nxlog.conf
   unattend:
   - description: install nxlog configuration
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
   target:
     cloud:
     - amazon
@@ -175,7 +175,7 @@
   savepath: Windows\Temp\nxlog.conf
   unattend:
   - description: install nxlog configuration
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
   target:
     cloud:
     - amazon
@@ -195,7 +195,7 @@
   savepath: Windows\Temp\nxlog.conf
   unattend:
   - description: install nxlog configuration
-    command: cmd /c move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+    command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
   target:
     cloud:
     - amazon
