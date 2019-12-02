@@ -105,7 +105,7 @@
     "unattend": [
       {
         "description": "install papertrail certificate",
-        "command": "cmd /c set COPYCMD=/Y && move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem\""
+        "command": "cmd /c move /y C:\\Windows\\Temp\\papertrail-bundle.pem \"C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem\""
       }
     ],
     "target": {
@@ -138,7 +138,7 @@
     "unattend": [
       {
         "description": "install papertrail certificate",
-        "command": "cmd /c set COPYCMD=/Y && move /y C:\\Windows\\Temp\\nxlog.conf \"C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem\""
+        "command": "cmd /c move /y C:\\Windows\\Temp\\papertrail-bundle.pem \"C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem\""
       }
     ],
     "target": {
