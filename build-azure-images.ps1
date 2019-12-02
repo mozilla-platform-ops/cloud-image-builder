@@ -216,152 +216,46 @@ foreach ($imageKey in $imagesToBuild) {
       Remove-Item -Path $vhdMountPoint -Force
     }
   }
-
   foreach ($target in $config.target) {
-    switch ($target.platform) {
-      'azure' {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
-
-        switch ($target.hostname.slug.type) {
-          'uuid' {
-            $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
-            $instanceName = ($target.hostname.format -f $resourceId);
-            $instanceNameMap[$imageKey] = $instanceName;
-            break;
-          }
-          default {
-            $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
-            $instanceName = ('vm-{0}' -f $resourceId);
-            $instanceNameMap[$imageKey] = $instanceName;
-            break;
-          }
-        }
-        $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
-        $tags = @{};
-        foreach ($tag in $target.tag) {
-          $tags[$tag.name] = $tag.value;
-        }
-
-        #New-CloudInstanceFromImageExport `
-        #  -platform $target.platform `
-        #  -localImagePath $vhdLocalPath `
-        #  -targetResourceId $resourceId `
-        #  -targetResourceGroupName $target.group `
-        #  -targetResourceRegion $target.region `
-        #  -targetInstanceCpuCount $target.machine.cpu `
-        #  -targetInstanceRamGb $target.machine.ram `
-        #  -targetInstanceName $instanceName `
-        #  -targetVirtualNetworkName ('vnet-{0}' -f $target.region.ToLower().Replace(' ', '-'), $target.group) `
-        #  -targetInstanceDiskVariant $osDiskConfig.variant `
-        #  -targetInstanceDiskSizeGb $osDiskConfig.size `
-        #  -targetInstanceTags $tags `
-        #  -targetVirtualNetworkAddressPrefix $target.virtual_network.address_prefix `
-        #  -targetVirtualNetworkDnsServers $target.virtual_network.dns `
-        #  -targetSubnetAddressPrefix $target.virtual_network.subnet.address_prefix `
-
-
-        $diskConfig = (New-AzDiskConfig `
-          -SkuName $osDiskConfig.type `
-          -OsType 'Windows' `
-          -UploadSizeInBytes ((Get-Item -Path $vhdLocalPath).Length) `
-          -Location $target.region `
-          -CreateOption 'Upload');
-        $disk = New-AzDisk `
-          -ResourceGroupName $target.group `
-          -DiskName ('{0}-{1}' -f $revision.Substring(0, 7), $osDiskConfig.source) `
-          -Disk $diskConfig;
-        $diskAccess = Grant-AzDiskAccess `
-          -ResourceGroupName $target.group `
-          -DiskName $disk.Name `
-          -DurationInSecond 86400 `
-          -Access 'Write';
-        & AzCopy.exe @('copy', $vhdLocalPath, ($diskAccess.AccessSAS), '--blob-type', 'PageBlob');
-        Revoke-AzDiskAccess `
-          -ResourceGroupName $target.group `
-          -DiskName $disk.Name;
-
-        # networking
-        $virtualNetwork = (Get-AzVirtualNetwork -Name $target.network.name);
-        $networkSecurityGroup = (Get-AzNetworkSecurityGroup `
-          -Name $target.network.flow[0] `
-          -ResourceGroupName $target.group `
-          -ErrorAction SilentlyContinue);
-        if (-not ($networkSecurityGroup)) {
-          $rdpNetworkSecurityRuleConfig = (New-AzNetworkSecurityRuleConfig `
-            -Name 'rdp-only' `
-            -Description 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389' `
-            -Access 'Allow' `
-            -Protocol 'Tcp' `
-            -Direction 'Inbound' `
-            -Priority 110 `
-            -SourceAddressPrefix 'Internet' `
-            -SourcePortRange '*' `
-            -DestinationAddressPrefix '*' `
-            -DestinationPortRange 3389);
-          $sshNetworkSecurityRuleConfig = (New-AzNetworkSecurityRuleConfig `
-            -Name 'ssh-only' `
-            -Description 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22' `
-            -Access 'Allow' `
-            -Protocol 'Tcp' `
-            -Direction 'Inbound' `
-            -Priority 120 `
-            -SourceAddressPrefix 'Internet' `
-            -SourcePortRange '*' `
-            -DestinationAddressPrefix '*' `
-            -DestinationPortRange 22);
-          $networkSecurityGroup = New-AzNetworkSecurityGroup `
-            -Name $target.network.flow[0] `
-            -ResourceGroupName $target.group `
-            -Location $target.region `
-            -SecurityRules @($rdpNetworkSecurityRuleConfig, $sshNetworkSecurityRuleConfig);
-        }
-        $publicIpAddress = New-AzPublicIpAddress `
-          -Name ('ip-{0}' -f $resourceId) `
-          -ResourceGroupName $target.group `
-          -Location $target.region `
-          -AllocationMethod 'Dynamic';
-
-        $networkInterface = New-AzNetworkInterface `
-          -Name ('ni-{0}' -f $resourceId) `
-          -ResourceGroupName $target.group `
-          -Location $target.region `
-          -SubnetId $virtualNetwork.Subnets[0].Id `
-          -PublicIpAddressId $publicIpAddress.Id `
-          -NetworkSecurityGroupId $networkSecurityGroup.Id;
-
-        # virtual machine
-        $vm = Add-AzVMNetworkInterface `
-          -VM (New-AzVMConfig -VMName $instanceName -VMSize $target.machine.type) `
-          -Id $networkInterface.Id;
-        $vm = Set-AzVMOSDisk `
-          -VM $vm `
-          -ManagedDiskId $disk.Id `
-          -StorageAccountType $osDiskConfig.type `
-          -DiskSizeInGB $osDiskConfig.size `
-          -CreateOption 'Attach' `
-          -Windows:$true;
-        $tags = @{};
-        foreach ($tag in $target.tag) {
-          $tags[$tag.name] = $tag.value;
-        }
-        New-AzVM `
-          -ResourceGroupName $target.group `
-          -Location $target.region `
-          -Tag $tags `
-          -VM $vm;
-        Get-AzVM `
-          -ResourceGroupName $target.group `
-          -Name $instanceName;
-
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
+    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
+    switch ($target.hostname.slug.type) {
+      'uuid' {
+        $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
+        $instanceName = ($target.hostname.format -f $resourceId);
+        $instanceNameMap[$imageKey] = $instanceName;
         break;
       }
       default {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image export: {0} in: {1} cloud platform (not implemented)' -f $exportImageName, $target.platform) -severity 'warn';
+        $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
+        $instanceName = ('vm-{0}' -f $resourceId);
+        $instanceNameMap[$imageKey] = $instanceName;
         break;
       }
     }
+    $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
+    $tags = @{};
+    foreach ($tag in $target.tag) {
+      $tags[$tag.name] = $tag.value;
+    }
+    $tags['resourceId'] = $resourceId;
+    New-CloudInstanceFromImageExport `
+      -platform $target.platform `
+      -localImagePath $vhdLocalPath `
+      -targetResourceId $resourceId `
+      -targetResourceGroupName $target.group `
+      -targetResourceRegion $target.region `
+      -targetInstanceCpuCount $target.machine.cpu `
+      -targetInstanceRamGb $target.machine.ram `
+      -targetInstanceName $instanceName `
+      -targetVirtualNetworkName ('vnet-{0}' -f $target.region.ToLower().Replace(' ', '-'), $target.group) `
+      -targetInstanceDiskVariant $osDiskConfig.variant `
+      -targetInstanceDiskSizeGb $osDiskConfig.size `
+      -targetInstanceTags $tags `
+      -targetVirtualNetworkAddressPrefix $target.virtual_network.address_prefix `
+      -targetVirtualNetworkDnsServers $target.virtual_network.dns `
+      -targetSubnetAddressPrefix $target.virtual_network.subnet.address_prefix
   }
+  Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 }
 
 foreach ($imageKey in $imagesToBuild) {
@@ -369,35 +263,13 @@ foreach ($imageKey in $imagesToBuild) {
   # imagename will be (for example): gecko-t-win10-64
   $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
   foreach ($target in $config.target) {
-    switch ($target.platform) {
-      'azure' {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
-        $instanceName = $instanceNameMap[$imageKey];
-        Stop-AzVM `
-          -ResourceGroupName $target.group `
-          -Name $instanceName `
-          -Force
-        Set-AzVm `
-          -ResourceGroupName $target.group `
-          -Name $instanceName `
-          -Generalized
-        $vm = (Get-AzVM `
-          -ResourceGroupName $target.group `
-          -Name $instanceName);
-        $imageConfig = (New-AzImageConfig `
-          -Location $target.region `
-          -SourceVirtualMachineId $vm.Id);
-        $image = (New-AzImage `
-          -Image $imageConfig `
-          -ImageName $importImageName `
-          -ResourceGroupName $target.group);
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
-        break;
-      }
-      default {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in: {1} cloud platform (not implemented)' -f $importImageName, $target.platform) -severity 'warn';
-        break;
-      }
-    }
+    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
+    New-CloudImageFromInstance `
+      -platform $target.platform `
+      -resourceGroupName $target.group `
+      -region $target.region `
+      -instanceName $instanceNameMap[$imageKey] `
+      -imageName $importImageName
+    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
   }
 }
