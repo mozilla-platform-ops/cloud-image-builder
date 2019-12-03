@@ -28,7 +28,7 @@ foreach ($orphanedAzVirtualNetwork in $orphanedAzVirtualNetworks) {
   Write-Output -InputObject ('removing orphaned AzVirtualNetwork {0} / {1} / {2}' -f $orphanedAzVirtualNetwork.Location, $orphanedAzVirtualNetwork.ResourceGroupName, $orphanedAzVirtualNetwork.Name);
   foreach ($orphanedAzVirtualNetworkSubnetConfig in $orphanedAzVirtualNetwork.Subnets) {
     Write-Output -InputObject ('removing orphaned AzVirtualNetworkSubnetConfig {0}' -f $orphanedAzVirtualNetworkSubnetConfig.Name);
-    $orphanedAzVirtualNetworkSubnetConfig | Remove-AzVirtualNetworkSubnetConfig;
+    Remove-AzVirtualNetworkSubnetConfig -Name $orphanedAzVirtualNetworkSubnetConfig.Name -VirtualNetwork $orphanedAzVirtualNetwork;
   }
   $orphanedAzVirtualNetwork | Remove-AzVirtualNetwork -Force;
 }
