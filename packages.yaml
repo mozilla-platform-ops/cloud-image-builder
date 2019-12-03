@@ -351,11 +351,19 @@
 - name: OpenCloudConfig
   savepath: Windows\Temp\rundsc.ps1
   unattend:
-  - description: trigger an occ run
-    command: cmd /c start /wait powershell -File C:\Windows\Temp\rundsc.ps1
+  - description: create log folder
+    command: cmd /c mkdir C:\log
+  - description: create dsc folder
+    command: cmd /c mkdir C:\dsc
+  - description: install occ trigger script
+    command: cmd /c move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
+  - description: create occ scheduled task
+    command: cmd /c start /wait schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr /tr "powershell -NoLogo -NoProfile -WindowStyle Hidden -File C:\dsc\rundsc.ps1 -ExecutionPolicy RemoteSigned -ConsoleOutputFile C:\dsc\rundsc-run.log" /f
   target:
     cloud:
+    - amazon
     - azure
+    - google
     os:
     - Windows 7
     - Windows 8.1
