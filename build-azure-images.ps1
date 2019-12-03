@@ -262,6 +262,16 @@ foreach ($imageKey in $imagesToBuild) {
       -targetVirtualNetworkDnsServers $target.network.dns `
       -targetSubnetName $target.network.subnet.name `
       -targetSubnetAddressPrefix $target.network.subnet.prefix
+    do {
+      Start-Sleep -Seconds 60
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting completion of provisioning for vm: {0}' -f $instanceName) -severity 'trace';
+    } while (@('Succeeded', 'Failed') -notcontains (Get-AzVm -ResourceGroupName $target.group -Name $instanceName).ProvisioningState)
+    Invoke-AzVMRunCommand `
+      -ResourceGroupName $target.group `
+      -Name $instanceName `
+      -CommandId 'trigger-occ' `
+      -ScriptPath 'C:\dsc\rundsc.ps1';
+      #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
   }
   Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 }
