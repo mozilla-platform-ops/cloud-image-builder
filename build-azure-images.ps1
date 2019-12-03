@@ -129,7 +129,7 @@ foreach ($imageKey in $imagesToBuild) {
               -destination $driverLocalPath `
               -force;
           } catch {
-            Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('exception in driver download with Get-CloudBucketResource from bucket: {0}/{1}/{2}, to: {3}. {4}' -f $source.platform, $source.bucket, $source.key, $packageLocalTempPath, $_.Exception.Message) -severity 'error';
+            Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('exception in driver download with Get-CloudBucketResource from bucket: {0}/{1}/{2}, to: {3}. {4}' -f $source.platform, $source.bucket, $source.key, $driverLocalPath, $_.Exception.Message) -severity 'error';
           }
         }
       } until ((Test-Path -Path $driverLocalPath -ErrorAction SilentlyContinue) -or ($sourceIndex -lt 0));
@@ -262,32 +262,34 @@ foreach ($imageKey in $imagesToBuild) {
       -targetVirtualNetworkDnsServers $target.network.dns `
       -targetSubnetName $target.network.subnet.name `
       -targetSubnetAddressPrefix $target.network.subnet.prefix
+
     do {
       Start-Sleep -Seconds 60
       Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting completion of provisioning for vm: {0}' -f $instanceName) -severity 'trace';
     } while (@('Succeeded', 'Failed') -notcontains (Get-AzVm -ResourceGroupName $target.group -Name $instanceName).ProvisioningState)
-    Invoke-AzVMRunCommand `
+    $runCommandResult = (Invoke-AzVMRunCommand `
       -ResourceGroupName $target.group `
       -Name $instanceName `
       -CommandId 'trigger-occ' `
-      -ScriptPath 'C:\dsc\rundsc.ps1';
-      #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-  }
-  Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
-}
+      -ScriptPath 'C:\dsc\rundsc.ps1'); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
+    #todo: check $runCommandResult
+    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 
-foreach ($imageKey in $imagesToBuild) {
-  $config = (Invoke-WebRequest -Uri ('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/{0}/config.yaml' -f $revision) -UseBasicParsing | ConvertFrom-Yaml)."$imageKey";
-  # imagename will be (for example): gecko-t-win10-64
-  $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
-  foreach ($target in $config.target) {
+    $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
     Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
+
     New-CloudImageFromInstance `
       -platform $target.platform `
       -resourceGroupName $target.group `
       -region $target.region `
       -instanceName $instanceNameMap[$imageKey] `
       -imageName $importImageName
+
+    Remove-AzVm `
+      -ResourceGroupName $target.group `
+      -Name $instanceName `
+      -Force;
+    Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()));
     Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
   }
 }
