@@ -236,11 +236,15 @@ foreach ($imageKey in $imagesToBuild) {
       }
     }
     $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
-    $tags = @{};
+    $tags = @{
+      'buildRevision' = $revision;
+      'imageKey' = $imageKey;
+      'resourceId' = $resourceId;
+      'sourceIso' = ([System.IO.Path]::GetFileName($config.iso.source.key))
+    };
     foreach ($tag in $target.tag) {
       $tags[$tag.name] = $tag.value;
     }
-    $tags['resourceId'] = $resourceId;
     New-CloudInstanceFromImageExport `
       -platform $target.platform `
       -localImagePath $vhdLocalPath `
