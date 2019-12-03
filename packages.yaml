@@ -114,8 +114,12 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
+  - description: stop nxlog service
+    command: cmd /c net stop nxlog
   - description: install nxlog configuration
     command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
+  - description: start nxlog service
+    command: cmd /c net start nxlog
   target:
     cloud:
     - amazon
@@ -134,8 +138,12 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
+  - description: stop nxlog service
+    command: cmd /c net stop nxlog
   - description: install nxlog configuration
     command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+  - description: start nxlog service
+    command: cmd /c net start nxlog
   target:
     cloud:
     - amazon
@@ -154,8 +162,12 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
+  - description: stop nxlog service
+    command: cmd /c net stop nxlog
   - description: install nxlog configuration
     command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+  - description: start nxlog service
+    command: cmd /c net start nxlog
   target:
     cloud:
     - amazon
@@ -174,8 +186,12 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
+  - description: stop nxlog service
+    command: cmd /c net stop nxlog
   - description: install nxlog configuration
     command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+  - description: start nxlog service
+    command: cmd /c net start nxlog
   target:
     cloud:
     - amazon
@@ -194,8 +210,12 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
+  - description: stop nxlog service
+    command: cmd /c net stop nxlog
   - description: install nxlog configuration
     command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+  - description: start nxlog service
+    command: cmd /c net start nxlog
   target:
     cloud:
     - amazon
@@ -210,7 +230,7 @@
     - false
   sources:
   - platform: url
-    url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2016.conf
+    url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2019.conf
 - name: EC2Install.zip
   savepath: Windows\Temp
   unattend:
