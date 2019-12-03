@@ -52,7 +52,8 @@ win10-64-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 110
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
@@ -62,7 +63,8 @@ win10-64-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 111
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 22
@@ -128,7 +130,8 @@ win10-64-gpu-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 110
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
@@ -138,7 +141,8 @@ win10-64-gpu-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 111
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 22
@@ -204,7 +208,8 @@ win2012-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 110
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
@@ -214,7 +219,8 @@ win2012-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 111
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 22
@@ -280,7 +286,8 @@ win2019-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 110
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
@@ -290,7 +297,8 @@ win2019-azure:
           Protocol: Tcp
           Direction: Inbound
           Priority: 111
-          SourceAddressPrefix: Internet
+          SourceAddressPrefix:
+          - 185.189.196.216
           SourcePortRange: '*'
           DestinationAddressPrefix: '*'
           DestinationPortRange: 22
