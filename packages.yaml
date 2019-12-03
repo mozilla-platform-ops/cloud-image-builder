@@ -358,7 +358,7 @@
   - description: install occ trigger script
     command: cmd /c move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
   - description: create occ scheduled task
-    command: cmd /c start /wait schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr /tr "powershell -NoLogo -NoProfile -WindowStyle Hidden -File C:\dsc\rundsc.ps1 -ExecutionPolicy RemoteSigned -ConsoleOutputFile C:\dsc\rundsc-run.log" /f
+    command: cmd /c start /wait schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr "powershell -NoLogo -NoProfile -WindowStyle Hidden -File C:\dsc\rundsc.ps1 -ExecutionPolicy RemoteSigned -ConsoleOutputFile C:\dsc\rundsc-run.log" /f
   target:
     cloud:
     - amazon
