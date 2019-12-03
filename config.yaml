@@ -19,7 +19,7 @@ win10-64-azure:
     wimindex: 5
   target:
   - platform: azure
-    group: gecko-t
+    group: rg-east-us-gecko-t
     region: East US
     hostname:
       format: vm-{0}
@@ -35,16 +35,16 @@ win10-64-azure:
       variant: ssd
       size: 64
     network:
-      name: vnet-gecko-t-east-us
+      name: vn-east-us-gecko-t
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-gecko-t-east-us
+        name: sn-east-us-gecko-t
         prefix: '10.0.4.0/24'
       flow:
-        name: nsg-gecko-t
+        name: nsg-east-us-gecko-t
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
@@ -95,7 +95,7 @@ win10-64-gpu-azure:
     wimindex: 5
   target:
   - platform: azure
-    group: gecko-t
+    group: rg-east-us-gecko-t
     region: East US
     hostname:
       format: vm-{0}
@@ -111,16 +111,16 @@ win10-64-gpu-azure:
       variant: ssd
       size: 64
     network:
-      name: vnet-gecko-t-east-us
+      name: vn-east-us-gecko-t
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-gecko-t-east-us
+        name: sn-east-us-gecko-t
         prefix: '10.0.4.0/24'
       flow:
-        name: nsg-gecko-t
+        name: nsg-east-us-gecko-t
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
@@ -171,7 +171,7 @@ win2012-azure:
     wimindex: 4
   target:
   - platform: azure
-    group: gecko-1
+    group: rg-east-us-gecko-1
     region: East US
     hostname:
       format: vm-{0}
@@ -187,16 +187,16 @@ win2012-azure:
       variant: ssd
       size: 64
     network:
-      name: vnet-gecko-1-east-us
+      name: vn-east-us-gecko-1
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-gecko-1-east-us
+        name: sn-east-us-gecko-1
         prefix: '10.0.1.0/24'
       flow:
-        name: nsg-gecko-1
+        name: nsg-east-us-gecko-1
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
@@ -247,7 +247,7 @@ win2019-azure:
     wimindex: 4
   target:
   - platform: azure
-    group: relops
+    group: rg-east-us-relops
     region: East US
     hostname:
       format: vm-{0}
@@ -263,16 +263,16 @@ win2019-azure:
       variant: ssd
       size: 64
     network:
-      name: vnet-relops-east-us
+      name: vn-east-us-relops
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-relops-east-us
+        name: sn-east-us-relops
         prefix: '10.0.6.0/24'
       flow:
-        name: nsg-relops
+        name: nsg-east-us-relops
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
