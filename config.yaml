@@ -296,7 +296,7 @@ win2019-azure:
           DestinationPortRange: 22
     tag:
     - name: workerType
-      value: gecko-1-b-win2019-azure
+      value: relops-win2019-azure
     - name: sourceOrganisation
       value: mozilla-releng
     - name: sourceRepository
