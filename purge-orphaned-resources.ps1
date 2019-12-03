@@ -1,5 +1,5 @@
 # usage:
-# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()))
+# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenad/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()));
 
 $orphanedAzNetworkInterfaces = @(Get-AzNetworkInterface | ? { $_.VirtualMachine -eq $null });
 Write-Output -InputObject ('removing {0} orphaned AzNetworkInterface objects' -f $orphanedAzNetworkInterfaces.Length);

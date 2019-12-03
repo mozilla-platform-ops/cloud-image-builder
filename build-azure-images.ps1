@@ -1,5 +1,5 @@
 # usage:
-# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/build-azure-images.ps1?{0}' -f [Guid]::NewGuid())) | Tee-Object -FilePath ('build-azure-images-{0}.log' -f ((Get-Date).ToUniversalTime().ToString('yyyyMMddHHmmss')))
+# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/build-azure-images.ps1?{0}' -f [Guid]::NewGuid()));
 
 # job settings. change these for the tasks at hand.
 $targetCloudPlatform = 'azure';
