@@ -310,9 +310,9 @@ foreach ($imageKey in $imagesToBuild) {
           Write-Log -source ('build-{0}-images' -f $target.platform) -message 'echo hostname command did not return a value' -severity 'debug';
         }
         if ($echoHostnameCommandOutput -match $instanceName) {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('host rename to: {0}, detected' -f $instanceName.Value[1]) -severity 'debug';
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('host rename to: {0}, detected' -f $instanceName) -severity 'debug';
         } else {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting host rename to: {0}' -f $instanceName.Value[1]) -severity 'debug';
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting host rename to: {0}' -f $instanceName) -severity 'debug';
           Start-Sleep -Seconds 30;
         }
       } until ($echoHostnameCommandOutput -match $instanceName)
