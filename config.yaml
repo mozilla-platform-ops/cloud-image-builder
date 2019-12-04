@@ -19,8 +19,8 @@ win10-64-azure:
     wimindex: 5
   target:
   - platform: azure
-    group: rg-central-us-gecko-t
-    region: Central US
+    group: rg-west-us-gecko-t
+    region: West US
     hostname:
       format: vm-{0}
       slug:
@@ -35,16 +35,16 @@ win10-64-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-central-us-gecko-t
+      name: vn-west-us-gecko-t
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-central-us-gecko-t
+        name: sn-west-us-gecko-t
         prefix: '10.0.4.0/24'
       flow:
-        name: nsg-central-us-gecko-t
+        name: nsg-west-us-gecko-t
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
@@ -97,8 +97,8 @@ win10-64-gpu-azure:
     wimindex: 5
   target:
   - platform: azure
-    group: rg-central-us-gecko-t
-    region: Central US
+    group: rg-west-us-gecko-t
+    region: West US
     hostname:
       format: vm-{0}
       slug:
@@ -113,16 +113,16 @@ win10-64-gpu-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-central-us-gecko-t
+      name: vn-west-us-gecko-t
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-central-us-gecko-t
+        name: sn-west-us-gecko-t
         prefix: '10.0.4.0/24'
       flow:
-        name: nsg-central-us-gecko-t
+        name: nsg-west-us-gecko-t
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
@@ -175,8 +175,8 @@ win2012-azure:
     wimindex: 4
   target:
   - platform: azure
-    group: rg-central-us-gecko-1
-    region: Central US
+    group: rg-west-us-gecko-1
+    region: West US
     hostname:
       format: vm-{0}
       slug:
@@ -191,16 +191,16 @@ win2012-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-central-us-gecko-1
+      name: vn-west-us-gecko-1
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-central-us-gecko-1
+        name: sn-west-us-gecko-1
         prefix: '10.0.1.0/24'
       flow:
-        name: nsg-central-us-gecko-1
+        name: nsg-west-us-gecko-1
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
@@ -253,8 +253,8 @@ win2019-azure:
     wimindex: 4
   target:
   - platform: azure
-    group: rg-central-us-relops
-    region: Central US
+    group: rg-west-us-relops
+    region: West US
     hostname:
       format: vm-{0}
       slug:
@@ -269,16 +269,16 @@ win2019-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-central-us-relops
+      name: vn-west-us-relops
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-central-us-relops
+        name: sn-west-us-relops
         prefix: '10.0.6.0/24'
       flow:
-        name: nsg-central-us-relops
+        name: nsg-west-us-relops
         rules:
         - name: allow-rdp
           description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'

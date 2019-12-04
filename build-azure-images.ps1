@@ -281,16 +281,54 @@ foreach ($imageKey in $imagesToBuild) {
       Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
       
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
-      $runCommandResult = (Invoke-AzVMRunCommand `
+
+      # the first time occ runs, it renames the instance and reboots
+      $firstOccTriggerCommandResult = (Invoke-AzVMRunCommand `
         -ResourceGroupName $target.group `
         -VMName $instanceName `
         -CommandId 'RunPowerShellScript' `
         -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $firstOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform) -severity $(if ($firstOccTriggerCommandResult.Status -eq 'Succeeded') { 'info' } else { 'error' });
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0]) -severity 'debug';
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1]) -severity 'debug';
+
+      Set-Content -Path ('{0}\computername.ps1' -f $env:Temp) -Value '$env:ComputerName';
+      $echoHostnameCommandOutput = '';
+      do {
+        $echoHostnameResult = (Invoke-AzVMRunCommand `
+          -ResourceGroupName $target.group `
+          -VMName $instanceName `
+          -CommandId 'RunPowerShellScript' `
+          -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp) `
+          -ErrorAction SilentlyContinue);
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $echoHostnameResult.Status.ToLower(), $instanceName, $target.region, $target.platform) -severity $(if ($echoHostnameResult.Status -eq 'Succeeded') { 'info' } else { 'error' });
+        if ($echoHostnameResult.Value) {
+          $echoHostnameCommandOutput = $echoHostnameResult.Value[0].Message;
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0]) -severity 'debug';
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('echo hostname std err: {0}' -f $echoHostnameResult.Value[1]) -severity 'debug';
+        } else {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message 'echo hostname command did not return a value' -severity 'debug';
+        }
+        if ($echoHostnameCommandOutput -match $instanceName) {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('host rename to: {0}, detected' -f $instanceName.Value[1]) -severity 'debug';
+        } else {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting host rename to: {0}' -f $instanceName.Value[1]) -severity 'debug';
+          Start-Sleep -Seconds 30;
+        }
+      } until ($echoHostnameCommandOutput -match $instanceName)
+      # todo: validate that the instance rebooted after the host rename.
+
+      # the second time occ runs, it invokes dsc
+      $seccondOccTriggerCommandResult = (Invoke-AzVMRunCommand `
+        -ResourceGroupName $target.group `
+        -VMName $instanceName `
+        -CommandId 'RunPowerShellScript' `
+        -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp));
       Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
 
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $runCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform) -severity $(if ($runCommandResult.Status -eq 'Succeeded') { 'info' } else { 'error' });
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std out: {0}' -f $runCommandResult.Value[0]) -severity 'debug';
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std err: {0}' -f $runCommandResult.Value[1]) -severity 'debug';
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $seccondOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform) -severity $(if ($seccondOccTriggerCommandResult.Status -eq 'Succeeded') { 'info' } else { 'error' });
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('seccond occ trigger std out: {0}' -f $seccondOccTriggerCommandResult.Value[0]) -severity 'debug';
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('seccond occ trigger std err: {0}' -f $seccondOccTriggerCommandResult.Value[1]) -severity 'debug';
 
       if ($runCommandResult.Status -eq 'Succeeded') {
         New-CloudImageFromInstance `
