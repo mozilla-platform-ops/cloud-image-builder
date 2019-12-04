@@ -289,8 +289,8 @@ foreach ($imageKey in $imagesToBuild) {
       Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
 
       Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $runCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform) -severity $(if ($runCommandResult.Status -eq 'Succeeded') { 'info' } else { 'error' });
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std out: {1}' -f $runCommandResult.Value[0]) -severity 'debug';
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std err: {1}' -f $runCommandResult.Value[1]) -severity 'debug';
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std out: {0}' -f $runCommandResult.Value[0]) -severity 'debug';
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std err: {0}' -f $runCommandResult.Value[1]) -severity 'debug';
 
       if ($runCommandResult.Status -eq 'Succeeded') {
         New-CloudImageFromInstance `
@@ -309,7 +309,7 @@ foreach ($imageKey in $imagesToBuild) {
           -ImageName $importImageName `
           -ErrorAction SilentlyContinue);
         if ($azImage) {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) severity 'info';
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
           if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
             Remove-AzVm `
               -ResourceGroupName $target.group `
@@ -317,7 +317,7 @@ foreach ($imageKey in $imagesToBuild) {
               -Force;
           }
         } else {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) severity 'info';
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
         }
       }
       Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
