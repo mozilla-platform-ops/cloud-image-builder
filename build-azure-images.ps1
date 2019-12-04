@@ -310,7 +310,7 @@ foreach ($imageKey in $imagesToBuild) {
           -ErrorAction SilentlyContinue);
         if ($azImage) {
           Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) severity 'info';
-          if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -r ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
+          if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
             Remove-AzVm `
               -ResourceGroupName $target.group `
               -Name $instanceName `
