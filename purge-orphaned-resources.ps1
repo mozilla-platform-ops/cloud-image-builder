@@ -1,5 +1,12 @@
 # usage:
-# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenad/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()));
+# Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()))
+
+$deallocatedAzVms = @(Get-AzVm -Status | ? { $_.PowerState -eq 'Provisioning succeeded' } | % { (Get-AzVm -Name $_.Name -ResourceGroupName $_.ResourceGroupName -Status) | ? { $_.Statuses -and $_.Statuses[2].Code -match 'deallocated' } });
+Write-Output -InputObject ('removing {0} deallocated AzVm objects' -f $deallocatedAzVms.Length);
+foreach ($deallocatedAzVm in $deallocatedAzVms) {
+  Write-Output -InputObject ('removing deallocated AzVm {0} / {1}' -f $deallocatedAzVm.ResourceGroupName, $deallocatedAzVm.Name);
+  $deallocatedAzVm | Remove-AzVm -Force;
+}
 
 $orphanedAzNetworkInterfaces = @(Get-AzNetworkInterface | ? { $_.VirtualMachine -eq $null });
 Write-Output -InputObject ('removing {0} orphaned AzNetworkInterface objects' -f $orphanedAzNetworkInterfaces.Length);
@@ -27,8 +34,8 @@ Write-Output -InputObject ('removing {0} orphaned AzVirtualNetwork objects' -f $
 foreach ($orphanedAzVirtualNetwork in $orphanedAzVirtualNetworks) {
   Write-Output -InputObject ('removing orphaned AzVirtualNetwork {0} / {1} / {2}' -f $orphanedAzVirtualNetwork.Location, $orphanedAzVirtualNetwork.ResourceGroupName, $orphanedAzVirtualNetwork.Name);
   foreach ($orphanedAzVirtualNetworkSubnetConfig in $orphanedAzVirtualNetwork.Subnets) {
-    Write-Output -InputObject ('skipped removing orphaned AzVirtualNetworkSubnetConfig {0}' -f $orphanedAzVirtualNetworkSubnetConfig.Name);
-    #Remove-AzVirtualNetworkSubnetConfig -Name $orphanedAzVirtualNetworkSubnetConfig.Name -VirtualNetwork $orphanedAzVirtualNetwork;
+    Write-Output -InputObject ('removing orphaned AzVirtualNetworkSubnetConfig {0}' -f $orphanedAzVirtualNetworkSubnetConfig.Name);
+    Remove-AzVirtualNetworkSubnetConfig -Name $orphanedAzVirtualNetworkSubnetConfig.Name -VirtualNetwork $orphanedAzVirtualNetwork;
   }
   $orphanedAzVirtualNetwork | Remove-AzVirtualNetwork -Force;
 }
