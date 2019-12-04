@@ -225,13 +225,11 @@ foreach ($imageKey in $imagesToBuild) {
       'uuid' {
         $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
         $instanceName = ($target.hostname.format -f $resourceId);
-        $instanceNameMap[$imageKey] = $instanceName;
         break;
       }
       default {
         $resourceId = (([Guid]::NewGuid()).ToString().Substring(24));
         $instanceName = ('vm-{0}' -f $resourceId);
-        $instanceNameMap[$imageKey] = $instanceName;
         break;
       }
     }
@@ -264,32 +262,68 @@ foreach ($imageKey in $imagesToBuild) {
       -targetSubnetAddressPrefix $target.network.subnet.prefix
 
     do {
-      Start-Sleep -Seconds 60
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting completion of provisioning for vm: {0}' -f $instanceName) -severity 'trace';
-    } while (@('Succeeded', 'Failed') -notcontains (Get-AzVm -ResourceGroupName $target.group -Name $instanceName).ProvisioningState)
-    $runCommandResult = (Invoke-AzVMRunCommand `
-      -ResourceGroupName $target.group `
-      -Name $instanceName `
-      -CommandId 'trigger-occ' `
-      -ScriptPath 'C:\dsc\rundsc.ps1'); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-    #todo: check $runCommandResult
+      $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
+      if ($azVm) {
+        if (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState) {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('provisioning of vm: {0}, {1}' -f $instanceName, $azVm.ProvisioningState.ToLower()) -severity $(if ($azVm.ProvisioningState -eq 'Succeeded') { 'info' } else { 'error' });
+        } else {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('provisioning of vm: {0}, in progress with state: {1}' -f $instanceName, $azVm.ProvisioningState.ToLower()) -severity 'trsace';
+          Start-Sleep -Seconds 60
+        }
+      } else {
+        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('provisioning of vm: {0}, failed before it started' -f $instanceName) -severity 'error';
+      }
+    } until ((-not $azVm) -or (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState))
     Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform) -severity 'info';
 
-    $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
+    if ($azVm) {
+      $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
+      
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
+      $runCommandResult = (Invoke-AzVMRunCommand `
+        -ResourceGroupName $target.group `
+        -VMName $instanceName `
+        -CommandId 'RunPowerShellScript' `
+        -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
+      Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
 
-    New-CloudImageFromInstance `
-      -platform $target.platform `
-      -resourceGroupName $target.group `
-      -region $target.region `
-      -instanceName $instanceNameMap[$imageKey] `
-      -imageName $importImageName
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $runCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform) -severity $(if ($runCommandResult.Status -eq 'Succeeded') { 'info' } else { 'error' });
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std out: {1}' -f $runCommandResult.Value[0]) -severity 'debug';
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ std err: {1}' -f $runCommandResult.Value[1]) -severity 'debug';
 
-    Remove-AzVm `
-      -ResourceGroupName $target.group `
-      -Name $instanceName `
-      -Force;
+      if ($runCommandResult.Status -eq 'Succeeded') {
+        New-CloudImageFromInstance `
+          -platform $target.platform `
+          -resourceGroupName $target.group `
+          -region $target.region `
+          -instanceName $instanceName `
+          -imageName $importImageName;
+        $azVm = (Get-AzVm `
+          -ResourceGroupName $target.group `
+          -Name $instanceName `
+          -Status `
+          -ErrorAction SilentlyContinue);
+        $azImage = (Get-AzImage `
+          -ResourceGroupName $target.group `
+          -ImageName $importImageName `
+          -ErrorAction SilentlyContinue);
+        if ($azImage) {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) severity 'info';
+          if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -r ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
+            Remove-AzVm `
+              -ResourceGroupName $target.group `
+              -Name $instanceName `
+              -Force;
+          }
+        } else {
+          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) severity 'info';
+        }
+      }
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
+    } else {
+      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform) -severity 'info';
+    }
     Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()));
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in: {1} cloud platform' -f $importImageName, $target.platform) -severity 'info';
   }
 }

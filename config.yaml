@@ -19,8 +19,8 @@ win10-64-azure:
     wimindex: 5
   target:
   - platform: azure
-    group: rg-east-us-gecko-t
-    region: East US
+    group: rg-central-us-gecko-t
+    region: Central US
     hostname:
       format: vm-{0}
       slug:
@@ -35,19 +35,19 @@ win10-64-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-east-us-gecko-t
+      name: vn-central-us-gecko-t
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-east-us-gecko-t
+        name: sn-central-us-gecko-t
         prefix: '10.0.4.0/24'
       flow:
-        name: nsg-east-us-gecko-t
+        name: nsg-central-us-gecko-t
         rules:
         - name: allow-rdp
-          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -58,7 +58,7 @@ win10-64-azure:
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
         - name: allow-ssh
-          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -97,8 +97,8 @@ win10-64-gpu-azure:
     wimindex: 5
   target:
   - platform: azure
-    group: rg-east-us-gecko-t
-    region: East US
+    group: rg-central-us-gecko-t
+    region: Central US
     hostname:
       format: vm-{0}
       slug:
@@ -113,19 +113,19 @@ win10-64-gpu-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-east-us-gecko-t
+      name: vn-central-us-gecko-t
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-east-us-gecko-t
+        name: sn-central-us-gecko-t
         prefix: '10.0.4.0/24'
       flow:
-        name: nsg-east-us-gecko-t
+        name: nsg-central-us-gecko-t
         rules:
         - name: allow-rdp
-          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -136,7 +136,7 @@ win10-64-gpu-azure:
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
         - name: allow-ssh
-          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -175,8 +175,8 @@ win2012-azure:
     wimindex: 4
   target:
   - platform: azure
-    group: rg-east-us-gecko-1
-    region: East US
+    group: rg-central-us-gecko-1
+    region: Central US
     hostname:
       format: vm-{0}
       slug:
@@ -191,19 +191,19 @@ win2012-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-east-us-gecko-1
+      name: vn-central-us-gecko-1
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-east-us-gecko-1
+        name: sn-central-us-gecko-1
         prefix: '10.0.1.0/24'
       flow:
-        name: nsg-east-us-gecko-1
+        name: nsg-central-us-gecko-1
         rules:
         - name: allow-rdp
-          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -214,7 +214,7 @@ win2012-azure:
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
         - name: allow-ssh
-          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -253,8 +253,8 @@ win2019-azure:
     wimindex: 4
   target:
   - platform: azure
-    group: rg-east-us-relops
-    region: East US
+    group: rg-central-us-relops
+    region: Central US
     hostname:
       format: vm-{0}
       slug:
@@ -269,19 +269,19 @@ win2019-azure:
       variant: ssd
       size: 64
     network:
-      name: vn-east-us-relops
+      name: vn-central-us-relops
       prefix: '10.0.0.0/16'
       dns:
       - '1.1.1.1'
       - '1.0.0.1'
       subnet:
-        name: sn-east-us-relops
+        name: sn-central-us-relops
         prefix: '10.0.6.0/24'
       flow:
-        name: nsg-east-us-relops
+        name: nsg-central-us-relops
         rules:
         - name: allow-rdp
-          description: 'allow: inbound tcp connections, for: rdp, from: anywhere, to: any host, on port: 3389'
+          description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
@@ -292,7 +292,7 @@ win2019-azure:
           DestinationAddressPrefix: '*'
           DestinationPortRange: 3389
         - name: allow-ssh
-          description: 'allow: inbound tcp connections, for: ssh, from: anywhere, to: any host, on port: 22'
+          description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
           access: Allow
           Protocol: Tcp
           Direction: Inbound
