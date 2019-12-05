@@ -85,13 +85,13 @@ for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'geck
       }
     ],
     commands = [
-      'git clone https://github.com/grenade/cloud-image-builder.git',
-      'cd cloud-image-builder',
       'dir',
       'echo $PSVersionTable.PSVersion > psv.ps1',
       'powershell -File .\\psv.ps1',
       'echo Get-Location > Get-Location.ps1',
-      'powershell -File .\\Get-Location.ps1'
+      'powershell -File .\\Get-Location.ps1',
+      'git clone https://github.com/grenade/cloud-image-builder.git',
+      'cd cloud-image-builder'
     ],
     scopes = [
       'generic-worker:os-group:relops/win2019/Administrators',
