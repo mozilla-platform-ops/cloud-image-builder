@@ -5,7 +5,7 @@ emailOnError: true
 providerId: aws
 config:
   minCapacity: 0
-  maxCapacity: 2
+  maxCapacity: 8
   launchConfigs:
   - capacityPerInstance: 1
     region: eu-central-1

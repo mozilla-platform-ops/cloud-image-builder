@@ -25,7 +25,7 @@ def updateWorkerPool(configPath, workerPoolId):
       'generic-worker:os-group:aws-provisioner-v1/relops-image-builder/Administrators',
       'generic-worker:run-as-administrator:aws-provisioner-v1/relops-image-builder',
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
@@ -37,7 +37,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
     'payload': {
       'maxRunTime': 3600,
       'command': commands,
-      #'artifacts': [],
+      'artifacts': artifacts,
       #'features': [],
       'osGroups': osGroups
     },
@@ -72,9 +72,26 @@ for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'geck
     taskDescription = 'say hello from {}'.format(key),
     provisioner = 'relops',
     workerType = 'win2019',
+    artifacts = [
+      {
+        'type': 'file',
+        'name': 'public/psv.ps1',
+        'path': 'psv.ps1',
+      },
+      {
+        'type': 'file',
+        'name': 'public/Get-Location.ps1',
+        'path': 'Get-Location.ps1',
+      }
+    ],
     commands = [
+      'git clone https://github.com/grenade/cloud-image-builder.git',
+      'cd cloud-image-builder',
+      'dir',
       'echo $PSVersionTable.PSVersion > psv.ps1',
-      'powershell -File .\\psv.ps1'
+      'powershell -File .\\psv.ps1',
+      'echo Get-Location > Get-Location.ps1',
+      'powershell -File .\\Get-Location.ps1'
     ],
     scopes = [
       'generic-worker:os-group:relops/win2019/Administrators',
