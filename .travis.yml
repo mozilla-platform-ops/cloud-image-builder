@@ -4,7 +4,7 @@ before_script:
 - curl -L -o ~/bin/taskcluster https://github.com/taskcluster/taskcluster/releases/download/v24.0.1/taskcluster-linux-amd64
 - chmod +x ~/bin/taskcluster
 script:
-- taskcluster
+- ./ci/worker-setup.sh
 env:
   matrix:
   - TASKCLUSTER_ROOT_URL='https://firefox-ci-tc.services.mozilla.com' TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'
