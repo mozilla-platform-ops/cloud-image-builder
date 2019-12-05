@@ -1,6 +1,7 @@
 language: python
 install:
   - pip install taskcluster
+  - pip install pyyaml
 script:
 - python ./ci/worker-setup.py
 env:
