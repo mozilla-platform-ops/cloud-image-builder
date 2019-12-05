@@ -1,6 +1,7 @@
 import boto3
-import uuid
+import slugid
 import time
+import uuid
 
 
 ec2 = boto3.resource('ec2')
@@ -30,7 +31,7 @@ def buildWorkerImages(userdataPath):
     instance.load()
   print('info: detected {} state for instance {}'.format(instance.state['Name'], instance.id))
   image = instance.create_image(
-    Name = 'relops-image-builder',
+    Name = 'relops-image-builder-{}'.format(slugid.nice()),
     Description = 'taskcluster windows image builder',
     NoReboot = True
   )
