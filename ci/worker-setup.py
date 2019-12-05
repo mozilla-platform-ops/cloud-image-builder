@@ -72,7 +72,10 @@ for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'geck
     taskDescription = 'say hello from {}'.format(key),
     provisioner = 'relops',
     workerType = 'win2019',
-    commands = ['echo "hello from {}"'.format(key)],
+    commands = [
+      'echo $PSVersionTable.PSVersion > psv.ps1',
+      'powershell -File .\\psv.ps1'
+    ],
     scopes = [
       'generic-worker:os-group:relops/win2019/Administrators',
       'generic-worker:run-as-administrator:relops/win2019'
