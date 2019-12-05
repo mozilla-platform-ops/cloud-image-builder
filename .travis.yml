@@ -1,0 +1,13 @@
+language: minimal
+os: linux
+before_script:
+- curl -L -o ~/bin/taskcluster https://github.com/taskcluster/taskcluster/releases/download/v24.0.1/taskcluster-linux-amd64
+- chmod +x ~/bin/taskcluster
+script:
+- taskcluster
+env:
+  matrix:
+  - TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'
+  - TASKCLUSTER_ROOT_URL='https://firefox-ci-tc.services.mozilla.com'
+  global:
+    secure: o55Dx7f10PB0xG2EnaqCcJkAFzeeuSq2eHB4K7U0WGa3LPkUcUbCQKFvk1Vwc2mls1iBlfRewR/SKvYn4BI4QnfJ621xkMZymZri8E5Tw9OyOR+x8W3poUyuJ2jrsYn/EuK75Q7HKCLu1uUbghmeQZGFYaMhtCfqxYNnZZwiz+4eN65WIKR88lbXX5+WXesDtPT3n37mL6JkQEv2QGtD+Ke7ow26ZobHHSn7QjZXsXBwELU+jMJYz/pOEMlJFOfiCwyoyGhDGeSvYLOLoFV7tH/zH/Q2G1/kRV4+Tj2Hn9ECp2SBtGUhGShvjmnhXdupjji4C8Fk7g1qutfQK1bfTQCWiEd/kycCJ+25DSSkeAiMrgAV8qe+I+MUg86ffxA3niukxlLeP/QqwhZ2Ufge933lGgLrYgfrQQLr7Kl00xGeq+0k1LjRMANkYOvH8Z4KE4iEXKiUSBx4bTCPPhqcpjzFrr9lUCz4mDz7DM4hWakZDw3ilyED7s6lyuFRIvvzoLBl2SnbXUX64lw+AzrCIZMFZx8ttosbdssfh9Lcc86g37lew9DfS89Y/Fds/qKFceTJXmeuoy4fROI+C+6kagvs5EI+Ytmf1w4y2QAC9SxsXrZiTEnL3+f8/YL+yVNlX9M654GZd7KHSDozvb6R7FKuIfS1imMLh6YxdIAGGuk=
