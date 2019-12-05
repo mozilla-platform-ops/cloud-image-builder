@@ -10,7 +10,7 @@ config:
   - capacityPerInstance: 1
     region: us-west-2
     launchConfig:
-      ImageId: ami-0e5430a7c5c50e0dc
+      ImageId: ami-04233ad9f775543b7
       Placement:
         AvailabilityZone: us-west-2a
       SubnetId: subnet-d948b6bf
@@ -59,7 +59,7 @@ config:
   - capacityPerInstance: 1
     region: us-west-2
     launchConfig:
-      ImageId: ami-0e5430a7c5c50e0dc
+      ImageId: ami-04233ad9f775543b7
       Placement:
         AvailabilityZone: us-west-2b
       SubnetId: subnet-2eaaba67
@@ -108,7 +108,7 @@ config:
   - capacityPerInstance: 1
     region: us-west-2
     launchConfig:
-      ImageId: ami-0e5430a7c5c50e0dc
+      ImageId: ami-04233ad9f775543b7
       Placement:
         AvailabilityZone: us-west-2c
       SubnetId: subnet-540a9f0f

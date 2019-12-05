@@ -1,18 +1,74 @@
+import slugid
 import taskcluster
 import yaml
+from datetime import datetime, timedelta
 
-workerPoolId = 'relops/win2019'
+
 workerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
+queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
 
-with open('ci/config/worker-pool.yaml', 'r') as stream:
-  payload = yaml.safe_load(stream)
-  try:
-    workerManager.workerPool(workerPoolId = workerPoolId)
-    print('info: worker pool {} existence detected'.format(workerPoolId))
-    workerManager.updateWorkerPool(workerPoolId, payload)
-    print('info: worker pool {} updated'.format(workerPoolId))
-  except:
-    print('info: worker pool {} absence detected'.format(workerPoolId))
-    workerManager.createWorkerPool(workerPoolId, payload)
-    print('info: worker pool {} created'.format(workerPoolId))
 
+def updateWorkerPool(configPath, workerPoolId):
+  with open(configPath, 'r') as stream:
+    payload = yaml.safe_load(stream)
+    try:
+      workerManager.workerPool(workerPoolId = workerPoolId)
+      print('info: worker pool {} existence detected'.format(workerPoolId))
+      workerManager.updateWorkerPool(workerPoolId, payload)
+      print('info: worker pool {} updated'.format(workerPoolId))
+    except:
+      print('info: worker pool {} absence detected'.format(workerPoolId))
+      workerManager.createWorkerPool(workerPoolId, payload)
+      print('info: worker pool {} created'.format(workerPoolId))
+
+
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, taskGroupId = None):
+  payload = {
+    'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
+    'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
+    'provisionerId': provisioner,
+    'workerType': workerType,
+    'priority': 'highest',
+    'routes': [],
+    'scopes': [],
+    'payload': {
+      'maxRunTime': 3600,
+      'command': commands,
+      #'artifacts': [],
+      #'features': [],
+      #'osGroups': []
+    },
+    'metadata': {
+      'name': taskName,
+      'description': taskDescription,
+      'owner': 'grenade@mozilla.com',
+      'source': 'https://github.com/grenade/cloud-image-builder' #.format(GIST_USER, GIST_SHA)
+    }
+  }
+  if taskGroupId is not None:
+    payload['taskGroupId'] = taskGroupId
+  print('info: payload for task {} created'.format(taskId))
+  queue.createTask(taskId, payload)
+
+
+updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
+
+taskGroupId = slugid.nice()
+createTask(
+  taskId = taskGroupId,
+  taskName = 'hello-from-task-group',
+  taskDescription = 'say hello from the task group',
+  provisioner = 'relops',
+  workerType = 'win2019',
+  commands = ['echo "hello from task group']
+)
+for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'gecko-t/win7-32-gpu', 'gecko-1/win2012', 'gecko-3/win2012', 'relops/win2019']:
+  createTask(
+    taskId = slugid.nice(),
+    taskName = 'hello-from-{}'.format(key),
+    taskDescription = 'say hello from {}'.format(key),
+    provisioner = 'relops',
+    workerType = 'win2019',
+    commands = ['echo "hello from {}"'.format(key)],
+    taskGroupId = taskGroupId
+  )

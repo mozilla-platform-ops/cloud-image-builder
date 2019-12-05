@@ -1,7 +1,9 @@
 language: python
 install:
-  - pip install taskcluster
+  - pip install boto3
   - pip install pyyaml
+  - pip install slugid
+  - pip install taskcluster
 script:
 - python ./ci/worker-setup.py
 env:
