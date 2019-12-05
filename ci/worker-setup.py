@@ -1,3 +1,4 @@
+import os
 import slugid
 import taskcluster
 import yaml
@@ -21,22 +22,24 @@ def updateWorkerPool(configPath, workerPoolId):
       workerManager.createWorkerPool(workerPoolId, payload)
       print('info: worker pool {} created'.format(workerPoolId))
 
+      'generic-worker:os-group:aws-provisioner-v1/relops-image-builder/Administrators',
+      'generic-worker:run-as-administrator:aws-provisioner-v1/relops-image-builder',
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
     'provisionerId': provisioner,
     'workerType': workerType,
     'priority': 'highest',
-    'routes': [],
-    'scopes': [],
+    'routes': routes,
+    'scopes': scopes,
     'payload': {
       'maxRunTime': 3600,
       'command': commands,
       #'artifacts': [],
       #'features': [],
-      #'osGroups': []
+      'osGroups': osGroups
     },
     'metadata': {
       'name': taskName,
@@ -70,5 +73,14 @@ for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'geck
     provisioner = 'relops',
     workerType = 'win2019',
     commands = ['echo "hello from {}"'.format(key)],
+    scopes = [
+      'generic-worker:os-group:relops/win2019/Administrators',
+      'generic-worker:run-as-administrator:relops/win2019'
+    ],
+    routes = [
+      'index.project.relops.cloud-image-builder.{}.revision.{}'.format(key.replace('/', '.'), os.getenv('TRAVIS_COMMIT')),
+      'index.project.relops.cloud-image-builder.{}.latest'.format(key.replace('/', '.'))
+    ],
+    
     taskGroupId = taskGroupId
   )
