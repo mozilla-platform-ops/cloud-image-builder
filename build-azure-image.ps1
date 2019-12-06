@@ -3,7 +3,7 @@ param (
 )
 # job settings. change these for the tasks at hand.
 $targetCloudPlatform = 'azure';
-$workFolder = '.';
+$workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
 $instanceNameMap = @{};
 
 # constants and script config. these are probably ok as they are.
@@ -25,9 +25,10 @@ foreach ($rm in @(
   }
   Import-Module $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue
 }
+Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message ('exception in driver download with Get-CloudBucketResource from bucket: {0}/{1}/{2}, to: {3}. {4}' -f $source.platform, $source.bucket, $source.key, $driverLocalPath) -severity 'info';
 
 # computed target specific settings. these are probably ok as they are.
-$config = (Get-Content -Path 'config\config.yaml' | ConvertFrom-Yaml)."$imageKey";
+$config = (Get-Content -Path ('{0}\cloud-image-builder\config\config.yaml' -f $workFolder) | ConvertFrom-Yaml)."$imageKey";
 $exportImageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
   $config.image.edition.ToLower(),
   $config.image.language.ToLower(),
@@ -45,26 +46,26 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
   $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
   # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-  $productKey = (Get-Content -Path 'config\product-keys.yaml' | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
-  $drivers = @((Get-Content -Path 'config\drivers.yaml' | ConvertFrom-Yaml) | ? {
+  $productKey = (Get-Content -Path ('config\product-keys.yaml' -f $workFolder) | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
+  $drivers = @((Get-Content -Path ('config\drivers.yaml' -f $workFolder) | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($targetCloudPlatform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $unattendCommands = @((Get-Content -Path 'config\unattend-commands.yaml' | ConvertFrom-Yaml) | ? {
+  $unattendCommands = @((Get-Content -Path ('config\unattend-commands.yaml' -f $workFolder) | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($targetCloudPlatform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $packages = @((Get-Content -Path 'config\packages.yaml' | ConvertFrom-Yaml) | ? {
+  $packages = @((Get-Content -Path ('config\packages.yaml' -f $workFolder) | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($targetCloudPlatform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $disableWindowsService = @((Get-Content -Path 'config\disable-windows-service.yaml' | ConvertFrom-Yaml) | ? {
+  $disableWindowsService = @((Get-Content -Path ('config\disable-windows-service.yaml' -f $workFolder) | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($targetCloudPlatform)
