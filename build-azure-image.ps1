@@ -22,7 +22,7 @@ foreach ($rm in @(
       Update-Module $rm.module -RequiredVersion $rm.version
     }
   } else {
-    Install-Module $rm.module -RequiredVersion $rm.version
+    Install-Module $rm.module -RequiredVersion $rm.version -AllowClobber
   }
   Import-Module $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue
 }
