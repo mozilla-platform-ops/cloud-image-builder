@@ -17,7 +17,7 @@ config:
       SecurityGroupIds:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
+      BlockDeviceMappings: &BlockDeviceMappings
       - DeviceName: /dev/sda1
         Ebs:
           DeleteOnTermination: true
@@ -28,9 +28,9 @@ config:
           DeleteOnTermination: true
           VolumeSize: 120
           VolumeType: gp2
-      InstanceMarketOptions:
+      InstanceMarketOptions: &InstanceMarketOptions
         MarketType: spot
-    workerConfig:
+    workerConfig: &workerConfig
       genericWorker:
         config:
           idleTimeoutSecs: 90
@@ -53,7 +53,7 @@ config:
           tasksDir: Z:\
           wstAudience: firefoxcitc
           wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
+    additionalUserData: &additionalUserData
       workerType: relops-image-builder
   - capacityPerInstance: 1
     region: eu-central-1
@@ -65,44 +65,10 @@ config:
       SecurityGroupIds:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: eu-central-1
     launchConfig:
@@ -113,44 +79,10 @@ config:
       SecurityGroupIds:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-1
     launchConfig:
@@ -161,44 +93,10 @@ config:
       SecurityGroupIds:
       - sg-27d72d57
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-1
     launchConfig:
@@ -209,44 +107,10 @@ config:
       SecurityGroupIds:
       - sg-27d72d57
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-1
     launchConfig:
@@ -257,44 +121,10 @@ config:
       SecurityGroupIds:
       - sg-27d72d57
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-1
     launchConfig:
@@ -305,44 +135,10 @@ config:
       SecurityGroupIds:
       - sg-27d72d57
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-1
     launchConfig:
@@ -353,44 +149,10 @@ config:
       SecurityGroupIds:
       - sg-27d72d57
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-2
     launchConfig:
@@ -401,44 +163,10 @@ config:
       SecurityGroupIds:
       - sg-f581719d
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-2
     launchConfig:
@@ -449,44 +177,10 @@ config:
       SecurityGroupIds:
       - sg-f581719d
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-east-2
     launchConfig:
@@ -497,44 +191,10 @@ config:
       SecurityGroupIds:
       - sg-f581719d
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-west-1
     launchConfig:
@@ -545,44 +205,10 @@ config:
       SecurityGroupIds:
       - sg-fee02b98
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-west-1
     launchConfig:
@@ -593,44 +219,10 @@ config:
       SecurityGroupIds:
       - sg-fee02b98
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-west-2
     launchConfig:
@@ -641,44 +233,10 @@ config:
       SecurityGroupIds:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-west-2
     launchConfig:
@@ -689,44 +247,10 @@ config:
       SecurityGroupIds:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
   - capacityPerInstance: 1
     region: us-west-2
     launchConfig:
@@ -737,41 +261,7 @@ config:
       SecurityGroupIds:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
-      BlockDeviceMappings:
-      - DeviceName: /dev/sda1
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 40
-          VolumeType: gp2
-      - DeviceName: /dev/sdb
-        Ebs:
-          DeleteOnTermination: true
-          VolumeSize: 120
-          VolumeType: gp2
-      InstanceMarketOptions:
-        MarketType: spot
-    workerConfig:
-      genericWorker:
-        config:
-          idleTimeoutSecs: 90
-          cachesDir: Z:\caches
-          cleanUpTaskDirs: true
-          deploymentId: f37dd7ee1cae
-          disableReboots: true
-          downloadsDir: Z:\downloads
-          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
-          livelogExecutable: C:\generic-worker\livelog.exe
-          livelogPUTPort: 60022
-          numberOfTasksToRun: 0
-          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
-          runTasksAsCurrentUser: false
-          sentryProject: generic-worker
-          shutdownMachineOnIdle: false
-          shutdownMachineOnInternalError: true
-          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
-          taskclusterProxyPort: 80
-          tasksDir: Z:\
-          wstAudience: firefoxcitc
-          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
-    additionalUserData:
-      workerType: relops-image-builder
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
