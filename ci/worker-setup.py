@@ -90,7 +90,7 @@ for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'geck
       'powershell -File .\\psv.ps1',
       'git clone https://github.com/grenade/cloud-image-builder.git',
       'cd cloud-image-builder',
-      'echo $revision = $(& git @("rev-parse", "HEAD")); > ..\\git-ref.ps1',
+      'echo $revision = $(& git rev-parse HEAD); > ..\\git-ref.ps1',
       'powershell -File ..\\git-ref.ps1'
     ],
     scopes = [
