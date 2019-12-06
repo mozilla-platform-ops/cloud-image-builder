@@ -5,7 +5,7 @@ install:
   - pip install slugid
   - pip install taskcluster
 script:
-- python ./ci/worker-setup.py
+- python ./ci/create-image-build-tasks.py
 env:
   matrix:
   - TASKCLUSTER_ROOT_URL='https://firefox-ci-tc.services.mozilla.com' TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'

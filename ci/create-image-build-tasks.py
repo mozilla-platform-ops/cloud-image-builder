@@ -22,10 +22,8 @@ def updateWorkerPool(configPath, workerPoolId):
       workerManager.createWorkerPool(workerPoolId, payload)
       print('info: worker pool {} created'.format(workerPoolId))
 
-      'generic-worker:os-group:aws-provisioner-v1/relops-image-builder/Administrators',
-      'generic-worker:run-as-administrator:aws-provisioner-v1/relops-image-builder',
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, artifacts = [], features = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
@@ -38,7 +36,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
       'maxRunTime': 3600,
       'command': commands,
       'artifacts': artifacts,
-      #'features': [],
+      'features': features,
       'osGroups': osGroups
     },
     'metadata': {
@@ -59,48 +57,39 @@ updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
 taskGroupId = slugid.nice()
 createTask(
   taskId = taskGroupId,
-  taskName = 'hello-from-task-group',
-  taskDescription = 'say hello from the task group',
+  taskName = 'build-cloud-images',
+  taskDescription = 'this task only serves as a task grouping. it does no task work',
   provisioner = 'relops',
   workerType = 'win2019',
-  commands = ['echo "hello from task group']
+  commands = []
 )
-for key in ['gecko-t/win10-64', 'gecko-t/win10-64-gpu', 'gecko-t/win7-32', 'gecko-t/win7-32-gpu', 'gecko-1/win2012', 'gecko-3/win2012', 'relops/win2019']:
-  createTask(
-    taskId = slugid.nice(),
-    taskName = 'hello-from-{}'.format(key),
-    taskDescription = 'say hello from {}'.format(key),
-    provisioner = 'relops',
-    workerType = 'win2019',
-    artifacts = [
-      {
-        'type': 'file',
-        'name': 'public/psv.ps1',
-        'path': 'psv.ps1',
-      },
-      {
-        'type': 'file',
-        'name': 'public/git-ref.ps1',
-        'path': 'git-ref.ps1',
-      }
-    ],
-    commands = [
-      'dir',
-      'echo $PSVersionTable.PSVersion > psv.ps1',
-      'powershell -File .\\psv.ps1',
-      'git clone https://github.com/grenade/cloud-image-builder.git',
-      'cd cloud-image-builder',
-      'echo $revision = $(& git rev-parse HEAD); > ..\\git-ref.ps1',
-      'powershell -File ..\\git-ref.ps1'
-    ],
-    scopes = [
-      'generic-worker:os-group:relops/win2019/Administrators',
-      'generic-worker:run-as-administrator:relops/win2019'
-    ],
-    routes = [
-      'index.project.relops.cloud-image-builder.{}.revision.{}'.format(key.replace('/', '.'), os.getenv('TRAVIS_COMMIT')),
-      'index.project.relops.cloud-image-builder.{}.latest'.format(key.replace('/', '.'))
-    ],
-    
-    taskGroupId = taskGroupId
-  )
+for platform in ['azure']:
+  for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019']:
+    createTask(
+      taskId = slugid.nice(),
+      taskName = 'build-{}-{}'.format(platform, key),
+      taskDescription = 'build {} {} image from iso file'.format(platform, key),
+      provisioner = 'relops',
+      workerType = 'win2019',
+      artifacts = [
+        {
+          'type': 'file',
+          'name': 'public/unattend.xml',
+          'path': 'cloud-image-builder/unattend.xml'
+        }
+      ],
+      commands = [
+        'git clone https://github.com/grenade/cloud-image-builder.git',
+        'cd cloud-image-builder',
+        'powershell -File build-{}-image.ps1 {}-{}'.format(platform, key, platform)
+      ],
+      scopes = [
+        'generic-worker:os-group:relops/win2019/Administrators',
+        'generic-worker:run-as-administrator:relops/win2019'
+      ],
+      routes = [
+        'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, os.getenv('TRAVIS_COMMIT')),
+        'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+      ],
+      taskGroupId = taskGroupId
+    )
