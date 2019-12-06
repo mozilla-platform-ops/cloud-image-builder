@@ -57,13 +57,13 @@ def buildWorkerImages(userdataPath, buildRegion, copyRegions):
 
   while any(i.state not in ('available') for i in copiedImages):
     for copiedImage in copiedImages:
-      if copiedImage.state in ('available'):
-        print('info: detected {} state for image: {}/{}'.format(copiedImage.state, imageRegionMap[copiedImage.id], copiedImage.id))
-      else:
+      if copiedImage.state not in ('available'):
         print('info: awaiting available state for image: {}/{} in state: {}'.format(imageRegionMap[copiedImage.id], copiedImage.id, copiedImage.state))
         copiedImage.load()
       time.sleep(2)
-      
+  for copiedImage in copiedImages:
+    print('info: detected {} state for image: {}/{}'.format(copiedImage.state, imageRegionMap[copiedImage.id], copiedImage.id))
+
 
 buildWorkerImages(
   userdataPath = 'ci/config/.userdata',

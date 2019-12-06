@@ -3,7 +3,7 @@
 
 # job settings. change these for the tasks at hand.
 $targetCloudPlatform = 'azure';
-$workFolder = ('{0}{1}{2}-ci' -f 'D:', ([IO.Path]::DirectorySeparatorChar), $targetCloudPlatform);
+$workFolder = '.';
 $imagesToBuild = @(
   ('win10-64-{0}' -f $targetCloudPlatform),
   ('win10-64-gpu-{0}' -f $targetCloudPlatform),
