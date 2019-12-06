@@ -8,6 +8,10 @@ $instanceNameMap = @{};
 
 # constants and script config. these are probably ok as they are.
 $revision = $(& git rev-parse HEAD);
+if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
+  Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted'
+  Write-Log -source ('build-{0}-images' -f $targetCloudPlatform) -message 'installation policy for repository: PSGallery, set to: Trusted' -severity 'info';
+}
 foreach ($rm in @(
   @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.36' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
