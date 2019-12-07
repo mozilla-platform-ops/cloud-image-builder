@@ -28,6 +28,8 @@ config:
           DeleteOnTermination: true
           VolumeSize: 120
           VolumeType: gp2
+      IamInstanceProfile: &IamInstanceProfile
+        Arn: 'arn:aws:iam::692406183521:instance-profile/windows-ami-builder'
       InstanceMarketOptions: &InstanceMarketOptions
         MarketType: spot
     workerConfig: &workerConfig
@@ -66,6 +68,7 @@ config:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -80,6 +83,7 @@ config:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -94,6 +98,7 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -108,6 +113,7 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -122,6 +128,7 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -136,6 +143,7 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -150,6 +158,7 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -164,6 +173,7 @@ config:
       - sg-f581719d
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -178,6 +188,7 @@ config:
       - sg-f581719d
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -192,6 +203,7 @@ config:
       - sg-f581719d
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -206,6 +218,7 @@ config:
       - sg-fee02b98
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -220,6 +233,7 @@ config:
       - sg-fee02b98
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -234,6 +248,7 @@ config:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -248,6 +263,7 @@ config:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -262,6 +278,7 @@ config:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
+      IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
