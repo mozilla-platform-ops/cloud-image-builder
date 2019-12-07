@@ -102,6 +102,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     }
   } until (Test-Path -Path $unattendLocalPath -ErrorAction SilentlyContinue)
   Remove-Item -Path $driversLocalPath -Force -Recurse -ErrorAction SilentlyContinue;
+  New-Item -Path $driversLocalPath -ItemType Directory -Force;
   foreach ($driver in $drivers) {
     $driverLocalPath = ('{0}{1}{2}{3}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $driver.name, $(if ($driver.extract) { '.zip' } else { '' }));
     try {
@@ -154,7 +155,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
 
 
   $vhdMountPoint = (Join-Path -Path $workFolder -ChildPath ([System.Guid]::NewGuid().Guid.Substring(24)));
-  New-Item -Path $vhdMountPoint -ItemType directory -force;
+  New-Item -Path $vhdMountPoint -ItemType Directory -Force;
   try {
     Mount-WindowsImage -ImagePath $vhdLocalPath -Path $vhdMountPoint -Index 1
     Write-Output -InputObject ('mounted: {0} at mount point: {1}' -f $vhdLocalPath, $vhdMountPoint);
@@ -164,6 +165,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     throw
   }
 
+  New-Item -Path $packagesLocalPath -ItemType Directory -Force;
   foreach ($package in $packages) {
     $packageLocalTempPath = ('{0}{1}{2}{3}' -f $packagesLocalPath, ([IO.Path]::DirectorySeparatorChar), $package.name, $(if (($package.extract) -and (-not $package.savepath.ToLower().EndsWith('.zip'))) { '.zip' } else { '' }));
     try {
