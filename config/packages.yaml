@@ -348,6 +348,27 @@
     url: https://go.microsoft.com/fwlink/?LinkID=394789
   - platform: url
     url: https://download.microsoft.com/download/3/4/3/3437907D-745F-46EF-8116-7FC025BBEBDB/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
+- name: psget-modules.zip
+  savepath: Windows\System32\WindowsPowerShell\v1.0\Modules
+  unattend: []
+  extract: true
+  target:
+    cloud:
+    - amazon
+    - azure
+    - google
+    os:
+    - Windows Server 2012 R2
+    architecture:
+    - x86
+    - x86-64
+    gpu:
+    - true
+    - false
+  sources:
+  - platform: amazon
+    bucket: windows-ami-builder
+    key: package/psget-modules.zip
 - name: OpenCloudConfig
   savepath: Windows\Temp\rundsc.ps1
   unattend:
