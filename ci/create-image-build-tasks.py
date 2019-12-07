@@ -77,6 +77,9 @@ for platform in ['azure']:
           'path': 'cloud-image-builder/unattend.xml'
         }
       ],
+      osGroups = [
+        'Administrators'
+      ],
       commands = [
         'git clone https://github.com/grenade/cloud-image-builder.git',
         'cd cloud-image-builder',
