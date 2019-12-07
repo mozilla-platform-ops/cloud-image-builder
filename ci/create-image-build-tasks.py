@@ -23,7 +23,7 @@ def updateWorkerPool(configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
@@ -36,6 +36,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
       'maxRunTime': 3600,
       'command': commands,
       'artifacts': artifacts,
+      'features': features,
       'osGroups': osGroups
     },
     'metadata': {
@@ -80,6 +81,10 @@ for platform in ['azure']:
       osGroups = [
         'Administrators'
       ],
+      features = {
+        'taskclusterProxy': True,
+        'runAsAdministrator': True
+      },
       commands = [
         'git clone https://github.com/grenade/cloud-image-builder.git',
         'cd cloud-image-builder',
