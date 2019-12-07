@@ -1,0 +1,78 @@
+---
+image:
+  os: Windows Server 2019
+  edition: Datacenter
+  language: en-US
+  architecture: x86-64
+  gpu: false
+  owner: Mozilla RelOps
+  organization: Mozilla Corporation
+  partition: MBR
+  format: VHD
+  type: Fixed
+iso:
+  source:
+    platform: amazon
+    bucket: windows-ami-builder
+    key: iso/en_windows_server_2019_updated_sept_2019_x64_dvd_199664ce.iso
+  wimindex: 4
+target:
+- platform: azure
+  group: rg-west-us-relops
+  region: West US
+  hostname:
+    format: vm-{0}
+    slug:
+      type: uuid
+      length: 12
+  machine:
+    cpu: 2
+    ram: 8
+  disk:
+  - os: true
+    source: windowsserver2019-datacenter-en-us-x86-64
+    variant: ssd
+    size: 64
+  network:
+    name: vn-west-us-relops
+    prefix: '10.0.0.0/16'
+    dns:
+    - '1.1.1.1'
+    - '1.0.0.1'
+    subnet:
+      name: sn-west-us-relops
+      prefix: '10.0.6.0/24'
+    flow:
+      name: nsg-west-us-relops
+      rules:
+      - name: allow-rdp
+        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
+        access: Allow
+        Protocol: Tcp
+        Direction: Inbound
+        Priority: 110
+        SourceAddressPrefix:
+        - 185.189.196.216
+        SourcePortRange: '*'
+        DestinationAddressPrefix: '*'
+        DestinationPortRange: 3389
+      - name: allow-ssh
+        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
+        access: Allow
+        Protocol: Tcp
+        Direction: Inbound
+        Priority: 111
+        SourceAddressPrefix:
+        - 185.189.196.216
+        SourcePortRange: '*'
+        DestinationAddressPrefix: '*'
+        DestinationPortRange: 22
+  tag:
+  - name: workerType
+    value: relops-win2019-azure
+  - name: sourceOrganisation
+    value: mozilla-releng
+  - name: sourceRepository
+    value: OpenCloudConfig
+  - name: sourceRevision
+    value: azure
