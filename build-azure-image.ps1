@@ -32,8 +32,7 @@ $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/
 Set-AWSCredential `
   -AccessKey $secret.amazon.id `
   -SecretKey $secret.amazon.key `
-  -StoreAs 'default' `
-  -ProfileLocation ('{0}\.secrets\amazon' -f $workFolder);
+  -StoreAs 'default';
 
 Connect-AzAccount `
   -ServicePrincipal `
