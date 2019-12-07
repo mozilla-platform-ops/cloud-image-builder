@@ -92,7 +92,8 @@ for platform in ['azure']:
       ],
       scopes = [
         'generic-worker:os-group:relops/win2019/Administrators',
-        'generic-worker:run-as-administrator:relops/win2019'
+        'generic-worker:run-as-administrator:relops/win2019',
+        'secrets:get:project/relops/image-builder/dev'
       ],
       routes = [
         'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, os.getenv('TRAVIS_COMMIT')),

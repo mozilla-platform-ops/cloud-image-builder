@@ -1,6 +1,7 @@
 param (
   [string] $imageKey
 )
+
 # job settings. change these for the tasks at hand.
 $VerbosePreference = 'continue';
 $targetCloudPlatform = 'azure';
@@ -26,6 +27,21 @@ foreach ($rm in @(
   Import-Module $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue
 }
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, targetCloudPlatform: {2}, imageKey: {3}' -f $workFolder, $revision, $targetCloudPlatform, $imageKey);
+
+$secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
+Set-AWSCredential `
+  -AccessKey $secret.amazon.id `
+  -SecretKey $secret.amazon.key `
+  -StoreAs 'default' `
+  -ProfileLocation ('{0}\.secrets\amazon' -f $workFolder);
+
+Connect-AzAccount `
+  -ServicePrincipal `
+  -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
+    -String $secret.azure.key `
+    -AsPlainText `
+    -Force))) `
+  -Tenant $secret.azure.account;
 
 # computed target specific settings. these are probably ok as they are.
 $config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
