@@ -1,0 +1,78 @@
+---
+image:
+  os: Windows 7
+  edition: Professional
+  language: en-US
+  architecture: x86
+  gpu: false
+  owner: Mozilla RelOps
+  organization: Mozilla Corporation
+  partition: MBR
+  format: VHD
+  type: Fixed
+iso:
+  source:
+    platform: amazon
+    bucket: windows-ami-builder
+    key: iso/en_windows_7_professional_with_sp1_x86_dvd_u_677056.iso
+  wimindex: 5
+target:
+- platform: azure
+  group: rg-west-us-gecko-t
+  region: West US
+  hostname:
+    format: vm-{0}
+    slug:
+      type: uuid
+      length: 12
+  machine:
+    cpu: 2
+    ram: 8
+  disk:
+  - os: true
+    source: windows7-professional-en-us-x86
+    variant: ssd
+    size: 64
+  network:
+    name: vn-west-us-gecko-t
+    prefix: '10.0.0.0/16'
+    dns:
+    - '1.1.1.1'
+    - '1.0.0.1'
+    subnet:
+      name: sn-west-us-gecko-t
+      prefix: '10.0.4.0/24'
+    flow:
+      name: nsg-west-us-gecko-t
+      rules:
+      - name: allow-rdp
+        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
+        access: Allow
+        Protocol: Tcp
+        Direction: Inbound
+        Priority: 110
+        SourceAddressPrefix:
+        - 185.189.196.216
+        SourcePortRange: '*'
+        DestinationAddressPrefix: '*'
+        DestinationPortRange: 3389
+      - name: allow-ssh
+        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
+        access: Allow
+        Protocol: Tcp
+        Direction: Inbound
+        Priority: 111
+        SourceAddressPrefix:
+        - 185.189.196.216
+        SourcePortRange: '*'
+        DestinationAddressPrefix: '*'
+        DestinationPortRange: 22
+  tag:
+  - name: workerType
+    value: gecko-t-win7-32-azure
+  - name: sourceOrganisation
+    value: mozilla-releng
+  - name: sourceRepository
+    value: OpenCloudConfig
+  - name: sourceRevision
+    value: azure
