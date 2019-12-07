@@ -75,7 +75,7 @@ for platform in ['azure']:
         {
           'type': 'file',
           'name': 'public/unattend.xml',
-          'path': 'cloud-image-builder/unattend.xml'
+          'path': 'unattend.xml'
         }
       ],
       osGroups = [
