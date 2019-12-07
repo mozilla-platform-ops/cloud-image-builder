@@ -2,6 +2,7 @@ param (
   [string] $imageKey
 )
 # job settings. change these for the tasks at hand.
+$VerbosePreference = 'continue';
 $targetCloudPlatform = 'azure';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
 
