@@ -23,7 +23,7 @@ def updateWorkerPool(configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
@@ -33,7 +33,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
     'routes': routes,
     'scopes': scopes,
     'payload': {
-      'maxRunTime': 3600,
+      'maxRunTime': (maxRunMinutes * 60),
       'command': commands,
       'artifacts': artifacts,
       'features': features,
@@ -69,6 +69,7 @@ for platform in ['azure']:
       taskId = slugid.nice(),
       taskName = 'build-{}-{}'.format(platform, key),
       taskDescription = 'build {} {} image from iso file'.format(platform, key),
+      maxRunMinutes = 180,
       provisioner = 'relops',
       workerType = 'win2019',
       artifacts = [

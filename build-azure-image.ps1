@@ -434,5 +434,4 @@ foreach ($target in $config.target) {
   } else {
     Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
   }
-  Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://gist.githubusercontent.com/grenade/3f2fbc64e7210de136e7eb69aae63f81/raw/purge-orphaned-resources.ps1?{0}' -f [Guid]::NewGuid()));
 }
