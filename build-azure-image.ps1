@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted'
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.38' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.39' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -32,16 +32,15 @@ $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/
 Set-AWSCredential `
   -AccessKey $secret.amazon.id `
   -SecretKey $secret.amazon.key `
-  -StoreAs 'default' `
-  -ProfileLocation ('{0}\.secrets\amazon' -f $workFolder);
+  -StoreAs 'default';
 
 Connect-AzAccount `
   -ServicePrincipal `
   -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
     -String $secret.azure.key `
     -AsPlainText `
-    -Force))) #`
-  #-Tenant $secret.azure.account
+    -Force))) `
+  -Tenant $secret.azure.account;
 
 # computed target specific settings. these are probably ok as they are.
 $config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
