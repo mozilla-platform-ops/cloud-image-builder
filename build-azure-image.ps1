@@ -42,6 +42,27 @@ Connect-AzAccount `
     -Force))) `
   -Tenant $secret.azure.account;
 
+$azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
+$azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
+$azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';
+if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
+  (New-Object Net.WebClient).DownloadFile($azcopyZipUrl, $azcopyZipPath);
+  if (Test-Path -Path $azcopyZipPath -ErrorAction SilentlyContinue) {
+    Write-Output -InputObject ('downloaded: {0} from: {1}' -f $azcopyZipPath, $azcopyZipUrl);
+    Expand-Archive -Path $azcopyZipPath -DestinationPath $workFolder;
+    try {
+      $extractedAzcopyExePath = (@(Get-ChildItem -Path ('{0}\azcopy.exe' -f $workFolder) -Recurse -ErrorAction SilentlyContinue -Force)[0].FullName);
+      Write-Output -InputObject ('extracted: {0} from: {1}' -f $extractedAzcopyExePath, $azcopyZipPath);
+      Copy-Item -Path $extractedAzcopyExePath -Destination $azcopyExePath;
+      if (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue) {
+        Write-Output -InputObject ('copied: {0} to: {1}' -f $extractedAzcopyExePath, $azcopyExePath);
+      }
+    } catch {
+      Write-Output -InputObject ('failed to extract azcopy from: {0}' -f $azcopyZipPath);
+    }
+  }
+}
+
 # computed target specific settings. these are probably ok as they are.
 $config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
 if (-not ($config)) {
@@ -153,7 +174,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       }
     } until ((Test-Path -Path $driverLocalPath -ErrorAction SilentlyContinue) -or ($sourceIndex -lt 0));
     if ($driver.extract) {
-      Expand-Archive -Path $driverLocalPath -DestinationPath ('{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $driver.name)
+      Expand-Archive -Path $driverLocalPath -DestinationPath ('{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $driver.name);
     }
   }
   Convert-WindowsImage `
@@ -222,7 +243,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       if ($package.extract) {
         Expand-Archive -Path $packageLocalTempPath -DestinationPath $packageLocalMountPath;
       } else {
-        Copy-Item -Path $packageLocalTempPath -Destination $packageLocalMountPath
+        Copy-Item -Path $packageLocalTempPath -Destination $packageLocalMountPath;
       }
     } else {
       Write-Output -InputObject ('failed to load image: {0} with package: {1}' -f $exportImageName, $package.savepath);
