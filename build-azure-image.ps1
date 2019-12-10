@@ -266,6 +266,11 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
     Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
     break;
   }
+  $azVMUsage = (Get-AzVMUsage -Location $target.region);
+  if ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
+    Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use. no capacity for requested aditional {5} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $target.machine.cpu);
+    break;
+  }
   try {
     Write-Output -InputObject ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
     switch ($target.hostname.slug.type) {
