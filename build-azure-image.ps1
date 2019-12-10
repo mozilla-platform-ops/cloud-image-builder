@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted'
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.39' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.40' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -260,8 +260,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     Remove-Item -Path $vhdMountPoint -Force
   }
 }
-foreach ($target in $config.target) {
-  Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
+foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform })) {
+  Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
   switch ($target.hostname.slug.type) {
     'uuid' {
       $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
@@ -290,6 +290,7 @@ foreach ($target in $config.target) {
     -targetResourceId $resourceId `
     -targetResourceGroupName $target.group `
     -targetResourceRegion $target.region `
+    -targetInstanceMachineVariantFormat $target.machine.format `
     -targetInstanceCpuCount $target.machine.cpu `
     -targetInstanceRamGb $target.machine.ram `
     -targetInstanceName $instanceName `
