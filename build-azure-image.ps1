@@ -261,6 +261,11 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   }
 }
 foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform })) {
+  $sku = ($target.machine.format -f $target.machine.cpu);
+  if (-not (Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region) -and ($_.Name -eq $sku)) })) {
+    Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
+    break;
+  }
   try {
     Write-Output -InputObject ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
     switch ($target.hostname.slug.type) {
