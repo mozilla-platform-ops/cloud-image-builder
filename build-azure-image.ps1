@@ -261,7 +261,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   }
 }
 foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform })) {
-  Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
+  
+  Write-Output -InputObject ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
   switch ($target.hostname.slug.type) {
     'uuid' {
       $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
@@ -307,20 +308,20 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
     $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
     if ($azVm) {
       if (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState) {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('provisioning of vm: {0}, {1}' -f $instanceName, $azVm.ProvisioningState.ToLower());
+        Write-Output -InputObject ('provisioning of vm: {0}, {1}' -f $instanceName, $azVm.ProvisioningState.ToLower());
       } else {
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('provisioning of vm: {0}, in progress with state: {1}' -f $instanceName, $azVm.ProvisioningState.ToLower());
+        Write-Output -InputObject ('provisioning of vm: {0}, in progress with state: {1}' -f $instanceName, $azVm.ProvisioningState.ToLower());
         Start-Sleep -Seconds 60
       }
     } else {
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('provisioning of vm: {0}, failed before it started' -f $instanceName);
+      Write-Output -InputObject ('provisioning of vm: {0}, failed before it started' -f $instanceName);
     }
   } until ((-not $azVm) -or (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState))
-  Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
+  Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
   if ($azVm) {
     $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+    Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
     
     (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
 
@@ -330,9 +331,9 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
       -VMName $instanceName `
       -CommandId 'RunPowerShellScript' `
       -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $firstOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0].Message);
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1].Message);
+    Write-Output -InputObject ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $firstOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+    Write-Output -InputObject ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0].Message);
+    Write-Output -InputObject ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1].Message);
 
     if ($firstOccTriggerCommandResult.Status -eq 'Succeeded') {
 
@@ -345,18 +346,18 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
           -CommandId 'RunPowerShellScript' `
           -ScriptPath ('{0}\computername.ps1' -f $env:Temp) `
           -ErrorAction SilentlyContinue);
-        Write-Log -source ('build-{0}-images' -f $target.platform) -message ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $echoHostnameResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+        Write-Output -InputObject ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $echoHostnameResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
         if ($echoHostnameResult.Value) {
           $echoHostnameCommandOutput = $echoHostnameResult.Value[0].Message;
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0].Message);
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('echo hostname std err: {0}' -f $echoHostnameResult.Value[1].Message);
+          Write-Output -InputObject ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0].Message);
+          Write-Output -InputObject ('echo hostname std err: {0}' -f $echoHostnameResult.Value[1].Message);
         } else {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message 'echo hostname command did not return a value';
+          Write-Output -InputObject 'echo hostname command did not return a value';
         }
         if ($echoHostnameCommandOutput -match $instanceName) {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('host rename to: {0}, detected' -f $instanceName);
+          Write-Output -InputObject ('host rename to: {0}, detected' -f $instanceName);
         } else {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting host rename to: {0}' -f $instanceName);
+          Write-Output -InputObject ('awaiting host rename to: {0}' -f $instanceName);
           Start-Sleep -Seconds 30;
         }
       } until ($echoHostnameCommandOutput -match $instanceName)
@@ -371,9 +372,9 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
         -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp));
       Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
 
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $secondOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('seccond occ trigger std out: {0}' -f $secondOccTriggerCommandResult.Value[0].Message);
-      Write-Log -source ('build-{0}-images' -f $target.platform) -message ('seccond occ trigger std err: {0}' -f $secondOccTriggerCommandResult.Value[1].Message);
+      Write-Output -InputObject ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $secondOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+      Write-Output -InputObject ('seccond occ trigger std out: {0}' -f $secondOccTriggerCommandResult.Value[0].Message);
+      Write-Output -InputObject ('seccond occ trigger std err: {0}' -f $secondOccTriggerCommandResult.Value[1].Message);
 
       if ($secondOccTriggerCommandResult.Status -eq 'Succeeded') {
 
@@ -386,18 +387,18 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
             -CommandId 'RunPowerShellScript' `
             -ScriptPath ('{0}\dirdsc.ps1' -f $env:Temp) `
             -ErrorAction SilentlyContinue);
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('dir dsc {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+          Write-Output -InputObject ('dir dsc {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
           if ($dirDscResult.Value) {
             $dirDscCommandOutput = $dirDscResult.Value[0].Message;
-            Write-Log -source ('build-{0}-images' -f $target.platform) -message ('dir dsc std out: {0}' -f $dirDscResult.Value[0].Message);
-            Write-Log -source ('build-{0}-images' -f $target.platform) -message ('dir dsc std err: {0}' -f $dirDscResult.Value[1].Message);
+            Write-Output -InputObject ('dir dsc std out: {0}' -f $dirDscResult.Value[0].Message);
+            Write-Output -InputObject ('dir dsc std err: {0}' -f $dirDscResult.Value[1].Message);
           } else {
-            Write-Log -source ('build-{0}-images' -f $target.platform) -message 'dir dsc command did not return a value';
+            Write-Output -InputObject 'dir dsc command did not return a value';
           }
           if ($dirDscCommandOutput -match 'task-claim-state.valid') {
-            Write-Log -source ('build-{0}-images' -f $target.platform) -message ('occ completion on: {0}, detected' -f $instanceName);
+            Write-Output -InputObject ('occ completion on: {0}, detected' -f $instanceName);
           } else {
-            Write-Log -source ('build-{0}-images' -f $target.platform) -message ('awaiting occ completion on: {0}' -f $instanceName);
+            Write-Output -InputObject ('awaiting occ completion on: {0}' -f $instanceName);
             Start-Sleep -Seconds 30;
           }
         } until ($dirDscCommandOutput -match 'task-claim-state.valid')
@@ -419,7 +420,7 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
           -ImageName $importImageName `
           -ErrorAction SilentlyContinue);
         if ($azImage) {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
           if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
             Remove-AzVm `
               -ResourceGroupName $target.group `
@@ -427,12 +428,12 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
               -Force;
           }
         } else {
-          Write-Log -source ('build-{0}-images' -f $target.platform) -message ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
         }
       }
     }
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+    Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
   } else {
-    Write-Log -source ('build-{0}-images' -f $target.platform) -message ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+    Write-Output -InputObject ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
   }
 }
