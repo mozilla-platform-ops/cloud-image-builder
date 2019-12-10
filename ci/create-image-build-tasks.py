@@ -89,6 +89,7 @@ for platform in ['azure']:
       commands = [
         'git clone https://github.com/grenade/cloud-image-builder.git',
         'cd cloud-image-builder',
+        'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
         'powershell -File build-{}-image.ps1 {}-{}'.format(platform, key, platform)
       ],
       scopes = [
