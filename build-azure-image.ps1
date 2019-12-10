@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted'
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.40' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.41' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -419,6 +419,7 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
             -resourceGroupName $target.group `
             -region $target.region `
             -instanceName $instanceName `
+            -imageTags $tags `
             -imageName $importImageName;
           $azVm = (Get-AzVm `
             -ResourceGroupName $target.group `

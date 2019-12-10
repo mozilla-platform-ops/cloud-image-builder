@@ -15,7 +15,7 @@ $instanceNameMap = @{};
 # constants and script config. these are probably ok as they are.
 $revision = (Invoke-WebRequest -Uri 'https://api.github.com/gists/3f2fbc64e7210de136e7eb69aae63f81' -UseBasicParsing | ConvertFrom-Json).history[0].version;
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.40' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.41' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
