@@ -265,6 +265,14 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
   $sku = ($target.machine.format -f $target.machine.cpu);
   if (-not (Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region) -and ($_.Name -eq $sku)) })) {
     Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
+    foreach ($cpuCount in @(1, 2, 4, 8, 12, 16, 20)) {
+      foreach ($skuFormat in @('Standard_A{0}', 'Standard_B{0}s', 'Standard_B{0}ms', 'Standard_D{0}_v3', 'Standard_D{0}s_v3', 'Standard_D{0}a_v4', 'Standard_D{0}as_v4', 'Standard_F{0}s_v2')) {
+        $sku = ($skuFormat -f $cpuCount);
+        if ((Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region) -and ($_.Name -eq $sku)) })) {
+          Write-Output -InputObject ('image export: {0}, to region: {1}, in cloud platform: {2}. {3} may succeed if sku: {4} is used' -f $exportImageName, $target.region, $target.platform, $sku);
+        }
+      }
+    }
   } else {
     $azVMUsage = (Get-AzVMUsage -Location $target.region);
     if ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
