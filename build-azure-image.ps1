@@ -134,7 +134,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
         -commands $commands;
-      Copy-Item -Path $unattendLocalPath -Destination ('{0}{1}unattnd.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar))
+      Copy-Item -Path $unattendLocalPath -Destination ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar))
     } catch {
       Write-Output -InputObject ('exception creating unattend: {0}. retrying... {1}' -f $unattendLocalPath, $_.Exception.Message);
     }
