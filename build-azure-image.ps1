@@ -123,12 +123,12 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   do {
     $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
     try {
-      # todo: set processorArchitecture, computerName, administratorPassword
-      #-processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
+      # todo: set computerName, administratorPassword
       #-computerName '*' `
       #-administratorPassword (New-Password) `
       New-UnattendFile `
         -destinationPath $unattendLocalPath `
+        -processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
         -uiLanguage $config.image.language `
         -productKey $productKey `
         -registeredOwner $config.image.owner `
