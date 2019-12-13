@@ -275,12 +275,10 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
         }
       }
     }
-    if (-not $skuFound) {
-      (Get-AzComputeResourceSku | where {$_.Locations.Contains($target.region.Replace(' ', '').ToLower())});
-    }
   } else {
     $azVMUsage = (Get-AzVMUsage -Location $target.region);
-    if ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
+    Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu);
+    if ($false -and ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu))) {
       Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use. no capacity for requested aditional {5} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $target.machine.cpu);
     } else {
       try {
