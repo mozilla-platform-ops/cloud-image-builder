@@ -483,25 +483,36 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
                 -instanceName $instanceName `
                 -imageTags $tags `
                 -imageName $importImageName;
-              $azVm = (Get-AzVm `
-                -ResourceGroupName $target.group `
-                -Name $instanceName `
-                -Status `
-                -ErrorAction SilentlyContinue);
-              $azImage = (Get-AzImage `
-                -ResourceGroupName $target.group `
-                -ImageName $importImageName `
-                -ErrorAction SilentlyContinue);
-              if ($azImage) {
-                Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+
+              try {
+                $azImage = (Get-AzImage `
+                  -ResourceGroupName $target.group `
+                  -ImageName $importImageName `
+                  -ErrorAction SilentlyContinue);
+                if ($azImage) {
+                  Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+                } else {
+                  Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+                }
+              } catch {
+                Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $importImageName, $target.region, $target.platform, $_.Exception.Message);
+              }
+
+              try {
+                $azVm = (Get-AzVm `
+                  -ResourceGroupName $target.group `
+                  -Name $instanceName `
+                  -Status `
+                  -ErrorAction SilentlyContinue);
                 if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
                   Remove-AzVm `
                     -ResourceGroupName $target.group `
                     -Name $instanceName `
                     -Force;
+                  Write-Output -InputObject ('instance: {0}, deletion appears successful in region: {1}, cloud platform: {2}' -f $instanceName, $target.region, $target.platform);
                 }
-              } else {
-                Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+              } catch {
+                Write-Output -InputObject ('instance: {0}, fetch/deletion threw exception in region: {1}, cloud platform: {2}. {3}' -f $instanceName, $target.region, $target.platform, $_.Exception.Message);
               }
             }
           }
