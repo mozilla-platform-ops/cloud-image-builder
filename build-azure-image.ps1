@@ -276,11 +276,49 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
       }
     }
   } else {
-    $azVMUsage = (Get-AzVMUsage -Location $target.region);
-    Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu);
-    if ($false -and ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu))) {
+    switch -regex ($sku) {
+      '^Standard_A[0-7]$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard A0-A7 Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_A(8|9|10|11)$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard A8-A11 Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_A[0-9]+_v2$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard Av2 Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_F[0-9]+$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard F Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_F[0-9]+s$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard FS Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_F[0-9]+s_v2$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard FSv2 Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_NV[0-9]$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard NV Family vCPUs' })[0];
+        break;
+      }
+      '^Standard_NV[0-9]_v2$' {
+        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard NV Promo Family vCPUs' })[0];
+        break;
+      }
+      default {
+        $azVMUsage = $false;
+      }
+    }
+    if (-not $azVMUsage) {
+      Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. missing cpu family configuration for sku: {3}' -f $exportImageName, $target.region, $target.platform, $sku);
+    } elseif ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
       Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use. no capacity for requested aditional {5} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $target.machine.cpu);
     } else {
+      Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu);
       try {
         Write-Output -InputObject ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
         switch ($target.hostname.slug.type) {
