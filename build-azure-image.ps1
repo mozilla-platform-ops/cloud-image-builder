@@ -178,18 +178,32 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       Expand-Archive -Path $driverLocalPath -DestinationPath ('{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $driver.name);
     }
   }
-  Convert-WindowsImage `
-    -verbose:$true `
-    -SourcePath $isoLocalPath `
-    -VhdPath $vhdLocalPath `
-    -VhdFormat $config.image.format `
-    -VhdType $config.image.type `
-    -VhdPartitionStyle $config.image.partition `
-    -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
-    -Driver @($drivers | % { '{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
-    -RemoteDesktopEnable:$true `
-    -DisableWindowsService $disableWindowsService `
-    -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
+  if (($drivers) -and ($drivers.Length)) {
+    Convert-WindowsImage `
+      -verbose:$true `
+      -SourcePath $isoLocalPath `
+      -VhdPath $vhdLocalPath `
+      -VhdFormat $config.image.format `
+      -VhdType $config.image.type `
+      -VhdPartitionStyle $config.image.partition `
+      -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
+      -Driver @($drivers | % { '{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
+      -RemoteDesktopEnable:$true `
+      -DisableWindowsService $disableWindowsService `
+      -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
+  } else {
+    Convert-WindowsImage `
+      -verbose:$true `
+      -SourcePath $isoLocalPath `
+      -VhdPath $vhdLocalPath `
+      -VhdFormat $config.image.format `
+      -VhdType $config.image.type `
+      -VhdPartitionStyle $config.image.partition `
+      -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
+      -RemoteDesktopEnable:$true `
+      -DisableWindowsService $disableWindowsService `
+      -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
+  }
 
 
   $vhdMountPoint = (Join-Path -Path $workFolder -ChildPath ([System.Guid]::NewGuid().Guid.Substring(24)));
