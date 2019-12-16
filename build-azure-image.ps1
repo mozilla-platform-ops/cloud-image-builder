@@ -3,7 +3,7 @@ param (
 )
 
 # job settings. change these for the tasks at hand.
-$VerbosePreference = 'continue';
+#$VerbosePreference = 'continue';
 $targetCloudPlatform = 'azure';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
 
@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted'
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.43' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.45' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -452,6 +452,7 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
 
               Set-Content -Path ('{0}\dirdsc.ps1' -f $env:Temp) -Value 'Get-ChildItem -Path "C:\dsc"';
               $dirDscCommandOutput = '';
+              $dirDscIteration = 0;
               do {
                 $dirDscResult = (Invoke-AzVMRunCommand `
                   -ResourceGroupName $target.group `
@@ -459,20 +460,21 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
                   -CommandId 'RunPowerShellScript' `
                   -ScriptPath ('{0}\dirdsc.ps1' -f $env:Temp) `
                   -ErrorAction SilentlyContinue);
-                Write-Output -InputObject ('dir dsc {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+                Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
                 if ($dirDscResult.Value) {
                   $dirDscCommandOutput = $dirDscResult.Value[0].Message;
-                  Write-Output -InputObject ('dir dsc std out: {0}' -f $dirDscResult.Value[0].Message);
-                  Write-Output -InputObject ('dir dsc std err: {0}' -f $dirDscResult.Value[1].Message);
+                  Write-Output -InputObject ('dir dsc (iteration {0}) std out: {1}' -f $dirDscIteration, $dirDscResult.Value[0].Message);
+                  Write-Output -InputObject ('dir dsc (iteration {0}) std err: {1}' -f $dirDscIteration, $dirDscResult.Value[1].Message);
                 } else {
-                  Write-Output -InputObject 'dir dsc command did not return a value';
+                  Write-Output -InputObject ('dir dsc (iteration {0}) command did not return a value' -f $dirDscIteration);
                 }
                 if ($dirDscCommandOutput -match 'task-claim-state.valid') {
-                  Write-Output -InputObject ('occ completion on: {0}, detected' -f $instanceName);
+                  Write-Output -InputObject ('dir dsc (iteration {0}) detected occ completion on: {1}' -f $dirDscIteration, $instanceName);
                 } else {
-                  Write-Output -InputObject ('awaiting occ completion on: {0}' -f $instanceName);
+                  Write-Output -InputObject ('dir dsc (iteration {0}) awaiting occ completion on: {1}' -f $dirDscIteration, $instanceName);
                   Start-Sleep -Seconds 30;
                 }
+                $dirDscIteration += 1;
               } until ($dirDscCommandOutput -match 'task-claim-state.valid')
               Remove-Item -Path ('{0}\dirdsc.ps1' -f $env:Temp);
 
