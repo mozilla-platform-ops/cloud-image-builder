@@ -120,15 +120,17 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       -destination $isoLocalPath `
       -force;  
   }
+  $unattendGenerationAttemptCount = 0;
   do {
+    $unattendGenerationAttemptCount += 1;
     $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
     try {
-      # todo: set computerName, administratorPassword
-      #-computerName '*' `
-      #-administratorPassword (New-Password) `
+      $administratorPassword = (New-Password);
       New-UnattendFile `
         -destinationPath $unattendLocalPath `
         -processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
+        -computerName '*' `
+        -administratorPassword $administratorPassword `
         -uiLanguage $config.image.language `
         -productKey $productKey `
         -registeredOwner $config.image.owner `
@@ -138,7 +140,11 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     } catch {
       Write-Output -InputObject ('exception creating unattend: {0}. retrying... {1}' -f $unattendLocalPath, $_.Exception.Message);
     }
-  } until (Test-Path -Path $unattendLocalPath -ErrorAction SilentlyContinue)
+  } until ((Test-Path -Path $unattendLocalPath -ErrorAction SilentlyContinue) -or ($unattendGenerationAttemptCount -gt 9))
+  if (-not (Test-Path -Path $unattendLocalPath -ErrorAction SilentlyContinue)) {
+    Write-Output -InputObject ('failed to genmerate unattend file at: {0}, in {1} attempts' -f $unattendLocalPath, $unattendGenerationAttemptCount);
+    exit 1
+  }
   Remove-Item -Path $driversLocalPath -Force -Recurse -ErrorAction SilentlyContinue;
   New-Item -Path $driversLocalPath -ItemType Directory -Force;
   foreach ($driver in $drivers) {
