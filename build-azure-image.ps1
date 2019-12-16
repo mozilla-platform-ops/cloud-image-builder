@@ -392,7 +392,7 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
         Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
         if ($azVm) {
-          $importImageName = ('{0}-{1}' -f $target.group, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
+          $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-'), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $revision.Substring(0, 7));
           Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
           
           (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
