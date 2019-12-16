@@ -481,7 +481,6 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
                 -resourceGroupName $target.group `
                 -region $target.region `
                 -instanceName $instanceName `
-                -imageTags $tags `
                 -imageName $importImageName;
 
               try {
