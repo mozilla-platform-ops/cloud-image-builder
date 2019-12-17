@@ -10,6 +10,9 @@ image:
   partition: MBR
   format: VHD
   type: Fixed
+  target:
+    platform: amazon
+    bucket: windows-ami-builder
 iso:
   source:
     platform: amazon

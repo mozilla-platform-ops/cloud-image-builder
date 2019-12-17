@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.49' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.50' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -270,6 +270,12 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   try {
     Dismount-WindowsImage -Path $vhdMountPoint -Save | Out-Null
     Write-Output -InputObject ('dismount success for: {0} at mount point: {1}' -f $vhdLocalPath, $vhdMountPoint);
+
+    Set-CloudBucketResource `
+      -platform $config.image.target.platform `
+      -bucket $config.image.target.bucket `
+      -key ('vhd/{0}' -f [System.IO.Path]::GetFileName($vhdLocalPath)) `
+      -source $vhdLocalPath;
   } catch {
     Write-Output -InputObject ('failed to dismount: {0} at mount point: {1}. {2}' -f $vhdLocalPath, $vhdMountPoint, $_.Exception.Message);
     throw
