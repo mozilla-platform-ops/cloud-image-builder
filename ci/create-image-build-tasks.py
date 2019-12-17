@@ -111,7 +111,7 @@ for platform in ['azure']:
       for target in targetConfig['target']:
         createTask(
           taskId = slugid.nice(),
-          taskName = 'import-{}-{}-to-{}'.format(platform, key. target['group']),
+          taskName = 'import-{}-{}-to-{}'.format(platform, key, target['group']),
           taskDescription = 'import {} {} image to {}'.format(platform, key, target['group']),
           maxRunMinutes = 180,
           dependencies = [ buildTaskId ],
