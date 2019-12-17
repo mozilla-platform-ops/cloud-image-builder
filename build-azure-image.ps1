@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted'
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.46' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.47' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -186,7 +186,6 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   }
   if (($drivers) -and ($drivers.Length)) {
     Convert-WindowsImage `
-      -verbose:$true `
       -SourcePath $isoLocalPath `
       -VhdPath $vhdLocalPath `
       -VhdFormat $config.image.format `
@@ -199,7 +198,6 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
   } else {
     Convert-WindowsImage `
-      -verbose:$true `
       -SourcePath $isoLocalPath `
       -VhdPath $vhdLocalPath `
       -VhdFormat $config.image.format `
@@ -398,9 +396,9 @@ foreach ($target in @($config.target | ? { $_.platform -eq $targetCloudPlatform 
         Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
         if ($azVm) {
-          $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-'), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $revision.Substring(0, 7));
+          $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $revision.Substring(0, 7));
           Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
-          
+
           (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
 
           # the first time occ runs, it renames the instance and reboots
