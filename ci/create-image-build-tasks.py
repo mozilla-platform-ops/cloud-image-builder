@@ -90,7 +90,8 @@ for platform in ['azure']:
         'git clone https://github.com/grenade/cloud-image-builder.git',
         'cd cloud-image-builder',
         'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
-        'powershell -File build-{}-image.ps1 {}-{}'.format(platform, key, platform)
+        'powershell -File build-{}-image.ps1 {}-{}'.format(platform, key, platform),
+        'powershell -File import-{}-image.ps1 {}-{}'.format(platform, key, platform)
       ],
       scopes = [
         'generic-worker:os-group:relops/win2019/Administrators',
