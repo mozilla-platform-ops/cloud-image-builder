@@ -14,7 +14,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.53' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.54' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -71,21 +71,23 @@ if (-not ($config)) {
   exit 1
 }
 
-$exportImageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().Replace(' ', ''),
-  $config.image.edition.ToLower(),
-  $config.image.language.ToLower(),
-  $config.image.architecture,
-  $(if ($config.image.gpu) { '-gpu' } else { '' }),
-  $config.image.type.ToLower(),
-  $config.image.format.ToLower());
-$vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName);
-# todo: get key from parent build task artifacts
+$imageArtifactDescriptorUri = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{0}.{1}.latest/artifacts/public/image-bucket-resource.json' -f $targetCloudPlatform, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
+$imageArtifactDescriptor = ((Invoke-WebRequest -Uri $imageArtifactDescriptorUri -UseBasicParsing).Content | ConvertFrom-Json);
+$exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
+$vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
+
 Get-CloudBucketResource `
-  -platform $config.image.target.platform `
-  -bucket $config.image.target.bucket `
-  -key ('vhd/{0}/{1}' -f (Get-Date -UFormat '+%Y-%m-%d'), [System.IO.Path]::GetFileName($vhdLocalPath)) `
+  -platform $imageArtifactDescriptor.image.platform `
+  -bucket $imageArtifactDescriptor.image.bucket `
+  -key $imageArtifactDescriptor.image.key `
   -destination $vhdLocalPath
   -force;
+if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
+  Write-Output -InputObject ('download success for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
+} else {
+  Write-Output -InputObject ('download failure for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
+  exit 1;
+}
 
 foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -eq $group) })) {
   $sku = ($target.machine.format -f $target.machine.cpu);

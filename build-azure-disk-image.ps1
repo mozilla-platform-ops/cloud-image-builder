@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.53' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.54' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -272,11 +272,39 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     Write-Output -InputObject ('dismount success for: {0} at mount point: {1}' -f $vhdLocalPath, $vhdMountPoint);
 
     # todo: set key in artifacts
+    $vhdBucketKey = ('vhd/{0}/{1}' -f (Get-Date -UFormat '+%Y-%m-%d'), [System.IO.Path]::GetFileName($vhdLocalPath));
     Set-CloudBucketResource `
       -platform $config.image.target.platform `
       -bucket $config.image.target.bucket `
-      -key ('vhd/{0}/{1}' -f (Get-Date -UFormat '+%Y-%m-%d'), [System.IO.Path]::GetFileName($vhdLocalPath)) `
+      -key $vhdBucketKey `
       -source $vhdLocalPath;
+    if (Test-CloudBucketResource `
+      -platform $config.image.target.platform `
+      -bucket $config.image.target.bucket `
+      -key $vhdBucketKey `
+      -source $vhdLocalPath) {
+      Write-Output -InputObject ('upload success for: {0} to: {1}/{2}/{3}' -f $vhdLocalPath, $config.image.target.platform, $config.image.target.bucket, $vhdBucketKey);
+      $imageArtifactDescriptor = @{
+        'build' = @{
+          'date' = (Get-Date -UFormat '+%Y-%m-%d');
+          'time' = (Get-Date -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
+          'revision' = $revision
+        };
+        'image' = @{
+          'platform' = $config.image.target.platform;
+          'bucket' = $config.image.target.bucket;
+          'key' = $vhdBucketKey
+        }
+      };
+      $imageArtifactDescriptorLocalPath = ('{0}{1}image-bucket-resource.json' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+      Out-File -FilePath $imageArtifactDescriptorLocalPath -Encoding UTF8NoBOM -InputObject (ConvertTo-Json -InputObject $imageArtifactDescriptor);
+      if (Test-Path -Path $imageArtifactDescriptorLocalPath -ErrorAction SilentlyContinue) {
+        Write-Output -InputObject ('image artifact descriptor written to: {0}' -f $imageArtifactDescriptorLocalPath);
+      }
+    } else {
+      Write-Output -InputObject ('upload failure for: {0} to: {1}/{2}/{3}' -f $vhdLocalPath, $config.image.target.platform, $config.image.target.bucket, $vhdBucketKey);
+      exit 1;
+    }
   } catch {
     Write-Output -InputObject ('failed to dismount: {0} at mount point: {1}. {2}' -f $vhdLocalPath, $vhdMountPoint, $_.Exception.Message);
     throw

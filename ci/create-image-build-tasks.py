@@ -79,6 +79,11 @@ for platform in ['azure']:
           'type': 'file',
           'name': 'public/unattend.xml',
           'path': 'unattend.xml'
+        },
+        {
+          'type': 'file',
+          'name': 'public/image-bucket-resource.json',
+          'path': 'image-bucket-resource.json'
         }
       ],
       osGroups = [
