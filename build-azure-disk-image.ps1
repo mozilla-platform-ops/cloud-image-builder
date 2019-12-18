@@ -296,7 +296,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         }
       };
       $imageArtifactDescriptorLocalPath = ('{0}{1}image-bucket-resource.json' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-      Out-File -FilePath $imageArtifactDescriptorLocalPath -Encoding UTF8NoBOM -InputObject (ConvertTo-Json -InputObject $imageArtifactDescriptor);
+      Out-File -FilePath $imageArtifactDescriptorLocalPath -Encoding 'utf8' -InputObject (ConvertTo-Json -InputObject $imageArtifactDescriptor);
       if (Test-Path -Path $imageArtifactDescriptorLocalPath -ErrorAction SilentlyContinue) {
         Write-Output -InputObject ('image artifact descriptor written to: {0}' -f $imageArtifactDescriptorLocalPath);
       }

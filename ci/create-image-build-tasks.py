@@ -49,8 +49,8 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   }
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
-  print('info: payload for task {} created'.format(taskId))
   queue.createTask(taskId, payload)
+  print('info: task {} created'.format(taskId))
 
 
 updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
