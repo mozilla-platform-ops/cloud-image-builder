@@ -281,8 +281,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     if (Test-CloudBucketResource `
       -platform $config.image.target.platform `
       -bucket $config.image.target.bucket `
-      -key $vhdBucketKey `
-      -source $vhdLocalPath) {
+      -key $vhdBucketKey) {
       Write-Output -InputObject ('upload success for: {0} to: {1}/{2}/{3}' -f $vhdLocalPath, $config.image.target.platform, $config.image.target.bucket, $vhdBucketKey);
       $imageArtifactDescriptor = @{
         'build' = @{
