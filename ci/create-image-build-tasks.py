@@ -58,7 +58,7 @@ updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
 taskGroupId = slugid.nice()
 createTask(
   taskId = taskGroupId,
-  taskName = 'build-cloud-images',
+  taskName = 'a-task-group-placeholder',
   taskDescription = 'this task only serves as a task grouping. it does no task work',
   provisioner = 'relops',
   workerType = 'win2019',
@@ -69,8 +69,8 @@ for platform in ['azure']:
     buildTaskId = slugid.nice()
     createTask(
       taskId = buildTaskId,
-      taskName = 'build-{}-{}'.format(platform, key),
-      taskDescription = 'build {} {} image from iso file'.format(platform, key),
+      taskName = 'build-{}-disk-image-from-{}-iso'.format(platform, key),
+      taskDescription = 'build {} {} disk image file from iso file and upload to cloud storage'.format(platform, key),
       maxRunMinutes = 180,
       provisioner = 'relops',
       workerType = 'win2019',
@@ -92,7 +92,7 @@ for platform in ['azure']:
         'git clone https://github.com/grenade/cloud-image-builder.git',
         'cd cloud-image-builder',
         'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
-        'powershell -File build-{}-image.ps1 {}-{}'.format(platform, key, platform)
+        'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
       ],
       scopes = [
         'generic-worker:os-group:relops/win2019/Administrators',
@@ -111,8 +111,8 @@ for platform in ['azure']:
       for target in targetConfig['target']:
         createTask(
           taskId = slugid.nice(),
-          taskName = 'import-{}-{}-to-{}'.format(platform, key, target['group']),
-          taskDescription = 'import {} {} image to {}'.format(platform, key, target['group']),
+          taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
+          taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
           maxRunMinutes = 180,
           dependencies = [ buildTaskId ],
           provisioner = 'relops',
@@ -124,7 +124,7 @@ for platform in ['azure']:
             'git clone https://github.com/grenade/cloud-image-builder.git',
             'cd cloud-image-builder',
             'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
-            'powershell -File import-{}-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
+            'powershell -File deploy-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
           ],
           scopes = [
             'secrets:get:project/relops/image-builder/dev'
