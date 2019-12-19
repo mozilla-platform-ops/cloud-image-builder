@@ -214,7 +214,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         } until ((-not $azVm) -or (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState))
         Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
-        if ($azVm) {
+        if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
           $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $revision.Substring(0, 7));
           Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
 
@@ -343,9 +343,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
         } else {
           Write-Output -InputObject ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          exit 1;
         }
       } catch {
         Write-Output -InputObject ('error: failure in image export: {0}, to region: {1}, in cloud platform: {2}. {3}' -f $exportImageName, $target.region, $target.platform, $_.Exception.Message);
+        exit 1;
       }
     }
   }
