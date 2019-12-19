@@ -73,11 +73,12 @@ if (-not ($config)) {
   Write-Output -InputObject ('error: failed to find image config for {0}' -f $imageKey);
   exit 1
 }
+$imageArtifactDescriptorUri = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{0}.{1}.latest/artifacts/public/image-bucket-resource.json' -f $targetCloudPlatform, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
+$imageArtifactDescriptorJson = ((New-Object Net.WebClient).DownloadString($imageArtifactDescriptorUri));
 try {
-  $imageArtifactDescriptorUri = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{0}.{1}.latest/artifacts/public/image-bucket-resource.json' -f $targetCloudPlatform, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
-  $imageArtifactDescriptor = ((New-Object Net.WebClient).DownloadString($imageArtifactDescriptorUri) | ConvertFrom-Json);
+  $imageArtifactDescriptor = (($imageArtifactDescriptorJson -replace "\xEF\xBB\xBF", '') | ConvertFrom-Json);
 } catch {
-  Write-Output -InputObject ('error: failed to download or parse {0}. {1}' -f $imageArtifactDescriptorUri, $_.Exception.Message);
+  Write-Output -InputObject ('error: failed to parse json: {0}. {1}' -f $imageArtifactDescriptorJson, $_.Exception.Message);
   exit 1
 }
 $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
