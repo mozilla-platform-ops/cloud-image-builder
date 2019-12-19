@@ -75,7 +75,7 @@ if (-not ($config)) {
 }
 
 $imageArtifactDescriptorUri = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{0}.{1}.latest/artifacts/public/image-bucket-resource.json' -f $targetCloudPlatform, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
-$imageArtifactDescriptor = ((Invoke-WebRequest -Uri $imageArtifactDescriptorUri -UseBasicParsing).Content | ConvertFrom-Json);
+$imageArtifactDescriptor = ((New-Object Net.WebClient).DownloadString($imageArtifactDescriptorUri) | ConvertFrom-Json);
 $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
 $vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
