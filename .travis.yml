@@ -1,7 +1,6 @@
 language: python
 install:
   - pip install boto3
-  - pip install json
   - pip install pyyaml
   - pip install slugid
   - pip install taskcluster
