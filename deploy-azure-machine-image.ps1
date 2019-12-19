@@ -74,11 +74,12 @@ if (-not ($config)) {
   exit 1
 }
 $imageArtifactDescriptorUri = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{0}.{1}.latest/artifacts/public/image-bucket-resource.json' -f $targetCloudPlatform, $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''));
-(New-Object Net.WebClient).DownloadFile($imageArtifactDescriptorUri, ('{0}\image-bucket-resource.json' -f $workFolder));
 try {
-  $imageArtifactDescriptor = (Get-Content -Path ('{0}\image-bucket-resource.json' -f $workFolder) -Raw | ConvertFrom-Json);
+  $memoryStream = (New-Object IO.MemoryStream(, (New-Object Net.WebClient).DownloadData($imageArtifactDescriptorUri)));
+  $streamReader = (New-Object IO.StreamReader(New-Object IO.Compression.GZipStream($memoryStream, 'Decompress')))
+  $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
 } catch {
-  Write-Output -InputObject ('error: failed to parse json: {0}. {1}' -f $imageArtifactDescriptorJson, $_.Exception.Message);
+  Write-Output -InputObject ('error: failed to decompress or parse json: {0}. {1}' -f $imageArtifactDescriptorJson, $_.Exception.Message);
   exit 1
 }
 $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
