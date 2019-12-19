@@ -89,7 +89,7 @@ Get-CloudBucketResource `
   -platform $imageArtifactDescriptor.image.platform `
   -bucket $imageArtifactDescriptor.image.bucket `
   -key $imageArtifactDescriptor.image.key `
-  -destination $vhdLocalPath
+  -destination $vhdLocalPath `
   -force;
 if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   Write-Output -InputObject ('download success for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
@@ -142,7 +142,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard NV Family vCPUs' })[0];
         break;
       }
-      '^Standard_NV[0-9]_v2$' {
+      '^Standard_NV[0-9]_Promo$' {
         $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard NV Promo Family vCPUs' })[0];
         break;
       }
