@@ -43,7 +43,7 @@ Connect-AzAccount `
     -Force))) `
   -Tenant $secret.azure.account | Out-Null;
 
-$azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
+$azcopyExePath = ('{0}\azcopy.exe' -f $workFolder);
 $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
 $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';
 if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
@@ -57,6 +57,9 @@ if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
       Copy-Item -Path $extractedAzcopyExePath -Destination $azcopyExePath;
       if (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue) {
         Write-Output -InputObject ('copied: {0} to: {1}' -f $extractedAzcopyExePath, $azcopyExePath);
+        $env:PATH = ('{0};{1}' -f $env:PATH, $workFolder);
+        [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User');
+        Write-Output -InputObject ('user env PATH set to: {0}' -f $env:PATH);
       }
     } catch {
       Write-Output -InputObject ('failed to extract azcopy from: {0}' -f $azcopyZipPath);

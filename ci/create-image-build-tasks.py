@@ -1,6 +1,9 @@
+import filecmp
+import json
 import os
 import slugid
 import taskcluster
+import urllib.request
 import yaml
 from datetime import datetime, timedelta
 
@@ -52,6 +55,17 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   queue.createTask(taskId, payload)
   print('info: task {} created'.format(taskId))
 
+def imageManifestHasChanged(platform, key):
+  currentRevision = os.getenv('TRAVIS_COMMIT')
+  lastRevision = json.loads(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read().decode('utf-8'))['build']['revision']
+  currentManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(currentRevision, key, platform)).read().decode('utf-8')
+  lastManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(lastRevision, key, platform)).read().decode('utf-8')
+  if currentManifest == lastManifest:
+    print('info: no change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
+  else:
+    print('info: change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
+  return currentManifest != lastManifest
+
 
 updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
 
@@ -66,50 +80,55 @@ createTask(
 )
 for platform in ['azure']:
   for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019']:
-    buildTaskId = slugid.nice()
-    createTask(
-      taskId = buildTaskId,
-      taskName = 'build-{}-disk-image-from-{}-iso'.format(platform, key),
-      taskDescription = 'build {} {} disk image file from iso file and upload to cloud storage'.format(platform, key),
-      maxRunMinutes = 180,
-      provisioner = 'relops',
-      workerType = 'win2019',
-      artifacts = [
-        {
-          'type': 'file',
-          'name': 'public/unattend.xml',
-          'path': 'unattend.xml'
+
+    if imageManifestHasChanged(platform, key):
+      buildTaskId = slugid.nice()
+      createTask(
+        taskId = buildTaskId,
+        taskName = 'build-{}-disk-image-from-{}-iso'.format(platform, key),
+        taskDescription = 'build {} {} disk image file from iso file and upload to cloud storage'.format(platform, key),
+        maxRunMinutes = 180,
+        provisioner = 'relops',
+        workerType = 'win2019',
+        artifacts = [
+          {
+            'type': 'file',
+            'name': 'public/unattend.xml',
+            'path': 'unattend.xml'
+          },
+          {
+            'type': 'file',
+            'name': 'public/image-bucket-resource.json',
+            'path': 'image-bucket-resource.json'
+          }
+        ],
+        osGroups = [
+          'Administrators'
+        ],
+        features = {
+          'taskclusterProxy': True,
+          'runAsAdministrator': True
         },
-        {
-          'type': 'file',
-          'name': 'public/image-bucket-resource.json',
-          'path': 'image-bucket-resource.json'
-        }
-      ],
-      osGroups = [
-        'Administrators'
-      ],
-      features = {
-        'taskclusterProxy': True,
-        'runAsAdministrator': True
-      },
-      commands = [
-        'git clone https://github.com/grenade/cloud-image-builder.git',
-        'cd cloud-image-builder',
-        'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
-        'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
-      ],
-      scopes = [
-        'generic-worker:os-group:relops/win2019/Administrators',
-        'generic-worker:run-as-administrator:relops/win2019',
-        'secrets:get:project/relops/image-builder/dev'
-      ],
-      routes = [
-        'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, os.getenv('TRAVIS_COMMIT')),
-        'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
-      ],
-      taskGroupId = taskGroupId
-    )
+        commands = [
+          'git clone https://github.com/grenade/cloud-image-builder.git',
+          'cd cloud-image-builder',
+          'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
+          'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
+        ],
+        scopes = [
+          'generic-worker:os-group:relops/win2019/Administrators',
+          'generic-worker:run-as-administrator:relops/win2019',
+          'secrets:get:project/relops/image-builder/dev'
+        ],
+        routes = [
+          'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, os.getenv('TRAVIS_COMMIT')),
+          'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+        ],
+        taskGroupId = taskGroupId
+      )
+    else:
+      buildTaskId = None
+
     targetConfigPath = 'config/{}-{}.yaml'.format(key, platform)
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
@@ -119,7 +138,7 @@ for platform in ['azure']:
           taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
           taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
           maxRunMinutes = 180,
-          dependencies = [ buildTaskId ],
+          dependencies = [] if buildTaskId is None else [ buildTaskId ],
           provisioner = 'relops',
           workerType = 'win2019',
           features = {
