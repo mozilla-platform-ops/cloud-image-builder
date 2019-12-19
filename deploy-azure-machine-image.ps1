@@ -79,11 +79,11 @@ try {
   $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')))
   $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
 } catch {
-  Write-Output -InputObject ('error: failed to decompress or parse json: {0}. {1}' -f $imageArtifactDescriptorJson, $_.Exception.Message);
+  Write-Output -InputObject ('error: failed to decompress or parse json from: {0}. {1}' -f $imageArtifactDescriptorUri, $_.Exception.Message);
   exit 1
 }
 $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
-$vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
+$vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
 Get-CloudBucketResource `
   -platform $imageArtifactDescriptor.image.platform `
