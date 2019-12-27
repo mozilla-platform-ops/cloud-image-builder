@@ -78,6 +78,7 @@ try {
   $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageArtifactDescriptorUri)));
   $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')))
   $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
+  Write-Output -InputObject ('fetched disk image config for: {0}, from: {1}' -f $imageKey, $imageArtifactDescriptorUri);
 } catch {
   Write-Output -InputObject ('error: failed to decompress or parse json from: {0}. {1}' -f $imageArtifactDescriptorUri, $_.Exception.Message);
   exit 1
@@ -85,20 +86,31 @@ try {
 $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
 $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
-Get-CloudBucketResource `
-  -platform $imageArtifactDescriptor.image.platform `
-  -bucket $imageArtifactDescriptor.image.bucket `
-  -key $imageArtifactDescriptor.image.key `
-  -destination $vhdLocalPath `
-  -force;
-if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
-  Write-Output -InputObject ('download success for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
-} else {
-  Write-Output -InputObject ('download failure for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
-  exit 1;
-}
-
 foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -eq $group) })) {
+  $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+  $existingImage = (Get-AzImage `
+    -ResourceGroupName $target.group `
+    -ImageName $importImageName `
+    -ErrorAction SilentlyContinue);
+  if ($existingImage) {
+    Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $importImageName, $target.group, $target.platform);
+    exit;
+  }
+  if (-not (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue)) {
+    Get-CloudBucketResource `
+      -platform $imageArtifactDescriptor.image.platform `
+      -bucket $imageArtifactDescriptor.image.bucket `
+      -key $imageArtifactDescriptor.image.key `
+      -destination $vhdLocalPath `
+      -force;
+    if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
+      Write-Output -InputObject ('download success for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
+    } else {
+      Write-Output -InputObject ('download failure for: {0} from: {1}/{2}/{3}' -f $vhdLocalPath, $imageArtifactDescriptor.image.platform, $imageArtifactDescriptor.image.bucket, $imageArtifactDescriptor.image.key);
+      exit 1;
+    }
+  }
+
   $sku = ($target.machine.format -f $target.machine.cpu);
   if (-not (Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region.Replace(' ', '').ToLower()) -and ($_.Name -eq $sku)) })) {
     Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
@@ -248,7 +260,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         }
         $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
         $tags = @{
-          'buildRevision' = $revision;
+          'diskImageBuildRevision' = $imageArtifactDescriptor.build.revision;
+          'machineImageBuildRevision' = $revision;
           'imageKey' = $imageKey;
           'resourceId' = $resourceId;
           'sourceIso' = ([System.IO.Path]::GetFileName($config.iso.source.key))
@@ -291,7 +304,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
         if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
-          $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $revision.Substring(0, 7));
           Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
 
           (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
