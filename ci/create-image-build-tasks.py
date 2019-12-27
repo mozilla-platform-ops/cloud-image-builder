@@ -54,7 +54,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
   queue.createTask(taskId, payload)
-  print('info: task {} created'.format(taskId))
+  print('info: task {} ({}: {}), created'.format(taskId, taskName, taskDescription))
 
 def imageManifestHasChanged(platform, key):
   currentRevision = os.getenv('TRAVIS_COMMIT')
