@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.54' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.56' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -124,13 +124,15 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
     try {
       $administratorPassword = (New-Password);
+      # todo: use -timeZone $config.image.timezone `
       New-UnattendFile `
         -destinationPath $unattendLocalPath `
         -processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
         -computerName '*' `
+        -productKey $productKey `
+        -timeZone $(if ($config.image.os -eq 'Windows 7') { $config.image.timezone } else { 'UTC' }) `
         -administratorPassword $administratorPassword `
         -uiLanguage $config.image.language `
-        -productKey $productKey `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
         -commands $commands;

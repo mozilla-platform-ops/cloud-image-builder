@@ -14,7 +14,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.54' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.56' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -273,6 +273,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         foreach ($tag in $target.tag) {
           $tags[$tag.name] = $tag.value;
         }
+        # todo: get instance screenshots
         New-CloudInstanceFromImageExport `
           -platform $target.platform `
           -localImagePath $vhdLocalPath `

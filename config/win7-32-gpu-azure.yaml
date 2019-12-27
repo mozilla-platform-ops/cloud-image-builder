@@ -4,6 +4,7 @@ image:
   edition: Professional
   language: en-US
   architecture: x86
+  timezone: ~
   gpu: true
   owner: Mozilla RelOps
   organization: Mozilla Corporation
