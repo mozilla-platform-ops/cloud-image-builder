@@ -27,14 +27,14 @@ def updateWorkerPool(configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
     'dependencies': dependencies,
     'provisionerId': provisioner,
     'workerType': workerType,
-    'priority': 'highest',
+    'priority': priority,
     'routes': routes,
     'scopes': scopes,
     'payload': {
@@ -54,7 +54,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
   queue.createTask(taskId, payload)
-  print('info: task {} ({}: {}), created'.format(taskId, taskName, taskDescription))
+  print('info: task {} ({}: {}), created with priority: {}'.format(taskId, taskName, taskDescription, priority))
 
 def imageManifestHasChanged(platform, key):
   currentRevision = os.getenv('TRAVIS_COMMIT')
@@ -91,6 +91,7 @@ for platform in ['azure']:
         maxRunMinutes = 180,
         provisioner = 'relops',
         workerType = 'win2019',
+        priority = 'high',
         artifacts = [
           {
             'type': 'file',
@@ -142,6 +143,7 @@ for platform in ['azure']:
           dependencies = [] if buildTaskId is None else [ buildTaskId ],
           provisioner = 'relops',
           workerType = 'win2019',
+          priority = 'low',
           features = {
             'taskclusterProxy': True
           },
