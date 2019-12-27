@@ -5,6 +5,7 @@ image:
   language: en-US
   architecture: x86
   timezone: null
+  hostname: null
   gpu: true
   owner: Mozilla RelOps
   organization: Mozilla Corporation
