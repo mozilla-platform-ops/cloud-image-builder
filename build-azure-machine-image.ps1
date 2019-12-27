@@ -102,58 +102,123 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
   $sku = ($target.machine.format -f $target.machine.cpu);
   if (-not (Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region.Replace(' ', '').ToLower()) -and ($_.Name -eq $sku)) })) {
     Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
-    $skuFound = $false;
-    foreach ($cpuCount in @(1, 2, 4, 8, 12, 16, 20)) {
-      foreach ($skuFormat in @('Standard_A{0}', 'Standard_A{0}_v2', 'Standard_A{0}m_v2', 'Standard_B{0}s', 'Standard_B{0}ms', 'Standard_D{0}_v3', 'Standard_D{0}s_v3', 'Standard_D{0}a_v4', 'Standard_D{0}as_v4', 'Standard_F{0}s_v2')) {
-        $sku = ($skuFormat -f $cpuCount);
-        if ((Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region.Replace(' ', '').ToLower()) -and ($_.Name -eq $sku)) })) {
-          Write-Output -InputObject ('image export: {0}, to region: {1}, in cloud platform: {2}. {3} may succeed if sku: {4} is used' -f $exportImageName, $target.region, $target.platform, $sku);
-          $skuFound = $true;
-        }
-      }
-    }
+    #$skuFound = $false;
+    #foreach ($cpuCount in @(1, 2, 4, 8, 12, 16, 20)) {
+    #  foreach ($skuFormat in @('Standard_A{0}', 'Standard_A{0}_v2', 'Standard_A{0}m_v2', 'Standard_B{0}s', 'Standard_B{0}ms', 'Standard_D{0}_v3', 'Standard_D{0}s_v3', 'Standard_D{0}a_v4', 'Standard_D{0}as_v4', 'Standard_F{0}s_v2')) {
+    #    $sku = ($skuFormat -f $cpuCount);
+    #    if ((Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region.Replace(' ', '').ToLower()) -and ($_.Name -eq $sku)) })) {
+    #      Write-Output -InputObject ('image export: {0}, to region: {1}, in cloud platform: {2}. {3} may succeed if sku: {4} is used' -f $exportImageName, $target.region, $target.platform, $sku);
+    #      $skuFound = $true;
+    #    }
+    #  }
+    #}
+    exit 1;
   } else {
     switch -regex ($sku) {
-      '^Standard_A[0-7]$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard A0-A7 Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+m?r?$' {
+        $skuFamily = '{0} {1} Family vCPUs' -f $matches[1], $matches[2];
         break;
       }
-      '^Standard_A(8|9|10|11)$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard A8-A11 Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+m?r?_Promo$' {
+        $skuFamily = '{0} {1} Promo Family vCPUs' -f $matches[1], $matches[2];
         break;
       }
-      '^Standard_A[0-9]+_v2$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard Av2 Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+[lmt]?s$' {
+        $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
         break;
       }
-      '^Standard_F[0-9]+$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard F Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M|P)([BC])[0-9]+r?s$' {
+        $skuFamily = '{0} {1}{2}S Family vCPUs' -f $matches[1], $matches[2], $matches[3];
         break;
       }
-      '^Standard_F[0-9]+s$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard FS Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?m?s$' {
+        $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
         break;
       }
-      '^Standard_F[0-9]+s_v2$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard FSv2 Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+$' {
+        $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
         break;
       }
-      '^Standard_NV[0-9]$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard NV Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+m?_v([2-4])$' {
+        $skuFamily = '{0} {1}v{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
         break;
       }
-      '^Standard_NV[0-9]_Promo$' {
-        $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq 'Standard NV Promo Family vCPUs' })[0];
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)?[0-9]+_v([2-4])_Promo$' {
+        $skuFamily = '{0} {1}v{2} Promo Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+_v([2-4])$' {
+        $skuFamily = '{0} {1}v{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+m?s_v([2-4])$' {
+        $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?s_v([2-4])$' {
+        $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+(-(1|2|4|8|16|32|64))?_v([2-4])$' {
+        $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?i_v([2-4])$' {
+        $skuFamily = '{0} {1}Iv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?is_v([2-4])$' {
+        $skuFamily = '{0} {1}ISv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+_v([2-4])_Promo$' {
+        $skuFamily = '{0} {1}Sv{2} Promo Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+a_v([2-4])$' {
+        $skuFamily = '{0} {1}Av{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+as_v([2-4])$' {
+        $skuFamily = '{0} {1}ASv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^Standard_N([CV])[0-9]+r?$' {
+        $skuFamily = 'Standard N{0} Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([CV])[0-9]+r?_Promo$' {
+        $skuFamily = 'Standard N{0} Promo Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([DP])S[0-9]+$' {
+        $skuFamily = 'Standard N{0}S Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([DP])[0-9]+r?s$' {
+        $skuFamily = 'Standard N{0}S Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([CDV])[0-9]+r?s_v([2-4])$' {
+        $skuFamily = 'Standard N{0}Sv{1} Family vCPUs' -f $matches[1], $matches[2];
         break;
       }
       default {
-        $azVMUsage = $false;
+        $skuFamily = $false;
+        break;
       }
+    }
+    if ($skuFamily) {
+      $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq $skuFamily })[0];
+    } else {
+      $azVMUsage = $false;
     }
     if (-not $azVMUsage) {
       Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. missing cpu family configuration for sku: {3}' -f $exportImageName, $target.region, $target.platform, $sku);
+      exit 1;
     } elseif ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
       Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use. no capacity for requested aditional {5} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $target.machine.cpu);
+      exit 1;
     } else {
       Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu);
       try {

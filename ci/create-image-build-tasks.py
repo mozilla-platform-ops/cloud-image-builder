@@ -149,7 +149,7 @@ for platform in ['azure']:
             'git clone https://github.com/grenade/cloud-image-builder.git',
             'cd cloud-image-builder',
             'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
-            'powershell -File deploy-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
+            'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
           ],
           scopes = [
             'secrets:get:project/relops/image-builder/dev'
