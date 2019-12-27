@@ -209,18 +209,21 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
       }
     }
     if ($skuFamily) {
+      Write-Output -InputObject ('mapped machine sku: {0}, to machine family: {1}' -f $sku, $skuFamily);
       $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq $skuFamily })[0];
     } else {
+      Write-Output -InputObject ('failed to map machine sku: {0}, to machine family (no regex match)' -f $sku);
       $azVMUsage = $false;
+      exit 1;
     }
     if (-not $azVMUsage) {
-      Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. missing cpu family configuration for sku: {3}' -f $exportImageName, $target.region, $target.platform, $sku);
+      Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. failed to obtain vm usage for machine sku: {3}, family: {4}' -f $exportImageName, $target.region, $target.platform, $sku, $skuFamily);
       exit 1;
     } elseif ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
-      Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use. no capacity for requested aditional {5} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $target.machine.cpu);
+      Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use for machine sku: {5}, family: {6}. no capacity for requested aditional {7} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $sku, $skuFamily, $target.machine.cpu);
       exit 1;
     } else {
-      Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu);
+      Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}, for machine sku: {3}, family: {4}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu, $sku, $skuFamily);
       try {
         Write-Output -InputObject ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
         switch ($target.hostname.slug.type) {
