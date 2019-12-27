@@ -127,6 +127,10 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
     exit 1;
   } else {
     switch -regex ($sku) {
+      '^Basic_A[0-9]+$' {
+        $skuFamily = 'Basic A Family vCPUs';
+        break;
+      }
       '^Standard_A[0-7]$' {
         $skuFamily = 'Standard A0-A7 Family vCPUs';
         break;
