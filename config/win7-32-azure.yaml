@@ -4,8 +4,8 @@ image:
   edition: Professional
   language: en-US
   architecture: x86
-  timezone: null
-  hostname: null
+  timezone: UTC
+  hostname: '*'
   gpu: false
   owner: Mozilla RelOps
   organization: Mozilla Corporation
@@ -20,7 +20,7 @@ iso:
     platform: amazon
     bucket: windows-ami-builder
     key: iso/en_windows_7_professional_with_sp1_x86_dvd_u_677056.iso
-  wimindex: 5
+  wimindex: 4
 target:
 - platform: azure
   group: rg-central-us-gecko-t
