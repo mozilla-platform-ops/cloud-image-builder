@@ -95,6 +95,20 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
   if ($existingImage) {
     Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $importImageName, $target.group, $target.platform);
     exit;
+  } else {
+    # check if the image exists in another regional resource-group
+    foreach ($alternateTarget in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -ne $group) })) {
+      $alternateImageName = ('{0}-{1}-{2}' -f $alternateTarget.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+      $alternateImage = (Get-AzImage `
+        -ResourceGroupName $alternateTarget.group `
+        -ImageName $alternateImageName `
+        -ErrorAction SilentlyContinue);
+      if ($alternateImage) {
+        Write-Output -InputObject ('found machine image for: {0}, in group: {1}, in cloud platform: {2}. triggering machine image copy from {1} to {3}...' -f $importImageName, $alternateTarget.group, $alternateTarget.platform, $target.group);
+        # todo implement image copy here...
+        exit;
+      }
+    }
   }
   if (-not (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue)) {
     Get-CloudBucketResource `
@@ -114,16 +128,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
   $sku = ($target.machine.format -f $target.machine.cpu);
   if (-not (Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region.Replace(' ', '').ToLower()) -and ($_.Name -eq $sku)) })) {
     Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
-    #$skuFound = $false;
-    #foreach ($cpuCount in @(1, 2, 4, 8, 12, 16, 20)) {
-    #  foreach ($skuFormat in @('Standard_A{0}', 'Standard_A{0}_v2', 'Standard_A{0}m_v2', 'Standard_B{0}s', 'Standard_B{0}ms', 'Standard_D{0}_v3', 'Standard_D{0}s_v3', 'Standard_D{0}a_v4', 'Standard_D{0}as_v4', 'Standard_F{0}s_v2')) {
-    #    $sku = ($skuFormat -f $cpuCount);
-    #    if ((Get-AzComputeResourceSku | where { (($_.Locations -icontains $target.region.Replace(' ', '').ToLower()) -and ($_.Name -eq $sku)) })) {
-    #      Write-Output -InputObject ('image export: {0}, to region: {1}, in cloud platform: {2}. {3} may succeed if sku: {4} is used' -f $exportImageName, $target.region, $target.platform, $sku);
-    #      $skuFound = $true;
-    #    }
-    #  }
-    #}
     exit 1;
   } else {
     switch -regex ($sku) {
@@ -245,7 +249,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
       exit 1;
     } elseif ($azVMUsage.Limit -lt ($azVMUsage.CurrentValue + $target.machine.cpu)) {
       Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3}/{4} cores quota in use for machine sku: {5}, family: {6}. no capacity for requested aditional {7} cores' -f $exportImageName, $target.region, $target.platform, $azVMUsage.CurrentValue, $azVMUsage.Limit, $sku, $skuFamily, $target.machine.cpu);
-      exit 1;
+      exit 123;
     } else {
       Write-Output -InputObject ('quota usage check: usage limit: {0}, usage current value: {1}, core request: {2}, for machine sku: {3}, family: {4}' -f $azVMUsage.Limit, $azVMUsage.CurrentValue, $target.machine.cpu, $sku, $skuFamily);
       try {
@@ -304,6 +308,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
             }
           } else {
             Write-Output -InputObject ('provisioning of vm: {0}, failed before it started' -f $instanceName);
+            exit 123;
           }
         } until ((-not $azVm) -or (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState))
         Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);

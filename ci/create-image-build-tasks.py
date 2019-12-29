@@ -27,10 +27,10 @@ def updateWorkerPool(configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', retries = 1, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
-    'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days=3)).isoformat()[:-3]),
+    'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days = 3)).isoformat()[:-3]),
     'dependencies': dependencies,
     'provisionerId': provisioner,
     'workerType': workerType,
@@ -53,6 +53,12 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   }
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
+  if retriggerOnExitCodes and retries > 1:
+    payload['retries'] = retries
+    payload['payload']['onExitStatus'] = {
+      'retry': retriggerOnExitCodes
+    }
+
   queue.createTask(taskId, payload)
   print('info: task {} ({}: {}), created with priority: {}'.format(taskId, taskName, taskDescription, priority))
 
@@ -140,6 +146,8 @@ for platform in ['azure']:
           taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
           taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
           maxRunMinutes = 180,
+          retries = 3,
+          retriggerOnExitCodes = [ 123 ],
           dependencies = [] if buildTaskId is None else [ buildTaskId ],
           provisioner = 'relops',
           workerType = 'win2019',
