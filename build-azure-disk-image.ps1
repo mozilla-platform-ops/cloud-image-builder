@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.59' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.60' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -197,7 +197,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       -Driver @($drivers | % { '{0}{1}{2}' -f $driversLocalPath, ([IO.Path]::DirectorySeparatorChar), $_.infpath }) `
       -RemoteDesktopEnable:$true `
       -DisableWindowsService $disableWindowsService `
-      -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
+      -DisableNotificationCenter:($config.image.os -eq 'Windows 10') `
+      -Verbose;
   } else {
     Convert-WindowsImage `
       -SourcePath $isoLocalPath `
@@ -208,7 +209,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
       -RemoteDesktopEnable:$true `
       -DisableWindowsService $disableWindowsService `
-      -DisableNotificationCenter:($config.image.os -eq 'Windows 10');
+      -DisableNotificationCenter:($config.image.os -eq 'Windows 10') `
+      -Verbose;
   }
 
 
