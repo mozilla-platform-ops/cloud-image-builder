@@ -4,6 +4,8 @@ image:
   edition: Professional
   language: en-US
   architecture: x86-64
+  timezone: UTC
+  hostname: '*'
   gpu: false
   owner: Mozilla RelOps
   organization: Mozilla Corporation

@@ -146,7 +146,7 @@ for platform in ['azure']:
           taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
           taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
           maxRunMinutes = 180,
-          retries = 3,
+          retries = 1,
           retriggerOnExitCodes = [ 123 ],
           dependencies = [] if buildTaskId is None else [ buildTaskId ],
           provisioner = 'relops',
@@ -168,5 +168,4 @@ for platform in ['azure']:
             'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, os.getenv('TRAVIS_COMMIT')),
             'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
           ],
-          taskGroupId = taskGroupId
-        )
+          taskGroupId = taskGroupId)
