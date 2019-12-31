@@ -268,7 +268,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         }
         $osDiskConfig = (@($target.disk | ? { $_.os })[0]);
         $tags = @{
+          'diskImageBuildDate' = $imageArtifactDescriptor.build.date;
+          'diskImageBuildTime' = $imageArtifactDescriptor.build.time;
           'diskImageBuildRevision' = $imageArtifactDescriptor.build.revision;
+          'machineImageBuildDate' = (Get-Date -UFormat '+%Y-%m-%d');
+          'machineImageBuildTime' = (Get-Date -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
           'machineImageBuildRevision' = $revision;
           'imageKey' = $imageKey;
           'resourceId' = $resourceId;
@@ -315,127 +319,132 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
 
         if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
           Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          $successfulOccRunDetected = $false;
 
-          (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
+          if ($config.image.architecture -eq 'x86-64') {
+            (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
 
-          # the first time occ runs, it renames the instance and reboots
-          $firstOccTriggerCommandResult = (Invoke-AzVMRunCommand `
-            -ResourceGroupName $target.group `
-            -VMName $instanceName `
-            -CommandId 'RunPowerShellScript' `
-            -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-          Write-Output -InputObject ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $firstOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
-          Write-Output -InputObject ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0].Message);
-          Write-Output -InputObject ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1].Message);
-
-          if ($firstOccTriggerCommandResult.Status -eq 'Succeeded') {
-
-            Set-Content -Path ('{0}\computername.ps1' -f $env:Temp) -Value '$env:ComputerName';
-            $echoHostnameCommandOutput = '';
-            do {
-              $echoHostnameResult = (Invoke-AzVMRunCommand `
-                -ResourceGroupName $target.group `
-                -VMName $instanceName `
-                -CommandId 'RunPowerShellScript' `
-                -ScriptPath ('{0}\computername.ps1' -f $env:Temp) `
-                -ErrorAction SilentlyContinue);
-              Write-Output -InputObject ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $echoHostnameResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
-              if ($echoHostnameResult.Value) {
-                $echoHostnameCommandOutput = $echoHostnameResult.Value[0].Message;
-                Write-Output -InputObject ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0].Message);
-                Write-Output -InputObject ('echo hostname std err: {0}' -f $echoHostnameResult.Value[1].Message);
-              } else {
-                Write-Output -InputObject 'echo hostname command did not return a value';
-              }
-              if ($echoHostnameCommandOutput -match $instanceName) {
-                Write-Output -InputObject ('host rename to: {0}, detected' -f $instanceName);
-              } else {
-                Write-Output -InputObject ('awaiting host rename to: {0}' -f $instanceName);
-                Start-Sleep -Seconds 30;
-              }
-            } until ($echoHostnameCommandOutput -match $instanceName)
-            Remove-Item -Path ('{0}\computername.ps1' -f $env:Temp);
-            # todo: validate that the instance rebooted after the host rename.
-
-            # the second time occ runs, it invokes dsc
-            $secondOccTriggerCommandResult = (Invoke-AzVMRunCommand `
+            # the first time occ runs, it renames the instance and reboots
+            $firstOccTriggerCommandResult = (Invoke-AzVMRunCommand `
               -ResourceGroupName $target.group `
               -VMName $instanceName `
               -CommandId 'RunPowerShellScript' `
-              -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp));
-            Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
+              -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
+            Write-Output -InputObject ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $firstOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+            Write-Output -InputObject ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0].Message);
+            Write-Output -InputObject ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1].Message);
 
-            Write-Output -InputObject ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $secondOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
-            Write-Output -InputObject ('seccond occ trigger std out: {0}' -f $secondOccTriggerCommandResult.Value[0].Message);
-            Write-Output -InputObject ('seccond occ trigger std err: {0}' -f $secondOccTriggerCommandResult.Value[1].Message);
+            if ($firstOccTriggerCommandResult.Status -eq 'Succeeded') {
 
-            if ($secondOccTriggerCommandResult.Status -eq 'Succeeded') {
-
-              Set-Content -Path ('{0}\dirdsc.ps1' -f $env:Temp) -Value 'Get-ChildItem -Path "C:\dsc"';
-              $dirDscCommandOutput = '';
-              $dirDscIteration = 0;
+              Set-Content -Path ('{0}\computername.ps1' -f $env:Temp) -Value '$env:ComputerName';
+              $echoHostnameCommandOutput = '';
               do {
-                $dirDscResult = (Invoke-AzVMRunCommand `
+                $echoHostnameResult = (Invoke-AzVMRunCommand `
                   -ResourceGroupName $target.group `
                   -VMName $instanceName `
                   -CommandId 'RunPowerShellScript' `
-                  -ScriptPath ('{0}\dirdsc.ps1' -f $env:Temp) `
+                  -ScriptPath ('{0}\computername.ps1' -f $env:Temp) `
                   -ErrorAction SilentlyContinue);
-                Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
-                if ($dirDscResult.Value) {
-                  $dirDscCommandOutput = $dirDscResult.Value[0].Message;
-                  Write-Output -InputObject ('dir dsc (iteration {0}) std out: {1}' -f $dirDscIteration, $dirDscResult.Value[0].Message);
-                  Write-Output -InputObject ('dir dsc (iteration {0}) std err: {1}' -f $dirDscIteration, $dirDscResult.Value[1].Message);
+                Write-Output -InputObject ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $echoHostnameResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+                if ($echoHostnameResult.Value) {
+                  $echoHostnameCommandOutput = $echoHostnameResult.Value[0].Message;
+                  Write-Output -InputObject ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0].Message);
+                  Write-Output -InputObject ('echo hostname std err: {0}' -f $echoHostnameResult.Value[1].Message);
                 } else {
-                  Write-Output -InputObject ('dir dsc (iteration {0}) command did not return a value' -f $dirDscIteration);
+                  Write-Output -InputObject 'echo hostname command did not return a value';
                 }
-                if ($dirDscCommandOutput -match 'task-claim-state.valid') {
-                  Write-Output -InputObject ('dir dsc (iteration {0}) detected occ completion on: {1}' -f $dirDscIteration, $instanceName);
+                if ($echoHostnameCommandOutput -match $instanceName) {
+                  Write-Output -InputObject ('host rename to: {0}, detected' -f $instanceName);
                 } else {
-                  Write-Output -InputObject ('dir dsc (iteration {0}) awaiting occ completion on: {1}' -f $dirDscIteration, $instanceName);
+                  Write-Output -InputObject ('awaiting host rename to: {0}' -f $instanceName);
                   Start-Sleep -Seconds 30;
                 }
-                $dirDscIteration += 1;
-              } until ($dirDscCommandOutput -match 'task-claim-state.valid')
-              Remove-Item -Path ('{0}\dirdsc.ps1' -f $env:Temp);
+              } until ($echoHostnameCommandOutput -match $instanceName)
+              Remove-Item -Path ('{0}\computername.ps1' -f $env:Temp);
+              # todo: validate that the instance rebooted after the host rename.
 
-              New-CloudImageFromInstance `
-                -platform $target.platform `
-                -resourceGroupName $target.group `
-                -region $target.region `
-                -instanceName $instanceName `
-                -imageName $importImageName;
+              # the second time occ runs, it invokes dsc
+              $secondOccTriggerCommandResult = (Invoke-AzVMRunCommand `
+                -ResourceGroupName $target.group `
+                -VMName $instanceName `
+                -CommandId 'RunPowerShellScript' `
+                -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp));
+              Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
 
-              try {
-                $azImage = (Get-AzImage `
-                  -ResourceGroupName $target.group `
-                  -ImageName $importImageName `
-                  -ErrorAction SilentlyContinue);
-                if ($azImage) {
-                  Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
-                } else {
-                  Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
-                }
-              } catch {
-                Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $importImageName, $target.region, $target.platform, $_.Exception.Message);
+              Write-Output -InputObject ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $secondOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+              Write-Output -InputObject ('seccond occ trigger std out: {0}' -f $secondOccTriggerCommandResult.Value[0].Message);
+              Write-Output -InputObject ('seccond occ trigger std err: {0}' -f $secondOccTriggerCommandResult.Value[1].Message);
+
+              if ($secondOccTriggerCommandResult.Status -eq 'Succeeded') {
+
+                Set-Content -Path ('{0}\dirdsc.ps1' -f $env:Temp) -Value 'Get-ChildItem -Path "C:\dsc"';
+                $dirDscCommandOutput = '';
+                $dirDscIteration = 0;
+                do {
+                  $dirDscResult = (Invoke-AzVMRunCommand `
+                    -ResourceGroupName $target.group `
+                    -VMName $instanceName `
+                    -CommandId 'RunPowerShellScript' `
+                    -ScriptPath ('{0}\dirdsc.ps1' -f $env:Temp) `
+                    -ErrorAction SilentlyContinue);
+                  Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+                  if ($dirDscResult.Value) {
+                    $dirDscCommandOutput = $dirDscResult.Value[0].Message;
+                    Write-Output -InputObject ('dir dsc (iteration {0}) std out: {1}' -f $dirDscIteration, $dirDscResult.Value[0].Message);
+                    Write-Output -InputObject ('dir dsc (iteration {0}) std err: {1}' -f $dirDscIteration, $dirDscResult.Value[1].Message);
+                  } else {
+                    Write-Output -InputObject ('dir dsc (iteration {0}) command did not return a value' -f $dirDscIteration);
+                  }
+                  if ($dirDscCommandOutput -match 'task-claim-state.valid') {
+                    Write-Output -InputObject ('dir dsc (iteration {0}) detected occ completion on: {1}' -f $dirDscIteration, $instanceName);
+                    $successfulOccRunDetected = $true;
+                  } else {
+                    Write-Output -InputObject ('dir dsc (iteration {0}) awaiting occ completion on: {1}' -f $dirDscIteration, $instanceName);
+                    Start-Sleep -Seconds 30;
+                  }
+                  $dirDscIteration += 1;
+                } until ($dirDscCommandOutput -match 'task-claim-state.valid')
+                Remove-Item -Path ('{0}\dirdsc.ps1' -f $env:Temp);
               }
-
-              try {
-                $azVm = (Get-AzVm `
+            }
+          }
+          if ($successfulOccRunDetected -or ($config.image.architecture -ne 'x86-64')) {
+            New-CloudImageFromInstance `
+              -platform $target.platform `
+              -resourceGroupName $target.group `
+              -region $target.region `
+              -instanceName $instanceName `
+              -imageName $importImageName `
+              -imageTags $tags;
+            try {
+              $azImage = (Get-AzImage `
+                -ResourceGroupName $target.group `
+                -ImageName $importImageName `
+                -ErrorAction SilentlyContinue);
+              if ($azImage) {
+                Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+              } else {
+                Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+              }
+            } catch {
+              Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $importImageName, $target.region, $target.platform, $_.Exception.Message);
+            }
+            try {
+              $azVm = (Get-AzVm `
+                -ResourceGroupName $target.group `
+                -Name $instanceName `
+                -Status `
+                -ErrorAction SilentlyContinue);
+              # todo: delete vm even if status is not as expected
+              if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
+                Remove-AzVm `
                   -ResourceGroupName $target.group `
                   -Name $instanceName `
-                  -Status `
-                  -ErrorAction SilentlyContinue);
-                if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
-                  Remove-AzVm `
-                    -ResourceGroupName $target.group `
-                    -Name $instanceName `
-                    -Force;
-                  Write-Output -InputObject ('instance: {0}, deletion appears successful in region: {1}, cloud platform: {2}' -f $instanceName, $target.region, $target.platform);
-                }
-              } catch {
-                Write-Output -InputObject ('instance: {0}, fetch/deletion threw exception in region: {1}, cloud platform: {2}. {3}' -f $instanceName, $target.region, $target.platform, $_.Exception.Message);
+                  -Force;
+                Write-Output -InputObject ('instance: {0}, deletion appears successful in region: {1}, cloud platform: {2}' -f $instanceName, $target.region, $target.platform);
               }
+            } catch {
+              Write-Output -InputObject ('instance: {0}, fetch/deletion threw exception in region: {1}, cloud platform: {2}. {3}' -f $instanceName, $target.region, $target.platform, $_.Exception.Message);
             }
           }
           Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
