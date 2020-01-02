@@ -87,25 +87,96 @@ $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.
 $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
 foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -eq $group) })) {
-  $importImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+  $targetImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
   $existingImage = (Get-AzImage `
     -ResourceGroupName $target.group `
-    -ImageName $importImageName `
+    -ImageName $targetImageName `
     -ErrorAction SilentlyContinue);
   if ($existingImage) {
-    Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $importImageName, $target.group, $target.platform);
+    Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
     exit;
   } else {
-    # check if the image exists in another regional resource-group
-    foreach ($alternateTarget in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -ne $group) })) {
-      $alternateImageName = ('{0}-{1}-{2}' -f $alternateTarget.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
-      $alternateImage = (Get-AzImage `
+    # check if the image snapshot exists in another regional resource-group
+    $targetSnapshotName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+    foreach ($source in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -ne $group) })) {
+      $sourceSnapshotName = ('{0}-{1}-{2}' -f $source.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+      $sourceSnapshot = (Get-AzSnapshot `
         -ResourceGroupName $alternateTarget.group `
-        -ImageName $alternateImageName `
+        -SnapshotName $sourceSnapshotName `
         -ErrorAction SilentlyContinue);
-      if ($alternateImage) {
-        Write-Output -InputObject ('found machine image for: {0}, in group: {1}, in cloud platform: {2}. triggering machine image copy from {1} to {3}...' -f $importImageName, $alternateTarget.group, $alternateTarget.platform, $target.group);
-        # todo implement image copy here...
+      if ($sourceSnapshot) {
+        Write-Output -InputObject ('found snapshot: {0}, in group: {1}, in cloud platform: {2}. triggering machine copy from {1} to {3}...' -f $sourceSnapshotName, $source.group, $source.platform, $target.group);
+
+        # get/create storage account in target region
+        $storageAccountName = 'cloudimagebuilder';
+        $targetAzStorageAccount = (Get-AzStorageAccount `
+          -ResourceGroupName $target.group `
+          -Name $storageAccountName);
+        if ($targetAzStorageAccount) {
+          Write-Output -InputObject ('detected storage account: {0}, for resource group: {1}' -f $storageAccountName, $target.group);
+        } else {
+          $targetAzStorageAccount = (New-AzStorageAccount `
+            -ResourceGroupName $target.group `
+            -AccountName $storageAccountName `
+            -Location $target.region.Replace(' ', '').ToLower() `
+            -SkuName 'Standard_LRS');
+          Write-Output -InputObject ('created storage account: {0}, for resource group: {1}' -f $storageAccountName, $target.group);
+        }
+        # get/create storage container (bucket) in target region
+        $storageContainerName = ('cloudimagebuilder-{0}' -f $target.region.Replace(' ', '-').ToLower());
+        $targetAzStorageContainer = (Get-AzStorageContainer `
+          -Name $storageContainerName `
+          -Context $targetAzStorageAccount.Context);
+        if ($targetAzStorageContainer) {
+          Write-Output -InputObject ('detected storage container: {0}' -f $storageContainerName);
+        } else {
+          $targetAzStorageContainer = (New-AzStorageContainer `
+            -Name $storageContainerName `
+            -Context $targetAzStorageAccount.Context `
+            -Permission 'Container');
+          Write-Output -InputObject ('created storage container: {0}' -f $storageContainerName);
+        }
+         
+        # copy snapshot to target container (bucket)
+        $sourceAzSnapshotAccess = (Grant-AzSnapshotAccess `
+          -ResourceGroupName $source.group `
+          -SnapshotName $sourceSnapshotName `
+          -DurationInSecond 3600 `
+          -Access 'Read');
+        Start-AzStorageBlobCopy `
+          -AbsoluteUri $sourceAzSnapshotAccess.AccessSAS `
+          -DestContainer $storageContainerName `
+          -DestContext $targetAzStorageAccount.Context `
+          -DestBlob $targetSnapshotName;
+        $targetAzStorageBlobCopyState = (Get-AzStorageBlobCopyState `
+          -Container $storageContainerName `
+          -Blob $targetSnapshotName `
+          -Context $targetAzStorageAccount.Context `
+          -WaitForComplete);
+        $targetAzSnapshotConfig = (New-AzSnapshotConfig `
+          -AccountType 'StandardLRS' `
+          -OsType 'Windows' `
+          -Location $target.region.Replace(' ', '').ToLower() `
+          -CreateOption 'Import' `
+          -SourceUri ('{0}{1}/{2}' -f $targetAzStorageAccount.Context.BlobEndPoint, $storageContainerName, $targetSnapshotName) `
+          -StorageAccountId $targetAzStorageAccount.Id);
+        $targetAzSnapshot = (New-AzSnapshot `
+          -ResourceGroupName $target.group `
+          -SnapshotName $targetSnapshotName `
+          -Snapshot $targetAzSnapshotConfig);
+        Write-Output -InputObject ('provisioning of snapshot: {0}, has state: {1}' -f $targetSnapshotName, $targetAzSnapshot.ProvisioningState.ToLower());
+        $targetAzImageConfig = (New-AzImageConfig `
+          -Location $target.region.Replace(' ', '').ToLower());
+        $targetAzImageConfig = (Set-AzImageOsDisk `
+          -Image $targetAzImageConfig `
+          -OsType 'Windows' `
+          -OsState 'Generalized' `
+          -SnapshotId $targetAzSnapshot.Id);
+        $targetAzImage = (New-AzImage `
+          -ResourceGroupName $target.group `
+          -ImageName $targetImageName `
+          -Image $targetAzImageConfig);
+        Write-Output -InputObject ('provisioning of image: {0}, has state: {1}' -f $targetImageName, $targetAzImage.ProvisioningState.ToLower());
         exit;
       }
     }
@@ -318,7 +389,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
         if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
-          Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
           $successfulOccRunDetected = $false;
 
           if ($config.image.architecture -eq 'x86-64') {
@@ -414,20 +485,20 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
               -resourceGroupName $target.group `
               -region $target.region `
               -instanceName $instanceName `
-              -imageName $importImageName `
+              -imageName $targetImageName `
               -imageTags $tags;
             try {
               $azImage = (Get-AzImage `
                 -ResourceGroupName $target.group `
-                -ImageName $importImageName `
+                -ImageName $targetImageName `
                 -ErrorAction SilentlyContinue);
               if ($azImage) {
-                Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+                Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               } else {
-                Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+                Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               }
             } catch {
-              Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $importImageName, $target.region, $target.platform, $_.Exception.Message);
+              Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
             }
             try {
               $azVm = (Get-AzVm `
@@ -447,11 +518,31 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
               Write-Output -InputObject ('instance: {0}, fetch/deletion threw exception in region: {1}, cloud platform: {2}. {3}' -f $instanceName, $target.region, $target.platform, $_.Exception.Message);
             }
           }
-          Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
         } else {
-          Write-Output -InputObject ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $importImageName, $target.region, $target.platform);
+          Write-Output -InputObject ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
           exit 1;
         }
+
+        # create a snapshot
+        # todo: move this functionality to posh-minions-managed
+        $azVm = (Get-AzVm `
+          -ResourceGroupName $target.group `
+          -Name $instanceName `
+          -ErrorAction SilentlyContinue);
+        $azDisk = (Get-AzDisk `
+          -ResourceGroupName $target.group `
+          -DiskName $azVm.StorageProfile.OsDisk.Name);
+        $azSnapshotConfig = (New-AzSnapshotConfig `
+          -SourceUri $azDisk.Id `
+          -CreateOption 'Copy' `
+          -Location $target.region.Replace(' ', '').ToLower());
+        $azSnapshot = (New-AzSnapshot `
+          -ResourceGroupName $target.group `
+          -Snapshot $azSnapshotConfig `
+          -SnapshotName $targetImageName);
+        Write-Output -InputObject ('provisioning of snapshot: {0}, has state: {1}' -f $targetImageName, $azSnapshot.ProvisioningState.ToLower());
+
       } catch {
         Write-Output -InputObject ('error: failure in image export: {0}, to region: {1}, in cloud platform: {2}. {3}' -f $exportImageName, $target.region, $target.platform, $_.Exception.Message);
         exit 1;
