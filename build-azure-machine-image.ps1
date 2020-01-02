@@ -545,6 +545,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
 
       } catch {
         Write-Output -InputObject ('error: failure in image export: {0}, to region: {1}, in cloud platform: {2}. {3}' -f $exportImageName, $target.region, $target.platform, $_.Exception.Message);
+        throw;
         exit 1;
       }
     }
