@@ -13,7 +13,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.62' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.65' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -123,16 +123,13 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     $unattendGenerationAttemptCount += 1;
     $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
     try {
-      # todo: switch to using no special win 7 rules after debugging the specialize component:
-      # -computerName $config.image.hostname `
-      # -timeZone $config.image.timezone `
       $administratorPassword = (New-Password);
       New-UnattendFile `
         -destinationPath $unattendLocalPath `
         -processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
-        -computerName $(if ($config.image.os -eq 'Windows 7') { $config.image.hostname } else { '*' }) `
+        -computerName $(if ($config.image.hostname) { $config.image.hostname } else { '*' }) `
         -productKey $productKey `
-        -timeZone $(if ($config.image.os -eq 'Windows 7') { $config.image.timezone } else { 'UTC' }) `
+        -timeZone $(if ($config.image.timezone) { $config.image.timezone } else { 'UTC' }) `
         -administratorPassword $administratorPassword `
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
