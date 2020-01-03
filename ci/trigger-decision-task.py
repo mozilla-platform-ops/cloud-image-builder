@@ -27,4 +27,3 @@ createTask(
     'echo task: $TASK_ID, sha: $GITHUB_HEAD_SHA'
   ]
 )
-print('info: task {} ({}: {}), created'.format(taskId, taskName, taskDescription))
