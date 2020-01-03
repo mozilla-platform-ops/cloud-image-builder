@@ -31,6 +31,6 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'echo task: $TASK_ID, sha: $GITHUB_HEAD_SHA && set'
+    'pip install azure boto3 pyyaml slugid taskcluster urllib3 && python --version'
   ]
 )
