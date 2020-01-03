@@ -4,6 +4,7 @@ owner: grenade@mozilla.com
 emailOnError: true
 providerId: aws
 config:
+  minCapacity: 0
   maxCapacity: 3
   launchConfigs:
   - capacityPerInstance: 2
