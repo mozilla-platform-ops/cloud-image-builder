@@ -19,7 +19,7 @@ def updateWorkerPool(workerManager, configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType, commands, env = None, image = None, priority = 'normal', retries = 0, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType, commands, env = None, image = None, priority = 'low', retries = 0, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days = 3)).isoformat()[:-3]),
