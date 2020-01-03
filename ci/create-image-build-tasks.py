@@ -27,7 +27,7 @@ def updateWorkerPool(configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', retries = 1, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', retries = 0, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days = 3)).isoformat()[:-3]),
@@ -53,7 +53,7 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   }
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
-  if retriggerOnExitCodes and retries > 1:
+  if retriggerOnExitCodes and retries > 0:
     payload['retries'] = retries
     payload['payload']['onExitStatus'] = {
       'retry': retriggerOnExitCodes
