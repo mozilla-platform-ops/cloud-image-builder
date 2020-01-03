@@ -28,6 +28,6 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'echo task: $TASK_ID, sha: $GITHUB_HEAD_SHA'
+    'echo task: $TASK_ID, sha: $GITHUB_HEAD_SHA && set'
   ]
 )
