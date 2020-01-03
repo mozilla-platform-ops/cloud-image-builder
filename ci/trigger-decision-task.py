@@ -26,7 +26,7 @@ createTask(
   workerType = 'decision',
   env = {
     'GITHUB_HEAD_SHA': os.getenv('TRAVIS_COMMIT')
-  }
+  },
   commands = [
     '/bin/bash',
     '--login',
