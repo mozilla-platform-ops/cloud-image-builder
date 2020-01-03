@@ -485,8 +485,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
               -resourceGroupName $target.group `
               -region $target.region `
               -instanceName $instanceName `
-              -imageName $targetImageName `
-              -imageTags $tags;
+              -imageName $targetImageName;
+              #-imageTags $tags; # todo: tag image when azure ps isn't broken
             try {
               $azImage = (Get-AzImage `
                 -ResourceGroupName $target.group `
