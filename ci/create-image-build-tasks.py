@@ -24,7 +24,7 @@ elif runEnvironment == 'taskcluster':
   taskGroupId = os.getenv('TASK_ID')
   auth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
   print('debug: auth.currentScopes')
-  print(auth.currentScopes)
+  print(auth.currentScopes())
 else:
   quit()
 
