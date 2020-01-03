@@ -32,7 +32,7 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
     'payload': {
       'maxRunTime': (maxRunMinutes * 60),
       'command': commands,
-      'artifacts': artifacts,
+      'artifacts': artifacts if workerType.startswith('win') else {},
       'features': features
     },
     'metadata': {
