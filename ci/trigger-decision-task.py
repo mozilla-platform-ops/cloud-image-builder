@@ -31,6 +31,6 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'pip install azure boto3 pyyaml slugid taskcluster urllib3 && python --version'
+    'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && python cloud-image-builder/ci/create-image-build-tasks.py'
   ]
 )
