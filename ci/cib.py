@@ -19,7 +19,7 @@ def updateWorkerPool(workerManager, configPath, workerPoolId):
       print('info: worker pool {} created'.format(workerPoolId))
 
 
-def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', retries = 0, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
+def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType, commands, image = None, priority = 'normal', retries = 0, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
   payload = {
     'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
     'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days = 3)).isoformat()[:-3]),
@@ -33,8 +33,7 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
       'maxRunTime': (maxRunMinutes * 60),
       'command': commands,
       'artifacts': artifacts,
-      'features': features,
-      'osGroups': osGroups
+      'features': features
     },
     'metadata': {
       'name': taskName,
@@ -45,6 +44,10 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
   }
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
+  if image is not None:
+    payload['payload']['image'] = image
+  if osGroups:
+    payload['payload']['osGroups'] = osGroups
   if retriggerOnExitCodes and retries > 0:
     payload['retries'] = retries
     payload['payload']['onExitStatus'] = {

@@ -18,12 +18,16 @@ updateWorkerPool(
   workerPoolId = 'relops/win2019')
 createTask(
   queue = queue,
+  image = 'python',
   taskId = slugid.nice(),
   taskName = '00 :: decision task',
   taskDescription = 'determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same',
   provisioner = 'relops',
   workerType = 'decision',
   commands = [
+    '/bin/bash',
+    '--login',
+    '-c',
     'echo task: $TASK_ID, sha: $GITHUB_HEAD_SHA'
   ]
 )
