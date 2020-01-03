@@ -1,13 +1,11 @@
 language: python
 install:
-  - pip install azure
-  - pip install boto3
   - pip install pyyaml
   - pip install slugid
   - pip install taskcluster
   - pip install urllib3
 script:
-- python ./ci/create-image-build-tasks.py
+- python ./ci/trigger-decision-task.py
 env:
   matrix:
   - TASKCLUSTER_ROOT_URL='https://firefox-ci-tc.services.mozilla.com' TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'

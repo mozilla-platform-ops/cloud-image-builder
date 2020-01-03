@@ -2,17 +2,10 @@ import os
 import slugid
 import taskcluster
 import yaml
-from cib import createTask, imageManifestHasChanged, updateWorkerPool
+from cib import createTask, imageManifestHasChanged
 
-
-workerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
 runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None and os.getenv('GITHUB_HEAD_SHA') is not None else None
-
-updateWorkerPool(
-  workerManager = workerManager,
-  configPath = 'ci/config/worker-pool.yaml',
-  workerPoolId = 'relops/win2019')
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')
