@@ -5,7 +5,7 @@ import yaml
 from cib import createTask, imageManifestHasChanged
 
 queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
-runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None and os.getenv('GITHUB_HEAD_SHA') is not None else None
+runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None else None
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')

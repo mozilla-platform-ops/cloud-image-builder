@@ -24,6 +24,9 @@ createTask(
   taskDescription = 'determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same',
   provisioner = 'relops',
   workerType = 'decision',
+  env = {
+    'GITHUB_HEAD_SHA': os.getenv('TRAVIS_COMMIT')
+  }
   commands = [
     '/bin/bash',
     '--login',
