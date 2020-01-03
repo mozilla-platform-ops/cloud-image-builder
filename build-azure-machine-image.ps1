@@ -506,16 +506,48 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
                 -Name $instanceName `
                 -Status `
                 -ErrorAction SilentlyContinue);
-              # todo: delete vm even if status is not as expected
               if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
+                # create a snapshot
+                # todo: move this functionality to posh-minions-managed
+                $azVm = (Get-AzVm `
+                  -ResourceGroupName $target.group `
+                  -Name $instanceName `
+                  -ErrorAction SilentlyContinue);
+                if ($azVm -and $azVm.StorageProfile.OsDisk.Name) {
+                  $azDisk = (Get-AzDisk `
+                    -ResourceGroupName $target.group `
+                    -DiskName $azVm.StorageProfile.OsDisk.Name);
+                  if ($azDisk -and $azDisk[0].Id) {
+                    $azSnapshotConfig = (New-AzSnapshotConfig `
+                      -SourceUri $azDisk[0].Id `
+                      -CreateOption 'Copy' `
+                      -Location $target.region.Replace(' ', '').ToLower());
+                    $azSnapshot = (New-AzSnapshot `
+                      -ResourceGroupName $target.group `
+                      -Snapshot $azSnapshotConfig `
+                      -SnapshotName $targetImageName);
+                  } else {
+                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk id' -f $targetImageName, $instanceName);
+                  }
+                } else {
+                  Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk name' -f $targetImageName, $instanceName);
+                }
+                Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, has state: {2}' -f $targetImageName, $instanceName, $azSnapshot.ProvisioningState.ToLower());
+              } else {
+                Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined vm state' -f $targetImageName, $instanceName);
+              }
+            } catch {
+              Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
+            } finally {
+              try {
                 Remove-AzVm `
                   -ResourceGroupName $target.group `
                   -Name $instanceName `
                   -Force;
-                Write-Output -InputObject ('instance: {0}, deletion appears successful in region: {1}, cloud platform: {2}' -f $instanceName, $target.region, $target.platform);
+                Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+              } catch {
+                Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
               }
-            } catch {
-              Write-Output -InputObject ('instance: {0}, fetch/deletion threw exception in region: {1}, cloud platform: {2}. {3}' -f $instanceName, $target.region, $target.platform, $_.Exception.Message);
             }
           }
           Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
@@ -523,26 +555,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           Write-Output -InputObject ('skipped image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
           exit 1;
         }
-
-        # create a snapshot
-        # todo: move this functionality to posh-minions-managed
-        $azVm = (Get-AzVm `
-          -ResourceGroupName $target.group `
-          -Name $instanceName `
-          -ErrorAction SilentlyContinue);
-        $azDisk = (Get-AzDisk `
-          -ResourceGroupName $target.group `
-          -DiskName $azVm.StorageProfile.OsDisk.Name);
-        $azSnapshotConfig = (New-AzSnapshotConfig `
-          -SourceUri $azDisk.Id `
-          -CreateOption 'Copy' `
-          -Location $target.region.Replace(' ', '').ToLower());
-        $azSnapshot = (New-AzSnapshot `
-          -ResourceGroupName $target.group `
-          -Snapshot $azSnapshotConfig `
-          -SnapshotName $targetImageName);
-        Write-Output -InputObject ('provisioning of snapshot: {0}, has state: {1}' -f $targetImageName, $azSnapshot.ProvisioningState.ToLower());
-
       } catch {
         Write-Output -InputObject ('error: failure in image export: {0}, to region: {1}, in cloud platform: {2}. {3}' -f $exportImageName, $target.region, $target.platform, $_.Exception.Message);
         throw;
