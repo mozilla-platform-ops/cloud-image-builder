@@ -1,5 +1,6 @@
 language: python
 install:
+  - pip install azure
   - pip install boto3
   - pip install pyyaml
   - pip install slugid

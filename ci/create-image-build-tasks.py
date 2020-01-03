@@ -62,8 +62,8 @@ def createTask(taskId, taskName, taskDescription, provisioner, workerType, comma
   queue.createTask(taskId, payload)
   print('info: task {} ({}: {}), created with priority: {}'.format(taskId, taskName, taskDescription, priority))
 
-def imageManifestHasChanged(platform, key):
-  currentRevision = os.getenv('TRAVIS_COMMIT')
+
+def imageManifestHasChanged(platform, key, currentRevision):
   lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
   currentManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(currentRevision, key, platform)).read().decode()
   lastManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(lastRevision, key, platform)).read().decode()
@@ -74,21 +74,30 @@ def imageManifestHasChanged(platform, key):
   return currentManifest != lastManifest
 
 
+runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None and os.getenv('GITHUB_HEAD_SHA') is not None else None
 updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
 
-taskGroupId = slugid.nice()
-createTask(
-  taskId = taskGroupId,
-  taskName = 'a-task-group-placeholder',
-  taskDescription = 'this task only serves as a task grouping. it does no task work',
-  provisioner = 'relops',
-  workerType = 'win2019',
-  commands = []
-)
+if runEnvironment == 'travis':
+  commitSha = os.getenv('TRAVIS_COMMIT')
+  taskGroupId = slugid.nice()
+  createTask(
+    taskId = taskGroupId,
+    taskName = 'a-task-group-placeholder',
+    taskDescription = 'this task only serves as a task grouping when triggered from travis. it does no actual work',
+    provisioner = 'relops',
+    workerType = 'win2019',
+    commands = [ 'echo "task: {}, sha: {}"'.format(taskGroupId, commitSha) ]
+  )
+elif runEnvironment == 'taskcluster':
+  commitSha = os.getenv('GITHUB_HEAD_SHA')
+  taskGroupId = os.getenv('TASK_ID')
+else:
+  quit()
+
 for platform in ['azure']:
   for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019']:
 
-    if imageManifestHasChanged(platform, key):
+    if imageManifestHasChanged(platform, key, commitSha):
       buildTaskId = slugid.nice()
       createTask(
         taskId = buildTaskId,
@@ -120,7 +129,7 @@ for platform in ['azure']:
         commands = [
           'git clone https://github.com/grenade/cloud-image-builder.git',
           'cd cloud-image-builder',
-          'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
+          'git reset --hard {}'.format(commitSha),
           'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
         ],
         scopes = [
@@ -129,7 +138,7 @@ for platform in ['azure']:
           'secrets:get:project/relops/image-builder/dev'
         ],
         routes = [
-          'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, os.getenv('TRAVIS_COMMIT')),
+          'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
           'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
         ],
         taskGroupId = taskGroupId
@@ -141,6 +150,8 @@ for platform in ['azure']:
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
       for target in targetConfig['target']:
+
+
         createTask(
           taskId = slugid.nice(),
           taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
@@ -158,14 +169,14 @@ for platform in ['azure']:
           commands = [
             'git clone https://github.com/grenade/cloud-image-builder.git',
             'cd cloud-image-builder',
-            'git reset --hard {}'.format(os.getenv('TRAVIS_COMMIT')),
+            'git reset --hard {}'.format(commitSha),
             'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
           ],
           scopes = [
             'secrets:get:project/relops/image-builder/dev'
           ],
           routes = [
-            'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, os.getenv('TRAVIS_COMMIT')),
+            'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
             'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
           ],
           taskGroupId = taskGroupId)
