@@ -34,13 +34,15 @@ createTask(
     'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && python cloud-image-builder/ci/create-image-build-tasks.py'
   ],
   scopes = [
+    'generic-worker:os-group:relops/win2019/Administrators',
+    'generic-worker:run-as-administrator:relops/win2019',
     'secrets:get:project/relops/image-builder/dev',
     'queue:route:index.project.relops.cloud-image-builder.*',
     'queue:scheduler-id:-',
-    'queue:create-task:highest:relops/*',
-    'queue:create-task:very-high:relops/*',
-    'queue:create-task:high:relops/*',
-    'queue:create-task:medium:relops/*',
-    'queue:create-task:low:relops/*'
+    'queue:create-task:highest:relops/win2019',
+    'queue:create-task:very-high:relops/win2019',
+    'queue:create-task:high:relops/win2019',
+    'queue:create-task:medium:relops/win2019',
+    'queue:create-task:low:relops/win2019'
   ]
 )
