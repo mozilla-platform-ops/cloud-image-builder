@@ -78,7 +78,7 @@ for platform in ['azure']:
     else:
       buildTaskId = None
 
-    targetConfigPath = 'config/{}-{}.yaml'.format(key, platform)
+    targetConfigPath = '{}/config/{}-{}.yaml'.format(os.path.dirname(sys.argv[0]), key, platform)
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
       for target in targetConfig['target']:
