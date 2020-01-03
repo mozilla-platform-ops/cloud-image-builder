@@ -1,86 +1,24 @@
-import filecmp
-import gzip
-import json
 import os
 import slugid
 import taskcluster
-import urllib.request
 import yaml
-from datetime import datetime, timedelta
+from cib import createTask, imageManifestHasChanged, updateWorkerPool
 
 
 workerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
-
-
-def updateWorkerPool(configPath, workerPoolId):
-  with open(configPath, 'r') as stream:
-    payload = yaml.safe_load(stream)
-    try:
-      workerManager.workerPool(workerPoolId = workerPoolId)
-      print('info: worker pool {} existence detected'.format(workerPoolId))
-      workerManager.updateWorkerPool(workerPoolId, payload)
-      print('info: worker pool {} updated'.format(workerPoolId))
-    except:
-      print('info: worker pool {} absence detected'.format(workerPoolId))
-      workerManager.createWorkerPool(workerPoolId, payload)
-      print('info: worker pool {} created'.format(workerPoolId))
-
-
-def createTask(taskId, taskName, taskDescription, provisioner, workerType, commands, priority = 'normal', retries = 0, retriggerOnExitCodes = [], dependencies = [], maxRunMinutes = 10, features = {}, artifacts = [], osGroups = [], routes = [], scopes = [], taskGroupId = None):
-  payload = {
-    'created': '{}Z'.format(datetime.utcnow().isoformat()[:-3]),
-    'deadline': '{}Z'.format((datetime.utcnow() + timedelta(days = 3)).isoformat()[:-3]),
-    'dependencies': dependencies,
-    'provisionerId': provisioner,
-    'workerType': workerType,
-    'priority': priority,
-    'routes': routes,
-    'scopes': scopes,
-    'payload': {
-      'maxRunTime': (maxRunMinutes * 60),
-      'command': commands,
-      'artifacts': artifacts,
-      'features': features,
-      'osGroups': osGroups
-    },
-    'metadata': {
-      'name': taskName,
-      'description': taskDescription,
-      'owner': 'grenade@mozilla.com',
-      'source': 'https://github.com/grenade/cloud-image-builder' #.format(GIST_USER, GIST_SHA)
-    }
-  }
-  if taskGroupId is not None:
-    payload['taskGroupId'] = taskGroupId
-  if retriggerOnExitCodes and retries > 0:
-    payload['retries'] = retries
-    payload['payload']['onExitStatus'] = {
-      'retry': retriggerOnExitCodes
-    }
-
-  queue.createTask(taskId, payload)
-  print('info: task {} ({}: {}), created with priority: {}'.format(taskId, taskName, taskDescription, priority))
-
-
-def imageManifestHasChanged(platform, key, currentRevision):
-  lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
-  currentManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(currentRevision, key, platform)).read().decode()
-  lastManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(lastRevision, key, platform)).read().decode()
-  if currentManifest == lastManifest:
-    print('info: no change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
-  else:
-    print('info: change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
-  return currentManifest != lastManifest
-
-
 runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None and os.getenv('GITHUB_HEAD_SHA') is not None else None
-updateWorkerPool('ci/config/worker-pool.yaml', 'relops/win2019')
+
+updateWorkerPool(
+  workerManager = workerManager,
+  configPath = 'ci/config/worker-pool.yaml',
+  workerPoolId = 'relops/win2019')
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')
   taskGroupId = slugid.nice()
   createTask(
+    queue = queue,
     taskId = taskGroupId,
     taskName = 'a-task-group-placeholder',
     taskDescription = 'this task only serves as a task grouping when triggered from travis. it does no actual work',
@@ -100,6 +38,7 @@ for platform in ['azure']:
     if imageManifestHasChanged(platform, key, commitSha):
       buildTaskId = slugid.nice()
       createTask(
+        queue = queue,
         taskId = buildTaskId,
         taskName = 'build-{}-disk-image-from-{}-iso'.format(platform, key),
         taskDescription = 'build {} {} disk image file from iso file and upload to cloud storage'.format(platform, key),
@@ -153,6 +92,7 @@ for platform in ['azure']:
 
 
         createTask(
+          queue = queue,
           taskId = slugid.nice(),
           taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
           taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
