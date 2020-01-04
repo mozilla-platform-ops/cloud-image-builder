@@ -28,7 +28,8 @@ createTask(
     'taskclusterProxy': True
   },
   env = {
-    'GITHUB_HEAD_SHA': os.getenv('TRAVIS_COMMIT')
+    'GITHUB_HEAD_SHA': os.getenv('TRAVIS_COMMIT'),
+    'TASKCLUSTER_PROXY_URL': 'http://taskcluster/'
   },
   commands = [
     '/bin/bash',
