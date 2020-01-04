@@ -29,7 +29,7 @@ createTask(
   },
   env = {
     'GITHUB_HEAD_SHA': os.getenv('TRAVIS_COMMIT'),
-    'TASKCLUSTER_PROXY_URL': 'http://taskcluster/'
+    'TASKCLUSTER_PROXY_URL': 'http://localhost/'
   },
   commands = [
     '/bin/bash',
