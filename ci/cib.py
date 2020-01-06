@@ -86,6 +86,6 @@ def machineImageExists(taskclusterIndex, platformClient, platform, region, group
     for offer in platformClient.virtual_machine_images.list_offers(location, publisher.name):
       for sku in platformClient.virtual_machine_images.list_skus(location, publisher.name, offer.name):
         for version in platformClient.virtual_machine_images.list(location, publisher.name, offer.name, sku.name):
-          image = compute_client.virtual_machine_images.get(location, publisher.name, offer.name, sku.name, version.name)
+          image = platformClient.virtual_machine_images.get(location, publisher.name, offer.name, sku.name, version.name)
           print('location: {}, publisher: {}, offer: {}, sku: {}, version: {}, image: {}'.format(location, publisher.name, offer.name, sku.name, version.name, image.name))
   return True
