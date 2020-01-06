@@ -30,7 +30,7 @@ if runEnvironment == 'travis':
   createTask(
     queue = queue,
     taskId = taskGroupId,
-    taskName = 'a-task-group-placeholder',
+    taskName = '00 :: task group placeholder',
     taskDescription = 'this task only serves as a task grouping when triggered from travis. it does no actual work',
     provisioner = 'relops',
     workerType = 'win2019',
@@ -45,66 +45,66 @@ else:
 
 for platform in ['azure']:
   for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019']:
-    queueDiskImageBuild = imageManifestHasChanged(platform, key, commitSha)
-    if queueDiskImageBuild:
-      buildTaskId = slugid.nice()
-      createTask(
-        queue = queue,
-        taskId = buildTaskId,
-        taskName = 'build-{}-disk-image-from-{}-iso'.format(platform, key),
-        taskDescription = 'build {} {} disk image file from iso file and upload to cloud storage'.format(platform, key),
-        maxRunMinutes = 180,
-        provisioner = 'relops',
-        workerType = 'win2019',
-        priority = 'high',
-        artifacts = [
-          {
-            'type': 'file',
-            'name': 'public/unattend.xml',
-            'path': 'unattend.xml'
-          },
-          {
-            'type': 'file',
-            'name': 'public/image-bucket-resource.json',
-            'path': 'image-bucket-resource.json'
-          }
-        ],
-        osGroups = [
-          'Administrators'
-        ],
-        features = {
-          'taskclusterProxy': True,
-          'runAsAdministrator': True
-        },
-        commands = [
-          'git clone https://github.com/grenade/cloud-image-builder.git',
-          'cd cloud-image-builder',
-          'git reset --hard {}'.format(commitSha),
-          'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
-        ],
-        scopes = [
-          'generic-worker:os-group:relops/win2019/Administrators',
-          'generic-worker:run-as-administrator:relops/win2019',
-          'secrets:get:project/relops/image-builder/dev'
-        ],
-        routes = [
-          'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
-          'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
-        ],
-        taskGroupId = taskGroupId
-      )
-    else:
-      buildTaskId = None
+    configPath = '{}/../config/{}-{}.yaml'.format(os.path.dirname(__file__), key, platform)
+    with open(configPath, 'r') as stream:
+      config = yaml.safe_load(stream)
 
-    targetConfigPath = '{}/../config/{}-{}.yaml'.format(os.path.dirname(__file__), key, platform)
-    with open(targetConfigPath, 'r') as stream:
-      targetConfig = yaml.safe_load(stream)
-      for target in targetConfig['target']:
+      queueDiskImageBuild = imageManifestHasChanged(platform, key, commitSha)
+      if queueDiskImageBuild:
+        buildTaskId = slugid.nice()
+        createTask(
+          queue = queue,
+          taskId = buildTaskId,
+          taskName = '01 :: build {} {} disk image from {} {} iso'.format(platform, key, config['image']['os'], config['image']['edition']),
+          taskDescription = 'build a customised {} disk image file for {}, from iso file {} and upload to cloud storage'.format(key, platform, config['iso']['key']),
+          maxRunMinutes = 180,
+          provisioner = 'relops',
+          workerType = 'win2019',
+          priority = 'high',
+          artifacts = [
+            {
+              'type': 'file',
+              'name': 'public/unattend.xml',
+              'path': 'unattend.xml'
+            },
+            {
+              'type': 'file',
+              'name': 'public/image-bucket-resource.json',
+              'path': 'image-bucket-resource.json'
+            }
+          ],
+          osGroups = [
+            'Administrators'
+          ],
+          features = {
+            'taskclusterProxy': True,
+            'runAsAdministrator': True
+          },
+          commands = [
+            'git clone https://github.com/grenade/cloud-image-builder.git',
+            'cd cloud-image-builder',
+            'git reset --hard {}'.format(commitSha),
+            'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
+          ],
+          scopes = [
+            'generic-worker:os-group:relops/win2019/Administrators',
+            'generic-worker:run-as-administrator:relops/win2019',
+            'secrets:get:project/relops/image-builder/dev'
+          ],
+          routes = [
+            'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
+            'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+          ],
+          taskGroupId = taskGroupId
+        )
+      else:
+        buildTaskId = None
+
+      for target in config['target']:
         queueMachineImageBuild = not machineImageExists(
           taskclusterIndex = index,
           platformClient = azureComputeManagementClient,
           platform = platform,
-          region = target['region'],
           group = target['group'],
           key = key)
         if queueMachineImageBuild:
