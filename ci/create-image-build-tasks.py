@@ -4,8 +4,8 @@ import taskcluster
 import yaml
 from cib import createTask, imageManifestHasChanged
 
-queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
 runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None else None
+queue = taskcluster.Queue({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] } if runEnvironment == 'taskcluster' else taskcluster.optionsFromEnvironment())
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')
