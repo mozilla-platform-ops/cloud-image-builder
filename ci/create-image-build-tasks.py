@@ -15,7 +15,8 @@ queue = taskcluster.Queue(taskclusterOptions)
 index = taskcluster.Index(taskclusterOptions)
 secrets = taskcluster.Secrets(taskclusterOptions)
 
-secret = secrets.get('project/relops/image-builder/dev')
+secret = secrets.get('project/relops/image-builder/dev')['secret']
+print(secret.keys())
 
 azureCredentials = ServicePrincipalCredentials(
   client_id = secret['azure']['id'],
@@ -99,7 +100,13 @@ for platform in ['azure']:
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
       for target in targetConfig['target']:
-        queueMachineImageBuild = not machineImageExists(index, azureComputeManagementClient, platform, target['region'], target['group'], key)
+        queueMachineImageBuild = not machineImageExists(
+          taskclusterIndex = index,
+          platformClient = azureComputeManagementClient,
+          platform = platform,
+          region = target['region'],
+          group = target['group'],
+          key = key)
         if queueMachineImageBuild:
           createTask(
             queue = queue,
