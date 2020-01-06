@@ -3,11 +3,25 @@ import slugid
 import taskcluster
 import yaml
 from cib import createTask, imageManifestHasChanged, machineImageExists
+from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.compute import ComputeManagementClient
+
 
 runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None else None
 taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] } if runEnvironment == 'taskcluster' else taskcluster.optionsFromEnvironment()
+
+auth = taskcluster.Auth(taskclusterOptions)
 queue = taskcluster.Queue(taskclusterOptions)
 index = taskcluster.Index(taskclusterOptions)
+secrets = taskcluster.Secrets(taskclusterOptions)
+
+secret = secrets.get('project/relops/image-builder/dev')
+
+azureCredentials = ServicePrincipalCredentials(
+  client_id = secret['azure']['id'],
+  secret = secret['azure']['key'],
+  tenant = secret['azure']['account'])
+azureComputeManagementClient = ComputeManagementClient(azureCredentials, secret['azure']['subscription'])
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')
@@ -19,12 +33,10 @@ if runEnvironment == 'travis':
     taskDescription = 'this task only serves as a task grouping when triggered from travis. it does no actual work',
     provisioner = 'relops',
     workerType = 'win2019',
-    commands = [ 'echo "task: {}, sha: {}"'.format(taskGroupId, commitSha) ]
-  )
+    commands = [ 'echo "task: {}, sha: {}"'.format(taskGroupId, commitSha) ])
 elif runEnvironment == 'taskcluster':
   commitSha = os.getenv('GITHUB_HEAD_SHA')
   taskGroupId = os.getenv('TASK_ID')
-  auth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
   print('debug: auth.currentScopes')
   print(auth.currentScopes())
 else:
@@ -87,7 +99,7 @@ for platform in ['azure']:
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
       for target in targetConfig['target']:
-        queueMachineImageBuild = not machineImageExists(index, platform, target['group'], key)
+        queueMachineImageBuild = not machineImageExists(index, azureComputeManagementClient, platform, target['region'], target['group'], key)
         if queueMachineImageBuild:
           createTask(
             queue = queue,

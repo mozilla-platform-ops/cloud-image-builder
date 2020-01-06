@@ -71,17 +71,21 @@ def imageManifestHasChanged(platform, key, currentRevision):
   return currentManifest != lastManifest
 
 
-def machineImageExists(index, platform, group, key):
-  artifact = index.findArtifactFromTask(
+def machineImageExists(taskclusterIndex, platformClient, platform, region, group, key):
+  artifact = taskclusterIndex.findArtifactFromTask(
     'project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key.replace('-{}'.format(platform), '')),
     'public/image-bucket-resource.json')
   print(artifact)
-  targetImageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
-  print(targetImageName)
 
-  # $targetImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
-  # $existingImage = (Get-AzImage `
-  #   -ResourceGroupName $target.group `
-  #   -ImageName $targetImageName `
-  #   -ErrorAction SilentlyContinue);
+  if platform == 'azure':
+    targetImageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
+
+  print(targetImageName)
+  location = region.replace(' ', '').lower()
+  for publisher in platformClient.virtual_machine_images.list_publishers(location):
+    for offer in platformClient.virtual_machine_images.list_offers(location, publisher.name):
+      for sku in platformClient.virtual_machine_images.list_skus(location, publisher.name, offer.name):
+        for version in platformClient.virtual_machine_images.list(location, publisher.name, offer.name, sku.name):
+          image = compute_client.virtual_machine_images.get(location, publisher.name, offer.name, sku.name, version.name)
+          print('location: {}, publisher: {}, offer: {}, sku: {}, version: {}, image: {}'.format(location, publisher.name, offer.name, sku.name, version.name, image.name))
   return True
