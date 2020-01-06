@@ -69,3 +69,11 @@ def imageManifestHasChanged(platform, key, currentRevision):
   else:
     print('info: change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
   return currentManifest != lastManifest
+
+
+def machineImageExists(index, platform, key):
+  artifact = index.findArtifactFromTask(
+    'project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key.replace('-{}'.format(platform), '')),
+    'public/image-bucket-resource.json')
+  print(artifact)
+  return True

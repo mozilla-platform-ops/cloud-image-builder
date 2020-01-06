@@ -2,10 +2,12 @@ import os
 import slugid
 import taskcluster
 import yaml
-from cib import createTask, imageManifestHasChanged
+from cib import createTask, imageManifestHasChanged, machineImageExists
 
 runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None else None
-queue = taskcluster.Queue({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] } if runEnvironment == 'taskcluster' else taskcluster.optionsFromEnvironment())
+taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] } if runEnvironment == 'taskcluster' else taskcluster.optionsFromEnvironment()
+queue = taskcluster.Queue(taskclusterOptions)
+index = taskcluster.Index(taskclusterOptions)
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')
@@ -30,8 +32,8 @@ else:
 
 for platform in ['azure']:
   for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019']:
-
-    if imageManifestHasChanged(platform, key, commitSha):
+    queueDiskImageBuild = imageManifestHasChanged(platform, key, commitSha)
+    if queueDiskImageBuild:
       buildTaskId = slugid.nice()
       createTask(
         queue = queue,
@@ -85,34 +87,34 @@ for platform in ['azure']:
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
       for target in targetConfig['target']:
-
-
-        createTask(
-          queue = queue,
-          taskId = slugid.nice(),
-          taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
-          taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
-          maxRunMinutes = 180,
-          retries = 1,
-          retriggerOnExitCodes = [ 123 ],
-          dependencies = [] if buildTaskId is None else [ buildTaskId ],
-          provisioner = 'relops',
-          workerType = 'win2019',
-          priority = 'low',
-          features = {
-            'taskclusterProxy': True
-          },
-          commands = [
-            'git clone https://github.com/grenade/cloud-image-builder.git',
-            'cd cloud-image-builder',
-            'git reset --hard {}'.format(commitSha),
-            'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
-          ],
-          scopes = [
-            'secrets:get:project/relops/image-builder/dev'
-          ],
-          routes = [
-            'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
-            'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
-          ],
-          taskGroupId = taskGroupId)
+        queueMachineImageBuild = not machineImageExists(index, platform, key)
+        if queueMachineImageBuild:
+          createTask(
+            queue = queue,
+            taskId = slugid.nice(),
+            taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
+            taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
+            maxRunMinutes = 180,
+            retries = 1,
+            retriggerOnExitCodes = [ 123 ],
+            dependencies = [] if buildTaskId is None else [ buildTaskId ],
+            provisioner = 'relops',
+            workerType = 'win2019',
+            priority = 'low',
+            features = {
+              'taskclusterProxy': True
+            },
+            commands = [
+              'git clone https://github.com/grenade/cloud-image-builder.git',
+              'cd cloud-image-builder',
+              'git reset --hard {}'.format(commitSha),
+              'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
+            ],
+            scopes = [
+              'secrets:get:project/relops/image-builder/dev'
+            ],
+            routes = [
+              'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
+              'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
+            ],
+            taskGroupId = taskGroupId)
