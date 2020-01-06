@@ -111,7 +111,7 @@ for platform in ['azure']:
           createTask(
             queue = queue,
             taskId = slugid.nice(),
-            taskName = 'convert-{}-{}-disk-image-to-{}-{}-machine-image-and-deploy-to-{}-{}'.format(platform, key, platform, key, platform, target['group']),
+            taskName = '02 :: convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
             taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
             maxRunMinutes = 180,
             retries = 1,

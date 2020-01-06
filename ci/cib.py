@@ -79,9 +79,10 @@ def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
   image = None
   if platform == 'azure':
     imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
-    image = platformClient.images.get(group, imageName)
-    if image is None:
-      print('{} machine image: {} not found'.format(platform, imageName))
-    else:
+    try:
+      image = platformClient.images.get(group, imageName)
       print('{} machine image: {} found with id: {}'.format(platform, imageName, image.id))
+    except:
+      image = None
+      print('{} machine image: {} not found'.format(platform, imageName))
   return image is not None
