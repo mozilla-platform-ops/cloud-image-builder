@@ -87,7 +87,7 @@ for platform in ['azure']:
     with open(targetConfigPath, 'r') as stream:
       targetConfig = yaml.safe_load(stream)
       for target in targetConfig['target']:
-        queueMachineImageBuild = not machineImageExists(index, platform, key)
+        queueMachineImageBuild = not machineImageExists(index, platform, target['group'], key)
         if queueMachineImageBuild:
           createTask(
             queue = queue,

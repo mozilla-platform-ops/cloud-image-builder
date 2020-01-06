@@ -71,9 +71,17 @@ def imageManifestHasChanged(platform, key, currentRevision):
   return currentManifest != lastManifest
 
 
-def machineImageExists(index, platform, key):
+def machineImageExists(index, platform, group, key):
   artifact = index.findArtifactFromTask(
     'project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key.replace('-{}'.format(platform), '')),
     'public/image-bucket-resource.json')
   print(artifact)
+  targetImageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
+  print(targetImageName)
+
+  # $targetImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+  # $existingImage = (Get-AzImage `
+  #   -ResourceGroupName $target.group `
+  #   -ImageName $targetImageName `
+  #   -ErrorAction SilentlyContinue);
   return True
