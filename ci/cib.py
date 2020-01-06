@@ -71,21 +71,17 @@ def imageManifestHasChanged(platform, key, currentRevision):
   return currentManifest != lastManifest
 
 
-def machineImageExists(taskclusterIndex, platformClient, platform, region, group, key):
+def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
   artifact = taskclusterIndex.findArtifactFromTask(
     'project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key.replace('-{}'.format(platform), '')),
     'public/image-bucket-resource.json')
   print(artifact)
-
+  image = None
   if platform == 'azure':
-    targetImageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
-
-  print(targetImageName)
-  location = region.replace(' ', '').lower()
-  for publisher in platformClient.virtual_machine_images.list_publishers(location):
-    for offer in platformClient.virtual_machine_images.list_offers(location, publisher.name):
-      for sku in platformClient.virtual_machine_images.list_skus(location, publisher.name, offer.name):
-        for version in platformClient.virtual_machine_images.list(location, publisher.name, offer.name, sku.name):
-          image = platformClient.virtual_machine_images.get(location, publisher.name, offer.name, sku.name, version.name)
-          print('location: {}, publisher: {}, offer: {}, sku: {}, version: {}, image: {}'.format(location, publisher.name, offer.name, sku.name, version.name, image.name))
-  return True
+    imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
+    image = platformClient.images.get(group, imageName)
+    if image is None:
+      print('{} machine image: {} not found'.format(platform, imageName))
+    else:
+      print('{} machine image: {} found with id: {}'.format(platform, imageName, image.id))
+  return image is not None
