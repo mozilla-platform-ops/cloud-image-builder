@@ -16,13 +16,13 @@ index = taskcluster.Index(taskclusterOptions)
 secrets = taskcluster.Secrets(taskclusterOptions)
 
 secret = secrets.get('project/relops/image-builder/dev')['secret']
-print(secret.keys())
 
-azureCredentials = ServicePrincipalCredentials(
-  client_id = secret['azure']['id'],
-  secret = secret['azure']['key'],
-  tenant = secret['azure']['account'])
-azureComputeManagementClient = ComputeManagementClient(azureCredentials, secret['azure']['subscription'])
+azureComputeManagementClient = ComputeManagementClient(
+  ServicePrincipalCredentials(
+    client_id = secret['azure']['id'],
+    secret = secret['azure']['key'],
+    tenant = secret['azure']['account']),
+  secret['azure']['subscription'])
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')

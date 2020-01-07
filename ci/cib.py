@@ -39,7 +39,7 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
       'name': taskName,
       'description': taskDescription,
       'owner': 'grenade@mozilla.com',
-      'source': 'https://github.com/grenade/cloud-image-builder' #.format(GIST_USER, GIST_SHA)
+      'source': 'https://github.com/grenade/cloud-image-builder'
     }
   }
   if taskGroupId is not None:
