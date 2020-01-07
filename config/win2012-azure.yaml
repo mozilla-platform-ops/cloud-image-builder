@@ -33,7 +33,7 @@ target:
   machine:
     cpu: 2
     ram: 4
-    format: Standard_F{0}s_v2
+    format: Standard_A{0}
   disk:
   - os: true
     source: windowsserver2012r2-datacenter-en-us-x86-64
