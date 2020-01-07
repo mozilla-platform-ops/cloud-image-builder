@@ -101,7 +101,7 @@ for platform in ['azure']:
         buildTaskId = None
 
       for target in config['target']:
-        queueMachineImageBuild = not machineImageExists(
+        queueMachineImageBuild = queueDiskImageBuild or not machineImageExists(
           taskclusterIndex = index,
           platformClient = azureComputeManagementClient,
           platform = platform,
