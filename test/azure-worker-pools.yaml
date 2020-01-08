@@ -1,0 +1,49 @@
+---
+- name: gecko-t/win7-32-azure
+  capacity:
+    min: 0
+    max: 2
+  regions:
+  - Central US
+  - North Central US
+  - South Central US
+  - East US
+  - East US 2
+  - West US
+  machine: Standard_A2
+- name: gecko-t/win10-64-azure
+  capacity:
+    min: 0
+    max: 2
+  regions:
+  - Central US
+  - North Central US
+  - South Central US
+  - East US
+  - East US 2
+  - West US
+  machine: Standard_A2
+- name: gecko-1/win2012-azure
+  capacity:
+    min: 1
+    max: 2
+  regions:
+  - Central US
+  - North Central US
+  - South Central US
+  - East US
+  - East US 2
+  - West US
+  machine: Standard_A2
+- name: relops/win2019-azure
+  capacity:
+    min: 0
+    max: 2
+  regions:
+  - Central US
+  - North Central US
+  - South Central US
+  - East US
+  - East US 2
+  - West US
+  machine: Standard_A2
