@@ -62,13 +62,16 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
 
 def imageManifestHasChanged(platform, key, currentRevision):
   lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
-  currentManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(currentRevision, key, platform)).read().decode()
-  lastManifest = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(lastRevision, key, platform)).read().decode()
-  if currentManifest == lastManifest:
-    print('info: no change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
-  else:
-    print('info: change detected for {}-{} manifest between last image build in revision: {} and current revision: {}'.format(key, platform, lastRevision[0:7], currentRevision[0:7]))
-  return currentManifest != lastManifest
+  allFilesUnchanged = True
+  for configFile in ['{}-{}'.format(key, platform), 'disable-windows-service', 'drivers', 'packages', 'unattend-commands']:
+    currentContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, configFile)).read().decode()
+    previousContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, configFile)).read().decode()
+    if currentContents == previousContents:
+      print('info: no change detected in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+    else:
+      allFilesUnchanged = False
+      print('info: change detected for {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+  return not allFilesUnchanged
 
 
 def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
