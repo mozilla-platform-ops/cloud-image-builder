@@ -39,6 +39,12 @@ target:
     source: windows7-professional-en-us-x86-gpu
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-east-us-gecko-t
     prefix: '10.0.0.0/24'
