@@ -40,6 +40,29 @@ elif runEnvironment == 'taskcluster':
   taskGroupId = os.getenv('TASK_ID')
   print('debug: auth.currentScopes')
   print(auth.currentScopes())
+  createTask(
+    queue = queue,
+    taskId = slugid.nice(),
+    taskName = '00 :: purge deprecated azure resources',
+    taskDescription = 'delete orphaned and/or unused azure resources',
+    maxRunMinutes = 60,
+    provisioner = 'relops',
+    workerType = 'win2019',
+    priority = 'high',
+    features = {
+      'taskclusterProxy': True
+    },
+    commands = [
+      'git clone https://github.com/grenade/cloud-image-builder.git',
+      'cd cloud-image-builder',
+      'git reset --hard {}'.format(commitSha),
+      'powershell -File ci\\purge-deprecated-azure-resources.ps1'
+    ],
+    scopes = [
+      'secrets:get:project/relops/image-builder/dev'
+    ],
+    taskGroupId = taskGroupId
+  )
 else:
   quit()
 
