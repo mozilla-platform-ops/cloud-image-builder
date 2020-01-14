@@ -36,13 +36,16 @@ target:
     format: Standard_NV{0}_Promo
   disk:
   - os: true
+    name: os
     source: windows7-professional-en-us-x86-gpu
     variant: ssd
     size: 64
   - os: false
+    name: cache
     variant: ssd
     size: 128
   - os: false
+    name: task
     variant: ssd
     size: 128
   network:

@@ -14,7 +14,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.70' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.71' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -362,7 +362,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           -targetInstanceCpuCount $target.machine.cpu `
           -targetInstanceRamGb $target.machine.ram `
           -targetInstanceName $instanceName `
-          -targetInstanceDisks @($target.disk | % {@{ 'Variant' = $_.variant; 'SizeInGB' = $_.size; 'Os' = $_.os }}) `
+          -targetInstanceDisks @($target.disk | % {@{ 'Variant' = $_.variant; 'SizeInGB' = $_.size; 'Os' = $_.os; 'Name' = $_.name }}) `
           -targetInstanceTags $tags `
           -targetVirtualNetworkName $target.network.name `
           -targetVirtualNetworkAddressPrefix $target.network.prefix `
