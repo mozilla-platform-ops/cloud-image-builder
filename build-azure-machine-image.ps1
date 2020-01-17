@@ -20,12 +20,12 @@ foreach ($rm in @(
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
   if ($module) {
     if ($module.Version -lt $rm.version) {
-      Update-Module $rm.module -RequiredVersion $rm.version;
+      Update-Module -Name $rm.module -RequiredVersion $rm.version;
     }
   } else {
-    Install-Module $rm.module -RequiredVersion $rm.version -AllowClobber;
+    Install-Module -Name $rm.module -RequiredVersion $rm.version -AllowClobber;
   }
-  Import-Module $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+  Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
 }
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, targetCloudPlatform: {2}, imageKey: {3}' -f $workFolder, $revision, $targetCloudPlatform, $imageKey);
 

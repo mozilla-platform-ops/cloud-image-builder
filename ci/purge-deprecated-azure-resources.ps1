@@ -9,20 +9,15 @@ foreach ($rm in @(
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
   if ($module) {
     if ($module.Version -lt $rm.version) {
-      Update-Module $rm.module -RequiredVersion $rm.version;
+      Update-Module -Name $rm.module -RequiredVersion $rm.version;
     }
   } else {
-    Install-Module $rm.module -RequiredVersion $rm.version -AllowClobber;
+    Install-Module -Name $rm.module -RequiredVersion $rm.version -AllowClobber;
   }
-  Import-Module $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+  Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
 }
 
 $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
-Set-AWSCredential `
-  -AccessKey $secret.amazon.id `
-  -SecretKey $secret.amazon.key `
-  -StoreAs 'default' | Out-Null;
-
 Connect-AzAccount `
   -ServicePrincipal `
   -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
