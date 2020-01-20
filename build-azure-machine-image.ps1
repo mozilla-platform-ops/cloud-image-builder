@@ -395,7 +395,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
 
             # set secrets in the instance registry
             $workerGroup = $target.group.Replace(('rg-{}-' -f $target.region.Replace(' ', '-').ToLower()), '');
-            Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerGroup, $imageKey, $secret.accessToken.staging[$target.platform][$workerGroup][$imageKey];
+            Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerGroup, $imageKey, $secret.accessToken.staging[$target.platform][$workerGroup][$imageKey]);
             $setSecretsCommandResult = (Invoke-AzVMRunCommand `
               -ResourceGroupName $target.group `
               -VMName $instanceName `
