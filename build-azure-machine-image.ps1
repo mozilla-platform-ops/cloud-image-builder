@@ -393,6 +393,19 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           if ($config.image.architecture -eq 'x86-64') {
             (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
 
+            # set secrets in the instance registry
+            $workerGroup = $target.group.Replace(('rg-{}-' -f $target.region.Replace(' ', '-').ToLower()), '');
+            Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerGroup, $imageKey, $secret.accessToken.staging[$target.platform][$workerGroup][$imageKey];
+            $setSecretsCommandResult = (Invoke-AzVMRunCommand `
+              -ResourceGroupName $target.group `
+              -VMName $instanceName `
+              -CommandId 'RunPowerShellScript' `
+              -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
+            Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $setSecretsCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+            Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
+            Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
+            Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
+
             # the first time occ runs, it renames the instance and reboots
             $firstOccTriggerCommandResult = (Invoke-AzVMRunCommand `
               -ResourceGroupName $target.group `
