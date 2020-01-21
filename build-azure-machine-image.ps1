@@ -395,9 +395,12 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
 
             # set secrets in the instance registry
             $workerGroup = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
-            $accessToken = ($secret.accessToken.staging."$($target.platform)"."$workerGroup"."$imageKey");
-            if ((-not $accessToken) -or ($accessToken.Length -ne 44)) {
-              Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $imageKey);
+            $workerType = $imageKey.Replace(('-{0}' -f $target.platform), '');
+            $accessToken = ($secret.accessToken.staging."$($target.platform)"."$workerGroup"."$workerType");
+            if (($accessToken) -and ($accessToken.Length -eq 44)) {
+              Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $workerType)
+            } else {
+              Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $workerType);
               exit 123;
             }
             Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerGroup, $imageKey, $accessToken);
