@@ -106,8 +106,20 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
   $orphanedAzDisks = @(Get-AzDisk | ? { $_.DiskState -eq 'Unattached' });
   Write-Output -InputObject ('removing {0} orphaned AzDisk objects' -f $orphanedAzDisks.Length);
   foreach ($orphanedAzDisk in $orphanedAzDisks) {
-    Write-Output -InputObject ('removing orphaned AzDisk {0} / {1} / {2}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name);
-    $orphanedAzDisk | Remove-AzDisk -Force;
+    try {
+      Write-Output -InputObject ('removing orphaned AzDisk {0} / {1} / {2}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name);
+      if (Remove-AzDisk `
+        -ResourceGroupName $orphanedAzDisk.ResourceGroupName `
+        -DiskName $orphanedAzDisk.Name `
+        -AsJob `
+        -Force) {
+        Write-Output -InputObject ('removed orphaned AzDisk {0} / {1} / {2}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name);
+      } else {
+        Write-Output -InputObject ('failed to remove orphaned AzDisk {0} / {1} / {2}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name);
+      }
+    } catch {
+      Write-Output -InputObject ('exception removing orphaned AzDisk {0} / {1} / {2}. {3}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name, $_.Exception.Message);
+    }
   }
 }
 
