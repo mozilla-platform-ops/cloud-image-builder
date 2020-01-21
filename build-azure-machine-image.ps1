@@ -401,6 +401,15 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
               Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $workerType)
             } else {
               Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $workerType);
+              try {
+                Remove-AzVm `
+                  -ResourceGroupName $target.group `
+                  -Name $instanceName `
+                  -Force;
+                Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+              } catch {
+                Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
+              }
               exit 123;
             }
             Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerGroup, $imageKey, $accessToken);
