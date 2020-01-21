@@ -427,7 +427,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
               -VMName $instanceName `
               -CommandId 'RunPowerShellScript' `
               -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-            Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $setSecretsCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+            Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
             Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
             Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
             Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
@@ -438,7 +438,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
               -VMName $instanceName `
               -CommandId 'RunPowerShellScript' `
               -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-            Write-Output -InputObject ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $firstOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+            Write-Output -InputObject ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($firstOccTriggerCommandResult -and $firstOccTriggerCommandResult.Status) { $firstOccTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
             Write-Output -InputObject ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0].Message);
             Write-Output -InputObject ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1].Message);
 
@@ -453,7 +453,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
                   -CommandId 'RunPowerShellScript' `
                   -ScriptPath ('{0}\computername.ps1' -f $env:Temp) `
                   -ErrorAction SilentlyContinue);
-                Write-Output -InputObject ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $echoHostnameResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+                Write-Output -InputObject ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($echoHostnameResult -and $echoHostnameResult.Status) { $echoHostnameResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
                 if ($echoHostnameResult.Value) {
                   $echoHostnameCommandOutput = $echoHostnameResult.Value[0].Message;
                   Write-Output -InputObject ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0].Message);
@@ -479,7 +479,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
                 -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp));
               Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
 
-              Write-Output -InputObject ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $secondOccTriggerCommandResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+              Write-Output -InputObject ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($secondOccTriggerCommandResult -and $secondOccTriggerCommandResult.Status) { $secondOccTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
               Write-Output -InputObject ('seccond occ trigger std out: {0}' -f $secondOccTriggerCommandResult.Value[0].Message);
               Write-Output -InputObject ('seccond occ trigger std err: {0}' -f $secondOccTriggerCommandResult.Value[1].Message);
 
@@ -495,7 +495,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
                     -CommandId 'RunPowerShellScript' `
                     -ScriptPath ('{0}\dirdsc.ps1' -f $env:Temp) `
                     -ErrorAction SilentlyContinue);
-                  Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $dirDscResult.Status.ToLower(), $instanceName, $target.region, $target.platform);
+                  Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $(if ($dirDscResult -and $dirDscResult.Status) { $dirDscResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
                   if ($dirDscResult.Value) {
                     $dirDscCommandOutput = $dirDscResult.Value[0].Message;
                     Write-Output -InputObject ('dir dsc (iteration {0}) std out: {1}' -f $dirDscIteration, $dirDscResult.Value[0].Message);
