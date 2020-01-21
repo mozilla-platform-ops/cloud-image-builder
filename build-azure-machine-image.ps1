@@ -163,7 +163,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           -Context $targetAzStorageAccount.Context `
           -WaitForComplete);
         $targetAzSnapshotConfig = (New-AzSnapshotConfig `
-          -AccountType 'StandardLRS' `
+          -AccountType 'Standard_LRS' `
           -OsType 'Windows' `
           -Location $target.region.Replace(' ', '').ToLower() `
           -CreateOption 'Import' `
@@ -185,6 +185,10 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           -ResourceGroupName $target.group `
           -ImageName $targetImageName `
           -Image $targetAzImageConfig);
+        if (-not $targetAzImage) {
+          Write-Output -InputObject ('provisioning of image: {0}, failed' -f $targetImageName);
+          exit 1;
+        }
         Write-Output -InputObject ('provisioning of image: {0}, has state: {1}' -f $targetImageName, $targetAzImage.ProvisioningState.ToLower());
         exit;
       }

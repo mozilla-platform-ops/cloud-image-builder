@@ -1,5 +1,28 @@
 import os
+import taskcluster
+from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.compute import ComputeManagementClient
 
-print('platform: {}'.format(os.getenv('platform')))
-print('group: {}'.format(os.getenv('group')))
-print('key: {}'.format(os.getenv('key')))
+secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
+secret = secretsClient.get('project/relops/image-builder/dev')['secret']
+
+azureComputeManagementClient = ComputeManagementClient(
+  ServicePrincipalCredentials(
+    client_id = secret['azure']['id'],
+    secret = secret['azure']['key'],
+    tenant = secret['azure']['account']),
+  secret['azure']['subscription'])
+
+
+platform = os.getenv('platform')
+group = os.getenv('group')
+key = os.getenv('key')
+
+print('platform: {}'.format(platform))
+print('group: {}'.format(group))
+print('key: {}'.format(key))
+
+
+images = azureComputeManagementClient.images.list_by_resource_group(group)
+for image in images:
+  print(image)
