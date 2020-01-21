@@ -108,7 +108,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         Write-Output -InputObject ('found snapshot: {0}, in group: {1}, in cloud platform: {2}. triggering machine copy from {1} to {3}...' -f $sourceSnapshotName, $source.group, $source.platform, $target.group);
 
         # get/create storage account in target region
-        $storageAccountName = ('{0}-cloud-image-builder' -f $target.group.Replace('rg-', ''));
+        $storageAccountName = ('{0}-cib' -f $target.group.Replace('rg-', ''));
         $targetAzStorageAccount = (Get-AzStorageAccount `
           -ResourceGroupName $target.group `
           -Name $storageAccountName);
@@ -128,7 +128,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
         }
 
         # get/create storage container (bucket) in target region
-        $storageContainerName = ('{0}-cloud-image-builder' -f $target.group.Replace('rg-', ''));
+        $storageContainerName = ('{0}-cib' -f $target.group.Replace('rg-', ''));
         $targetAzStorageContainer = (Get-AzStorageContainer `
           -Name $storageContainerName `
           -Context $targetAzStorageAccount.Context);
