@@ -78,7 +78,6 @@ def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
   artifact = taskclusterIndex.findArtifactFromTask(
     'project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key.replace('-{}'.format(platform), '')),
     'public/image-bucket-resource.json')
-  print(artifact)
   image = None
   if platform == 'azure':
     imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
