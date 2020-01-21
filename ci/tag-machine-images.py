@@ -24,7 +24,12 @@ print('group: {}'.format(group))
 print('key: {}'.format(key))
 
 
-images = azureComputeManagementClient.images.list_by_resource_group(group)
 pattern = re.compile('^{}-{}-([a-z0-9]{{7}})$'.format(group.replace('rg-', ''), key))
-for image in [x for x in images if pattern.match(x.name)]:
-  print(image)
+images = [x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)]
+for image in images:
+  revision = pattern.search(image.name).group(1)
+  print('image: {}, has revision: {}'.format(image.name, revision))
+  if image.tags:
+    print(', '.join(['%s:: %s' % (key, value) for (key, value) in image.tags.items()]))
+  else:
+    print('image has no tags')
