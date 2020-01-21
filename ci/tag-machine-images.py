@@ -3,6 +3,7 @@ import os
 import re
 import taskcluster
 import urllib.request
+import yaml
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 
