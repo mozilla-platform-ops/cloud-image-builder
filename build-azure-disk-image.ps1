@@ -58,7 +58,7 @@ if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
         Write-Output -InputObject ('copied: {0} to: {1}' -f $extractedAzcopyExePath, $azcopyExePath);
       }
     } catch {
-      Write-Output -InputObject ('failed to extract azcopy from: {0}' -f $azcopyZipPath);
+      Write-Output -InputObject ('failed to extract azcopy from: {0}. {1}' -f $azcopyZipPath, , $_.Exception.Message);
     }
   }
 }
