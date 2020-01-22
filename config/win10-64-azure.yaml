@@ -39,6 +39,12 @@ target:
     source: windows10-professional-en-us-x86-64
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-central-us-gecko-t
     prefix: '10.0.0.0/24'
@@ -99,6 +105,12 @@ target:
     source: windows10-professional-en-us-x86-64
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-east-us-gecko-t
     prefix: '10.0.0.0/24'
@@ -159,6 +171,12 @@ target:
     source: windows10-professional-en-us-x86-64
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-east-us-2-gecko-t
     prefix: '10.0.0.0/24'
@@ -219,6 +237,12 @@ target:
     source: windows10-professional-en-us-x86-64
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-north-central-us-gecko-t
     prefix: '10.0.0.0/24'
@@ -279,6 +303,12 @@ target:
     source: windows10-professional-en-us-x86-64
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-south-central-us-gecko-t
     prefix: '10.0.0.0/24'
@@ -339,6 +369,12 @@ target:
     source: windows10-professional-en-us-x86-64
     variant: ssd
     size: 64
+  - os: false
+    variant: ssd
+    size: 128
+  - os: false
+    variant: ssd
+    size: 128
   network:
     name: vn-west-us-gecko-t
     prefix: '10.0.0.0/24'

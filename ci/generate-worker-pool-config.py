@@ -58,18 +58,18 @@ workerPool = {
           'lun': 0,
           'caching': 'ReadWrite',
           'createOption': 'Empty',
-          'diskSizeGB': 128,
+          'diskSizeGB': x['disk'][1]['size'],
           'managedDisk': {
-            'storageAccountType': 'StandardSSD_LRS' if x['disk'][0]['variant'] == 'ssd' else 'Standard_LRS'
+            'storageAccountType': 'StandardSSD_LRS' if x['disk'][1]['variant'] == 'ssd' else 'Standard_LRS'
           }
         },
         {
           'lun': 1,
           'caching': 'ReadWrite',
           'createOption': 'Empty',
-          'diskSizeGB': 128,
+          'diskSizeGB': x['disk'][2]['size'],
           'managedDisk': {
-            'storageAccountType': 'StandardSSD_LRS' if x['disk'][0]['variant'] == 'ssd' else 'Standard_LRS'
+            'storageAccountType': 'StandardSSD_LRS' if x['disk'][2]['variant'] == 'ssd' else 'Standard_LRS'
           }
         }
       ]
