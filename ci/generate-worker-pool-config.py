@@ -83,4 +83,4 @@ workerPool = {
 }
 
 with open('../{}-{}.json'.format(platform, key), 'w') as file:
-  json.dump(workerPool, file)
+  json.dump(workerPool, file, indent = 2, sort_keys = True)
