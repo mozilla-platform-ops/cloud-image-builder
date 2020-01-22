@@ -78,7 +78,8 @@ workerPool = {
       'sourceOrganisation': 'mozilla-releng',
       'sourceRepository': 'OpenCloudConfig',
       'sourceRevision': 'azure'
-    }
+    },
+    'workerConfig': {}
   }, config['target'])))
 }
 
