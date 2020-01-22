@@ -1,8 +1,10 @@
 param (
   [string[]] $resources = @(
     'disk',
+    'image',
     'ni',
     'pia',
+    'snap',
     'vm'
   )
 )
@@ -152,6 +154,86 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
       }
     } catch {
       Write-Output -InputObject ('exception removing orphaned AzDisk {0} / {1} / {2}. {3}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name, $_.Exception.Message);
+    }
+  }
+}
+
+$resourceGroups = @(Get-AzResourceGroup | ? {
+  $_.ResourceGroupName.StartsWith('rg-') `
+  -and $_.ResourceGroupName.Contains('-us-') `
+  -and (
+    $_.ResourceGroupName.EndsWith('-gecko-1') `
+    -or $_.ResourceGroupName.EndsWith('-gecko-3') `
+    -or $_.ResourceGroupName.EndsWith('-gecko-t') `
+    -or $_.ResourceGroupName.EndsWith('-relops')
+  )
+});
+
+if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'snap')) {
+  $allAzSnapshots = @(Get-AzSnapshot);
+  foreach ($resourceGroup in $resourceGroups) {
+    $prefix = $resourceGroup.ResourceGroupName.Replace('rg-', '');
+    $rgSnapshots = @($allAzSnapshots | ? { $_.Name.StartsWith(('{0}-' -f $prefix)) });
+    $keys = @($rgSnapshots | % { $_.Name.SubString(0, ($_.Name.Length - 8)).Replace(('{0}-' -f $prefix), '').Trim() } | Select-Object -Unique);
+    foreach ($key in $keys) {
+      $workerSnapshots = @($rgSnapshots | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) } | Sort-Object -Property 'TimeCreated' -Descending);
+      if ($workerSnapshots.Length -gt 1) {
+        # delete all but newest snapshot
+        for ($i = ($workerSnapshots.Length -1); $i -gt 0; $i --) {
+          try {
+            Write-Output -InputObject ('removing deprecated AzSnapshot {0} / {1} / {2}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name);
+            if (Remove-AzSnapshot `
+              -ResourceGroupName $workerSnapshots[$i].ResourceGroupName `
+              -Name $workerSnapshots[$i].Name `
+              -AsJob `
+              -Force) {
+              Write-Output -InputObject ('removed deprecated AzSnapshot {0} / {1} / {2}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name);
+            } else {
+              Write-Output -InputObject ('failed to remove deprecated AzSnapshot {0} / {1} / {2}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name);
+            }
+          } catch {
+            Write-Output -InputObject ('exception removing deprecated AzSnapshot {0} / {1} / {2}. {3}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name, $_.Exception.Message);
+          }
+        }
+      }
+      Write-Output -InputObject ('skipping latest AzSnapshot {0} / {1} / {2}, created {3}' -f $workerSnapshots[0].Location, $workerSnapshots[0].ResourceGroupName, $workerSnapshots[0].Name, $workerSnapshots[0].TimeCreated);
+    }
+  }
+}
+
+if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'image')) {
+  $allAzImages = @(Get-AzImage);
+  foreach ($resourceGroup in $resourceGroups) {
+    $prefix = $resourceGroup.ResourceGroupName.Replace('rg-', '');
+    $rgImages = @($allAzImages | ? { $_.Name.StartsWith(('{0}-' -f $prefix)) });
+    $keys = @($rgImages | % { $_.Name.SubString(0, ($_.Name.Length - 8)).Replace(('{0}-' -f $prefix), '').Trim() } | Select-Object -Unique);
+    foreach ($key in $keys) {
+      $workerImages = @($rgImages | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) } | % { Add-Member -InputObject $_ -MemberType 'NoteProperty' -Name 'TimeCreated' -Value ([DateTime]$_.Tags['diskImageCommitTime']) -PassThru -Force } | Sort-Object -Property 'TimeCreated' -Descending);
+      if ($workerImages.Length -gt 2) {
+        # delete all but newest image
+        for ($i = ($workerImages.Length -1); $i -gt 1; $i --) {
+          try {
+            Write-Output -InputObject ('removing deprecated AzImage {0} / {1} / {2}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name);
+            if (Remove-AzImage `
+              -ResourceGroupName $workerImages[$i].ResourceGroupName `
+              -Name $workerImages[$i].Name `
+              -AsJob `
+              -Force) {
+              Write-Output -InputObject ('removed deprecated AzImage {0} / {1} / {2}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name);
+            } else {
+              Write-Output -InputObject ('failed to remove deprecated AzImage {0} / {1} / {2}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name);
+            }
+          } catch {
+            Write-Output -InputObject ('exception removing deprecated AzImage {0} / {1} / {2}. {3}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name, $_.Exception.Message);
+          }
+        }
+      }
+      if ($workerImages.Length -gt 0) {
+        Write-Output -InputObject ('skipping latest AzImage {0} / {1} / {2}, created {3:s}' -f $workerImages[0].Location, $workerImages[0].ResourceGroupName, $workerImages[0].Name, $workerImages[0].TimeCreated);
+        if ($workerImages.Length -gt 1) {
+          Write-Output -InputObject ('skipping penultimate AzImage {0} / {1} / {2}, created {3:s}' -f $workerImages[1].Location, $workerImages[1].ResourceGroupName, $workerImages[1].Name, $workerImages[1].TimeCreated);
+        }
+      }
     }
   }
 }
