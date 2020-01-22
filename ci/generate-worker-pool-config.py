@@ -80,6 +80,11 @@ workerPool = {
       'sourceRepository': 'OpenCloudConfig',
       'sourceRevision': 'azure'
     },
+    'priority': 'Spot',
+    'evictionPolicy': 'Deallocate',
+    'billingProfile': {
+      'maxPrice': -1
+    },
     'workerConfig': {}
   }, config['target'])))
 }
