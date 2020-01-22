@@ -34,7 +34,7 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && python cloud-image-builder/ci/create-image-build-tasks.py'
+    'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/create-image-build-tasks.py'.format(os.getenv('TRAVIS_COMMIT'))
   ],
   scopes = [
     'generic-worker:os-group:relops/win2019/Administrators',
