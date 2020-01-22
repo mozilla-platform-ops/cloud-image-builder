@@ -1,5 +1,10 @@
 param (
-  [string[]] $resources
+  [string[]] $resources = @(
+    'disk',
+    'ni',
+    'pia',
+    'vm'
+  )
 )
 
 if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
