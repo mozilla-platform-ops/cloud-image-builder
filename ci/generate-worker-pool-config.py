@@ -19,7 +19,7 @@ config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.co
 workerPool = {
   'minCapacity': 0,
   'maxCapacity': 0,
-  'launchConfigs': map(lambda x: {
+  'launchConfigs': list(map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/sn-central-us-{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
@@ -65,7 +65,7 @@ workerPool = {
       'sourceRepository': 'OpenCloudConfig',
       'sourceRevision': 'azure'
     }
-  }, config['target'])
+  }, config['target']))
 }
 
 with open('../{}-{}.json'.format(platform, key), 'w') as file:
