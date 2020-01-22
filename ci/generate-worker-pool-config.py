@@ -37,7 +37,7 @@ workerPool = {
   'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in enabledLocations, map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
-    'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/sn-central-us-{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
+    'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
     'hardwareProfile': {
       'vmSize': x['machine']['format'].format(x['machine']['cpu'])
     },
