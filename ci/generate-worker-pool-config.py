@@ -2,8 +2,21 @@
 import json
 import os
 import re
+import taskcluster
 import urllib.request
 import yaml
+from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.compute import ComputeManagementClient
+
+secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
+secret = secretsClient.get('project/relops/image-builder/dev')['secret']
+
+azureComputeManagementClient = ComputeManagementClient(
+  ServicePrincipalCredentials(
+    client_id = secret['azure']['id'],
+    secret = secret['azure']['key'],
+    tenant = secret['azure']['account']),
+  secret['azure']['subscription'])
 
 
 def getLatestImageId(resourceGroup, key):
