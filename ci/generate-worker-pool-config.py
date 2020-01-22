@@ -1,4 +1,3 @@
-
 import json
 import os
 import re
@@ -11,7 +10,7 @@ from azure.mgmt.compute import ComputeManagementClient
 secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
 secret = secretsClient.get('project/relops/image-builder/dev')['secret']
 
-enabledRegions = ['Central US']
+enabledLocations = ['centralus']
 
 azureComputeManagementClient = ComputeManagementClient(
   ServicePrincipalCredentials(
@@ -35,7 +34,7 @@ config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.co
 workerPool = {
   'minCapacity': 0,
   'maxCapacity': 0,
-  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['region'] in enabledRegions, map(lambda x: {
+  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in enabledLocations, map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/sn-central-us-{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
