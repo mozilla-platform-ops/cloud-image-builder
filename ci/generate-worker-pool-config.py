@@ -23,7 +23,7 @@ def getLatestImageId(resourceGroup, key):
   pattern = re.compile('^{}-{}-([a-z0-9]{{7}})$'.format(resourceGroup.replace('rg-', ''), key))
   images = sorted([x for x in azureComputeManagementClient.images.list_by_resource_group(resourceGroup) if pattern.match(x.name)], key = lambda i: i.tags['diskImageCommitTime'], reverse=True)
   print('found {} {} images in {}'.format(len(images), key, resourceGroup))
-  return images[0].id
+  return images[0].id if len(images) > 0 else None
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')
 platform = os.getenv('platform')
@@ -33,7 +33,7 @@ config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.co
 workerPool = {
   'minCapacity': 0,
   'maxCapacity': 0,
-  'launchConfigs': list(map(lambda x: {
+  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None, map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/sn-central-us-{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
@@ -79,7 +79,7 @@ workerPool = {
       'sourceRepository': 'OpenCloudConfig',
       'sourceRevision': 'azure'
     }
-  }, config['target']))
+  }, config['target'])))
 }
 
 with open('../{}-{}.json'.format(platform, key), 'w') as file:
