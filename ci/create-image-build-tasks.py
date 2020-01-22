@@ -44,7 +44,7 @@ elif runEnvironment == 'taskcluster':
     queue = queue,
     taskId = slugid.nice(),
     taskName = '00 :: purge deprecated azure resources',
-    taskDescription = 'delete orphaned and/or unused azure resources',
+    taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
     maxRunMinutes = 60,
     provisioner = 'relops',
     workerType = 'win2019',
@@ -195,3 +195,42 @@ for platform in ['azure']:
             taskGroupId = taskGroupId)
         else:
           print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
+
+      createTask(
+        queue = queue,
+        image = 'python',
+        taskId = slugid.nice(),
+        taskName = '04 :: generate {} {} worker pool configuration'.format(platform, key),
+        taskDescription = 'create worker pool configuration for {} {} which can be added to worker manager'.format(platform, key),
+        maxRunMinutes = 180,
+        retries = 1,
+        retriggerOnExitCodes = [ 123 ],
+        artifacts = [
+          {
+            'type': 'file',
+            'name': 'public/{}-{}.json'.format(platform, key),
+            'path': '{}-{}.json'.format(platform, key),
+          }
+        ],
+        dependencies = [],
+        provisioner = 'relops',
+        workerType = 'decision',
+        priority = 'low',
+        features = {
+          'taskclusterProxy': True
+        },
+        env = {
+          'GITHUB_HEAD_SHA': commitSha,
+          'platform': platform,
+          'key': key
+        },
+        commands = [
+          '/bin/bash',
+          '--login',
+          '-c',
+          'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
+        ],
+        scopes = [
+          'secrets:get:project/relops/image-builder/dev'
+        ],
+        taskGroupId = taskGroupId)
