@@ -1,6 +1,7 @@
 param (
   [string] $imageKey,
-  [string] $group
+  [string] $group,
+  [switch] $enableSnapshotCopy = $false
 )
 
 # job settings. change these for the tasks at hand.
@@ -95,7 +96,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
   if ($existingImage) {
     Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
     exit;
-  } else {
+  } elseif ($enableSnapshotCopy) {
     # check if the image snapshot exists in another regional resource-group
     $targetSnapshotName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
     foreach ($source in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -ne $group) })) {
@@ -157,6 +158,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatfor
           -DestContainer $storageContainerName `
           -DestContext $targetAzStorageAccount.Context `
           -DestBlob $targetSnapshotName;
+        # todo: wrap above cmdlet in try/catch and handle exceptions
         $targetAzStorageBlobCopyState = (Get-AzStorageBlobCopyState `
           -Container $storageContainerName `
           -Blob $targetSnapshotName `
