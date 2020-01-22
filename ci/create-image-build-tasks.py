@@ -72,6 +72,8 @@ for platform in ['azure']:
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
 
+      taggingTaskIdsForKey = []
+
       queueDiskImageBuild = imageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
@@ -162,10 +164,12 @@ for platform in ['azure']:
               'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
             ],
             taskGroupId = taskGroupId)
+          taggingTaskId = slugid.nice()
+          taggingTaskIdsForKey.append(taggingTaskId)
           createTask(
             queue = queue,
             image = 'python',
-            taskId = slugid.nice(),
+            taskId = taggingTaskId,
             taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
             taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
             maxRunMinutes = 180,
@@ -212,7 +216,7 @@ for platform in ['azure']:
             'path': '{}-{}.json'.format(platform, key),
           }
         ],
-        dependencies = [],
+        dependencies = taggingTaskIdsForKey,
         provisioner = 'relops',
         workerType = 'decision',
         priority = 'low',
