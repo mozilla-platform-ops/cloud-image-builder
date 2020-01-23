@@ -127,7 +127,7 @@ for platform in ['azure']:
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
       for target in config['target']:
-        queueMachineImageBuild = queueDiskImageBuild or not machineImageExists(
+        queueMachineImageBuild = True or queueDiskImageBuild or not machineImageExists(
           taskclusterIndex = index,
           platformClient = azureComputeManagementClient,
           platform = platform,
