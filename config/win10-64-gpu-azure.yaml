@@ -27,7 +27,7 @@ manager:
       minimum: 0
       maximum: 1
     locations:
-    - centralus
+    - eastus
     owner: grenade@mozilla.com
     provider: azure
 target:
