@@ -109,7 +109,7 @@ occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision
 
 # https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.azure.win10-64.latest/artifacts/public/unattend.xml
 workerGroup, workerType = config['manager']['pool']['id'].split('/', 2)
-machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: workerGroup in x['group'], config['target']))
+machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: workerGroup in x['group'], config['target'])))
 machineImageBuildsDescription = list(map(lambda x: '  - {} {}'.format(x.location, x.name), machineImages))
 description = [
   '### experimental {} taskcluster worker'.format(config['manager']['pool']['id']),
