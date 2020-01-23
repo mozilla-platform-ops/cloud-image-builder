@@ -6,9 +6,20 @@ import urllib.request
 import yaml
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
+from cib import updateWorkerPool
 
-secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
-secret = secretsClient.get('project/relops/image-builder/dev')['secret']
+taskclusterProductionOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
+taskclusterProductionSecretsClient = taskcluster.Secrets(taskclusterProductionOptions)
+secret = taskclusterProductionSecretsClient.get('project/relops/image-builder/dev')['secret']
+
+taskclusterStagingOptions = {
+  'rootUrl': 'https://stage.taskcluster.nonprod.cloudops.mozgcp.net',
+  'credentials': {
+    'clientId': 'project/relops/image-builder/dev',
+    'accessToken': secret['accessToken']['staging']['relops']['image-builder']['dev']
+  }
+}
+taskclusterStagingWorkerManagerClient = taskcluster.WorkerManager(taskclusterStagingOptions)
 
 enabledLocations = ['centralus']
 
@@ -89,5 +100,22 @@ workerPool = {
   }, config['target'])))
 }
 
+# create an artifact containing the worker pool config that can be used for manual worker manager updates in the taskcluster web ui
 with open('../{}-{}.json'.format(platform, key), 'w') as file:
   json.dump(workerPool, file, indent = 2, sort_keys = True)
+
+# update the staging worker manager with a complete worker pool config
+providerConfig = {
+  'description': 'experimental azure {} {} staging worker'.format(config['image']['os'].lower(), config['image']['edition'].lower()),
+  'owner': 'grenade@mozilla.com',
+  'emailOnError': True,
+  'providerId': 'aws',
+  'config': workerPool
+}
+configPath = '../{}-{}.yaml'.format(platform, key)
+with open(configPath, 'w') as file:
+  yaml.dump(providerConfig, file, default_flow_style=False)
+  updateWorkerPool(
+    workerManager = taskclusterStagingWorkerManagerClient,
+    configPath = configPath,
+    workerPoolId = 'gecko-1/win2012' if key == 'win2012' else 'relops/win2019' if key == 'win2019' else 'gecko-t/{}'.format(key))

@@ -214,6 +214,11 @@ for platform in ['azure']:
             'type': 'file',
             'name': 'public/{}-{}.json'.format(platform, key),
             'path': '{}-{}.json'.format(platform, key),
+          },
+          {
+            'type': 'file',
+            'name': 'public/{}-{}.yaml'.format(platform, key),
+            'path': '{}-{}.yaml'.format(platform, key),
           }
         ],
         dependencies = taggingTaskIdsForKey,
