@@ -46,6 +46,9 @@ platform = os.getenv('platform')
 key = os.getenv('key')
 subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
 config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(commitSha, key, platform)).read().decode())
+
+# todo change pool to list and iterate
+workerGroup, workerType = config['manager']['pool']['id'].split('/', 2)
 workerPool = {
   'minCapacity': config['manager']['pool']['capacity']['minimum'],
   'maxCapacity': config['manager']['pool']['capacity']['maximum'],
@@ -96,7 +99,7 @@ workerPool = {
       'maxPrice': -1
     },
     'workerConfig': {}
-  }, config['target'])))
+  }, filter(lambda x: workerGroup in x['group'], config['target']))))
 }
 
 # create an artifact containing the worker pool config that can be used for manual worker manager updates in the taskcluster web ui
@@ -108,8 +111,14 @@ firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' 
 occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
 
 # https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.azure.win10-64.latest/artifacts/public/unattend.xml
-workerGroup, workerType = config['manager']['pool']['id'].split('/', 2)
 machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: workerGroup in x['group'], config['target'])))
+
+# todo: get provenance of each machine build & disk build including task id and git sha
+#machineImageBuildDescriptions = []
+#for machineImage in machineImages:
+#  machineImageBuildDescriptions.append('  - {}'.format(x.name))
+#  machineImageBuildDescriptions.append('    - {}'.format(x.location, x.name))
+
 machineImageBuildsDescription = list(map(lambda x: '  - {} {}'.format(x.location, x.name), machineImages))
 description = [
   '### experimental {} taskcluster worker'.format(config['manager']['pool']['id']),
