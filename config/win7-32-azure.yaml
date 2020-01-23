@@ -21,6 +21,15 @@ iso:
     bucket: windows-ami-builder
     key: iso/en_windows_7_professional_with_sp1_x86_dvd_u_677056.iso
   wimindex: 4
+manager:
+  pool:
+    capacity:
+      minimum: 0
+      maximum: 1
+    locations:
+    - centralus
+    owner: grenade@mozilla.com
+    provider: azure
 target:
 - platform: azure
   group: rg-central-us-gecko-t

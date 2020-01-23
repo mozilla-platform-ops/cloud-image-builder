@@ -21,8 +21,6 @@ taskclusterStagingOptions = {
 }
 taskclusterStagingWorkerManagerClient = taskcluster.WorkerManager(taskclusterStagingOptions)
 
-enabledLocations = ['centralus']
-
 azureComputeManagementClient = ComputeManagementClient(
   ServicePrincipalCredentials(
     client_id = secret['azure']['id'],
@@ -43,9 +41,9 @@ key = os.getenv('key')
 subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
 config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(commitSha, key, platform)).read().decode())
 workerPool = {
-  'minCapacity': 0,
-  'maxCapacity': 0,
-  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in enabledLocations, map(lambda x: {
+  'minCapacity': config['manager']['pool']['capacity']['minimum'],
+  'maxCapacity': config['manager']['pool']['capacity']['maximum'],
+  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in config['manager']['pool']['locations'], map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
@@ -85,12 +83,7 @@ workerPool = {
         }
       ]
     },
-    'tags': {
-      'workerType': 'gecko-1-b-win2012-azure' if key == 'win2012' else 'relops-win2019-azure' if key == 'win2019' else 'gecko-t-{}-{}'.format(key, platform),
-      'sourceOrganisation': 'mozilla-releng',
-      'sourceRepository': 'OpenCloudConfig',
-      'sourceRevision': 'azure'
-    },
+    'tags': { t['name']: t['value'] for t in x['tag'] },
     'priority': 'Spot',
     'evictionPolicy': 'Deallocate',
     'billingProfile': {
@@ -107,9 +100,9 @@ with open('../{}-{}.json'.format(platform, key), 'w') as file:
 # update the staging worker manager with a complete worker pool config
 providerConfig = {
   'description': 'experimental azure {} {} staging worker'.format(config['image']['os'].lower(), config['image']['edition'].lower()),
-  'owner': 'grenade@mozilla.com',
+  'owner': config['manager']['pool']['owner'],
   'emailOnError': True,
-  'providerId': 'azure',
+  'providerId': config['manager']['pool']['provider'],
   'config': workerPool
 }
 configPath = '../{}-{}.yaml'.format(platform, key)

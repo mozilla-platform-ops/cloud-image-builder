@@ -60,18 +60,40 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
   print('info: task {} ({}: {}), created with priority: {}'.format(taskId, taskName, taskDescription, priority))
 
 
-def imageManifestHasChanged(platform, key, currentRevision):
+def diskImageManifestHasChanged(platform, key, currentRevision):
   lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
-  allFilesUnchanged = True
-  for configFile in ['{}-{}'.format(key, platform), 'disable-windows-service', 'drivers', 'packages', 'unattend-commands']:
-    currentContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, configFile)).read().decode()
-    previousContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, configFile)).read().decode()
+
+  imageConfigUnchanged = True
+  isoConfigUnchanged = True
+  sharedFilesUnchanged = True
+
+  configFile = '{}-{}'.format(key, platform)
+  currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, configFile)).read().decode())
+  previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, configFile)).read().decode())
+
+  if currentConfig['image'] == previousConfig['image']:
+    print('info: no change detected for image definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+  else:
+    imageConfigUnchanged = False
+    print('info: change detected for image definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+
+  if currentConfig['iso'] == previousConfig['iso']:
+    print('info: no change detected for iso definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+  else:
+    isoConfigUnchanged = False
+    print('info: change detected for iso definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+
+  # todo: parse shared config files for change specific to platform/key
+  for sharedFile in ['disable-windows-service', 'drivers', 'packages', 'unattend-commands']:
+    currentContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, sharedFile)).read().decode()
+    previousContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, sharedFile)).read().decode()
     if currentContents == previousContents:
-      print('info: no change detected in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+      print('info: no change detected in {}.yaml between last image build in revision: {} and current revision: {}'.format(sharedFile, lastRevision[0:7], currentRevision[0:7]))
     else:
-      allFilesUnchanged = False
-      print('info: change detected for {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
-  return not allFilesUnchanged
+      sharedFilesUnchanged = False
+      print('info: change detected for {}.yaml between last image build in revision: {} and current revision: {}'.format(sharedFile, lastRevision[0:7], currentRevision[0:7]))
+
+  return not (imageConfigUnchanged and isoConfigUnchanged and sharedFilesUnchanged)
 
 
 def machineImageExists(taskclusterIndex, platformClient, platform, group, key):

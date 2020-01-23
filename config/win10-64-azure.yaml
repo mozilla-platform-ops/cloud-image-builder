@@ -21,6 +21,15 @@ iso:
     bucket: windows-ami-builder
     key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
   wimindex: 5
+manager:
+  pool:
+    capacity:
+      minimum: 0
+      maximum: 12
+    locations:
+    - centralus
+    owner: grenade@mozilla.com
+    provider: azure
 target:
 - platform: azure
   group: rg-central-us-gecko-t

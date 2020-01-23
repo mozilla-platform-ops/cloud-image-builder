@@ -2,7 +2,7 @@ import os
 import slugid
 import taskcluster
 import yaml
-from cib import createTask, imageManifestHasChanged, machineImageExists
+from cib import createTask, diskImageManifestHasChanged, machineImageExists
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 
@@ -74,7 +74,7 @@ for platform in ['azure']:
 
       taggingTaskIdsForKey = []
 
-      queueDiskImageBuild = imageManifestHasChanged(platform, key, commitSha)
+      queueDiskImageBuild = diskImageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
         createTask(
