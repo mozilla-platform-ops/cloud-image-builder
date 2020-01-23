@@ -108,7 +108,7 @@ firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' 
 occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
 
 # https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.azure.win10-64.latest/artifacts/public/unattend.xml
-machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(resourceGroup, key), config['target']))
+machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), config['target']))
 machineImageBuildsDescription = list(map(lambda x: '  - {} {}'.format(x.location, x.name), machineImages))
 description = [
   '### experimental {} taskcluster worker'.format(config['manager']['pool']['id']),
