@@ -7,6 +7,7 @@ import yaml
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 from cib import updateWorkerPool
+from datetime import datetime
 
 taskclusterProductionOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
 taskclusterProductionSecretsClient = taskcluster.Secrets(taskclusterProductionOptions)
