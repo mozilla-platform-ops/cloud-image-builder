@@ -109,7 +109,7 @@ providerConfig = {
   'description': 'experimental azure {} {} staging worker'.format(config['image']['os'].lower(), config['image']['edition'].lower()),
   'owner': 'grenade@mozilla.com',
   'emailOnError': True,
-  'providerId': 'aws',
+  'providerId': 'azure',
   'config': workerPool
 }
 configPath = '../{}-{}.yaml'.format(platform, key)
