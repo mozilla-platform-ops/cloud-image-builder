@@ -23,6 +23,7 @@ iso:
   wimindex: 4
 manager:
   pool:
+    id: relops/win2019
     capacity:
       minimum: 0
       maximum: 2

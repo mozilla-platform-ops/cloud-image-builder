@@ -23,6 +23,7 @@ iso:
   wimindex: 4
 manager:
   pool:
+    id: gecko-t/win7-32
     capacity:
       minimum: 0
       maximum: 1

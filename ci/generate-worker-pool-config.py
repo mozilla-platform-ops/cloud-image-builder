@@ -29,11 +29,16 @@ azureComputeManagementClient = ComputeManagementClient(
   secret['azure']['subscription'])
 
 
-def getLatestImageId(resourceGroup, key):
+def getLatestImage(resourceGroup, key):
   pattern = re.compile('^{}-{}-([a-z0-9]{{7}})$'.format(resourceGroup.replace('rg-', ''), key))
   images = sorted([x for x in azureComputeManagementClient.images.list_by_resource_group(resourceGroup) if pattern.match(x.name)], key = lambda i: i.tags['diskImageCommitTime'], reverse=True)
   print('found {} {} images in {}'.format(len(images), key, resourceGroup))
-  return images[0].id if len(images) > 0 else None
+  return images[0] if len(images) > 0 else None
+
+
+def getLatestImageId(resourceGroup, key):
+  image = getLatestImage(resourceGroup, key)
+  return image.id if image is not None else None
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')
 platform = os.getenv('platform')
@@ -98,8 +103,36 @@ with open('../{}-{}.json'.format(platform, key), 'w') as file:
   json.dump(workerPool, file, indent = 2, sort_keys = True)
 
 # update the staging worker manager with a complete worker pool config
+firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in config['manager']['pool']['locations'])
+occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
+
+# https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.azure.win10-64.latest/artifacts/public/unattend.xml
+machineImageBuildsDescription = [
+  '  - implementation missing',
+  '  - implementation missing'
+]
+description = [
+  '### experimental {} taskcluster worker'.format(config['manager']['pool']['id']),
+  '#### provenance',
+  '- operating system: **{}**'.format(config['image']['os']),
+  '- os edition: **{}**'.format(config['image']['edition']),
+  '- source iso: **{}**'.format(os.path.basename(config['iso']['source']['key'])),
+  '- iso wim index: **{}** ({} {})'.format(config['iso']['wimindex'], config['image']['os'], config['image']['edition']),
+  '- architecture: **{}**'.format(config['image']['architecture']),
+  '- language: **{}**'.format(config['image']['language']),
+  '- system timezone: **{}**'.format(config['image']['timezone']),
+  '#### integration',
+  '- disk image build: [{} {}]({})'.format('0000-00-00 OO:00:00Z', '<task-id>', 'https://firefox-ci-tc.services.mozilla.com/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/').format(platform, key),
+  '- machine image builds:',
+  '\n'.join(machineImageBuildsDescription),
+  '- applied occ revision: [{}]({})'.format(occRevision, 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
+  '#### deployment',
+  '- platform: **{} ({})**'.format(platform, ', '.join(config['manager']['pool']['locations'])),
+  '- staging worker-manager/worker-pool update:[{} {}]({})'.format('{}Z'.format(datetime.utcnow().isoformat()[:-3]), os.getenv('TASK_ID'), 'https://firefox-ci-tc.services.mozilla.com/tasks/{}#artifacts'.format(os.getenv('TASK_ID')))
+]
+
 providerConfig = {
-  'description': 'experimental azure {} {} staging worker'.format(config['image']['os'].lower(), config['image']['edition'].lower()),
+  'description': '\n'.join(description),
   'owner': config['manager']['pool']['owner'],
   'emailOnError': True,
   'providerId': config['manager']['pool']['provider'],
@@ -111,4 +144,4 @@ with open(configPath, 'w') as file:
   updateWorkerPool(
     workerManager = taskclusterStagingWorkerManagerClient,
     configPath = configPath,
-    workerPoolId = 'gecko-1/win2012' if key == 'win2012' else 'relops/win2019' if key == 'win2019' else 'gecko-t/{}'.format(key))
+    workerPoolId = config['manager']['pool']['id'])
