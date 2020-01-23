@@ -97,4 +97,4 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 023a3eaa5126972f622dce6b139031d3866593dc
+    value: 605d6448e40704296b17da1cc9eee8655bd263a2
