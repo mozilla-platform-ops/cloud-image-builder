@@ -74,7 +74,7 @@ for platform in ['azure']:
 
       taggingTaskIdsForKey = []
 
-      queueDiskImageBuild = diskImageManifestHasChanged(platform, key, commitSha)
+      queueDiskImageBuild = True or diskImageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
         createTask(

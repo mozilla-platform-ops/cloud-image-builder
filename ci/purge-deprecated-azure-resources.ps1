@@ -181,18 +181,18 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
         # delete all but newest snapshot
         for ($i = ($workerSnapshots.Length -1); $i -gt 0; $i --) {
           try {
-            Write-Output -InputObject ('removing deprecated AzSnapshot {0} / {1} / {2}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name);
+            Write-Output -InputObject ('removing deprecated AzSnapshot {0} / {1} / {2}, created {3}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name, $workerSnapshots[$i].TimeCreated);
             if (Remove-AzSnapshot `
               -ResourceGroupName $workerSnapshots[$i].ResourceGroupName `
               -Name $workerSnapshots[$i].Name `
               -AsJob `
               -Force) {
-              Write-Output -InputObject ('removed deprecated AzSnapshot {0} / {1} / {2}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name);
+              Write-Output -InputObject ('removed deprecated AzSnapshot {0} / {1} / {2}, created {3}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name, $workerSnapshots[$i].TimeCreated);
             } else {
-              Write-Output -InputObject ('failed to remove deprecated AzSnapshot {0} / {1} / {2}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name);
+              Write-Output -InputObject ('failed to remove deprecated AzSnapshot {0} / {1} / {2}, created {3}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name, $workerSnapshots[$i].TimeCreated);
             }
           } catch {
-            Write-Output -InputObject ('exception removing deprecated AzSnapshot {0} / {1} / {2}. {3}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name, $_.Exception.Message);
+            Write-Output -InputObject ('exception removing deprecated AzSnapshot {0} / {1} / {2}, created {3}. {4}' -f $workerSnapshots[$i].Location, $workerSnapshots[$i].ResourceGroupName, $workerSnapshots[$i].Name, $workerSnapshots[$i].TimeCreated, $_.Exception.Message);
           }
         }
       }
@@ -210,21 +210,21 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
     foreach ($key in $keys) {
       $workerImages = @($rgImages | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) } | % { Add-Member -InputObject $_ -MemberType 'NoteProperty' -Name 'TimeCreated' -Value ([DateTime]$_.Tags['diskImageCommitTime']) -PassThru -Force } | Sort-Object -Property 'TimeCreated' -Descending);
       if ($workerImages.Length -gt 2) {
-        # delete all but newest image
+        # delete all but newest and penultimate image
         for ($i = ($workerImages.Length -1); $i -gt 1; $i --) {
           try {
-            Write-Output -InputObject ('removing deprecated AzImage {0} / {1} / {2}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name);
+            Write-Output -InputObject ('removing deprecated AzImage {0} / {1} / {2}, created {3:s}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name, $workerImages[$i].TimeCreated);
             if (Remove-AzImage `
               -ResourceGroupName $workerImages[$i].ResourceGroupName `
               -Name $workerImages[$i].Name `
               -AsJob `
               -Force) {
-              Write-Output -InputObject ('removed deprecated AzImage {0} / {1} / {2}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name);
+              Write-Output -InputObject ('removed deprecated AzImage {0} / {1} / {2}, created {3:s}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name, $workerImages[$i].TimeCreated);
             } else {
-              Write-Output -InputObject ('failed to remove deprecated AzImage {0} / {1} / {2}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name);
+              Write-Output -InputObject ('failed to remove deprecated AzImage {0} / {1} / {2}, created {3:s}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name, $workerImages[$i].TimeCreated);
             }
           } catch {
-            Write-Output -InputObject ('exception removing deprecated AzImage {0} / {1} / {2}. {3}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name, $_.Exception.Message);
+            Write-Output -InputObject ('exception removing deprecated AzImage {0} / {1} / {2}, created {3:s}. {4}' -f $workerImages[$i].Location, $workerImages[$i].ResourceGroupName, $workerImages[$i].Name, $workerImages[$i].TimeCreated, $_.Exception.Message);
           }
         }
       }
