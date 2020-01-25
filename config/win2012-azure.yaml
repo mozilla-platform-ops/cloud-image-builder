@@ -97,7 +97,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US
@@ -163,7 +163,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-east-us-2-gecko-1
   region: East US 2
@@ -229,7 +229,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-north-central-us-gecko-1
   region: North Central US
@@ -295,7 +295,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-south-central-us-gecko-1
   region: South Central US
@@ -361,7 +361,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-west-us-gecko-1
   region: West US
@@ -427,7 +427,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-central-us-gecko-3
   region: Central US
@@ -493,7 +493,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-east-us-gecko-3
   region: East US
@@ -559,7 +559,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-east-us-2-gecko-3
   region: East US 2
@@ -625,7 +625,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-north-central-us-gecko-3
   region: North Central US
@@ -691,7 +691,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-south-central-us-gecko-3
   region: South Central US
@@ -757,7 +757,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07
 - platform: azure
   group: rg-west-us-gecko-3
   region: West US
@@ -823,4 +823,4 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 8206fdccf0a39e86d8b2a0a2bcbbc3ea87265d29
+    value: 1e56f07

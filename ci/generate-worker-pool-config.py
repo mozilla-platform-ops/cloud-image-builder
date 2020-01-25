@@ -71,26 +71,26 @@ workerPool = {
         },
         'osType': 'Windows'
       },
-      'dataDisks': [
-        {
-          'lun': 0,
-          'caching': 'ReadWrite',
-          'createOption': 'Empty',
-          'diskSizeGB': x['disk'][1]['size'],
-          'managedDisk': {
-            'storageAccountType': 'StandardSSD_LRS' if x['disk'][1]['variant'] == 'ssd' else 'Standard_LRS'
-          }
-        },
-        {
-          'lun': 1,
-          'caching': 'ReadWrite',
-          'createOption': 'Empty',
-          'diskSizeGB': x['disk'][2]['size'],
-          'managedDisk': {
-            'storageAccountType': 'StandardSSD_LRS' if x['disk'][2]['variant'] == 'ssd' else 'Standard_LRS'
-          }
-        }
-      ]
+      #'dataDisks': [
+      #  {
+      #    'lun': 0,
+      #    'caching': 'ReadWrite',
+      #    'createOption': 'Empty',
+      #    'diskSizeGB': x['disk'][1]['size'],
+      #    'managedDisk': {
+      #      'storageAccountType': 'StandardSSD_LRS' if x['disk'][1]['variant'] == 'ssd' else 'Standard_LRS'
+      #    }
+      #  },
+      #  {
+      #    'lun': 1,
+      #    'caching': 'ReadWrite',
+      #    'createOption': 'Empty',
+      #    'diskSizeGB': x['disk'][2]['size'],
+      #    'managedDisk': {
+      #      'storageAccountType': 'StandardSSD_LRS' if x['disk'][2]['variant'] == 'ssd' else 'Standard_LRS'
+      #    }
+      #  }
+      #]
     },
     'tags': { t['name']: t['value'] for t in x['tag'] },
     'priority': 'Spot',
