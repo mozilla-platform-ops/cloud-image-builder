@@ -97,7 +97,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 1e56f07
+    value: 485d46a
 - platform: azure
   group: rg-east-us-relops
   region: East US
@@ -163,7 +163,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 1e56f07
+    value: 485d46a
 - platform: azure
   group: rg-east-us-2-relops
   region: East US 2
@@ -229,7 +229,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 1e56f07
+    value: 485d46a
 - platform: azure
   group: rg-north-central-us-relops
   region: North Central US
@@ -295,7 +295,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 1e56f07
+    value: 485d46a
 - platform: azure
   group: rg-south-central-us-relops
   region: South Central US
@@ -361,7 +361,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 1e56f07
+    value: 485d46a
 - platform: azure
   group: rg-west-us-relops
   region: West US
@@ -427,4 +427,4 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 1e56f07
+    value: 485d46a

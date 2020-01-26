@@ -2,7 +2,7 @@ import os
 import slugid
 import taskcluster
 import yaml
-from cib import createTask, diskImageManifestHasChanged, machineImageExists
+from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 
@@ -127,7 +127,7 @@ for platform in ['azure']:
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
       for target in config['target']:
-        queueMachineImageBuild = queueDiskImageBuild or not machineImageExists(
+        queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha) or not machineImageExists(
           taskclusterIndex = index,
           platformClient = azureComputeManagementClient,
           platform = platform,
@@ -165,7 +165,8 @@ for platform in ['azure']:
             ],
             taskGroupId = taskGroupId)
           taggingTaskId = slugid.nice()
-          taggingTaskIdsForKey.append(taggingTaskId)
+          if 'gecko-3' not in target['group']:
+            taggingTaskIdsForKey.append(taggingTaskId)
           createTask(
             queue = queue,
             image = 'python',
