@@ -26,7 +26,7 @@ manager:
     id: gecko-t/win10-64
     capacity:
       minimum: 0
-      maximum: 12
+      maximum: 3
     locations:
     - centralus
     owner: grenade@mozilla.com
