@@ -23,7 +23,26 @@ iso:
   wimindex: 4
 manager:
   pool:
-    id: gecko-1/win2012
+  - domain: gecko-1
+    variant: win2012
+    capacity:
+      minimum: 0
+      maximum: 3
+    locations:
+    - centralus
+    owner: grenade@mozilla.com
+    provider: azure
+  - domain: gecko-3
+    variant: win2012
+    capacity:
+      minimum: 0
+      maximum: 3
+    locations:
+    - centralus
+    owner: grenade@mozilla.com
+    provider: azure
+  - domain: mpd001
+    variant: win2012
     capacity:
       minimum: 0
       maximum: 3

@@ -71,9 +71,6 @@ for platform in ['azure']:
     configPath = '{}/../config/{}-{}.yaml'.format(os.path.dirname(__file__), key, platform)
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
-
-      taggingTaskIdsForKey = []
-
       queueDiskImageBuild = diskImageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
@@ -126,121 +123,123 @@ for platform in ['azure']:
         buildTaskId = None
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
-      for target in config['target']:
-        queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha) or not machineImageExists(
-          taskclusterIndex = index,
-          platformClient = azureComputeManagementClient,
-          platform = platform,
-          group = target['group'],
-          key = key)
-        if queueMachineImageBuild:
-          machineImageBuildTaskId = slugid.nice()
-          createTask(
-            queue = queue,
-            taskId = machineImageBuildTaskId,
-            taskName = '02 :: convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
-            taskDescription = 'convert {} {} disk image to {} {} machine image and deploy to {} {}'.format(platform, key, platform, key, platform, target['group']),
-            maxRunMinutes = 180,
-            retries = 1,
-            retriggerOnExitCodes = [ 123 ],
-            dependencies = [] if buildTaskId is None else [ buildTaskId ],
-            provisioner = 'relops',
-            workerType = 'win2019',
-            priority = 'low',
-            features = {
-              'taskclusterProxy': True
-            },
-            commands = [
-              'git clone https://github.com/grenade/cloud-image-builder.git',
-              'cd cloud-image-builder',
-              'git reset --hard {}'.format(commitSha),
-              'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
-            ],
-            scopes = [
-              'secrets:get:project/relops/image-builder/dev'
-            ],
-            routes = [
-              'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
-              'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
-            ],
-            taskGroupId = taskGroupId)
-          taggingTaskId = slugid.nice()
-          if 'gecko-3' not in target['group']:
-            taggingTaskIdsForKey.append(taggingTaskId)
-          createTask(
-            queue = queue,
-            image = 'python',
-            taskId = taggingTaskId,
-            taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
-            taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
-            maxRunMinutes = 180,
-            retries = 1,
-            retriggerOnExitCodes = [ 123 ],
-            dependencies = [ machineImageBuildTaskId ],
-            provisioner = 'relops',
-            workerType = 'decision',
-            priority = 'low',
-            features = {
-              'taskclusterProxy': True
-            },
-            env = {
-              'platform': platform,
-              'group': target['group'],
-              'key': key
-            },
-            commands = [
-              '/bin/bash',
-              '--login',
-              '-c',
-              'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
-            ],
-            scopes = [
-              'secrets:get:project/relops/image-builder/dev'
-            ],
-            taskGroupId = taskGroupId)
-        else:
-          print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
+      for pool in config['manager']['pool']:
+        taggingTaskIdsForPool = []
+        for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
+          queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha) or not machineImageExists(
+            taskclusterIndex = index,
+            platformClient = azureComputeManagementClient,
+            platform = platform,
+            group = target['group'],
+            key = key)
+          if queueMachineImageBuild:
+            machineImageBuildTaskId = slugid.nice()
+            createTask(
+              queue = queue,
+              taskId = machineImageBuildTaskId,
+              taskName = '02 :: convert {} {} disk image to {} {}/{} machine image and deploy to {} {}'.format(platform, key, platform, pool['domain'], pool['variant'], platform, target['group']),
+              taskDescription = 'convert {} {} disk image to {} {}/{} machine image and deploy to {} {}'.format(platform, key, platform, pool['domain'], pool['variant'], platform, target['group']),
+              maxRunMinutes = 180,
+              retries = 1,
+              retriggerOnExitCodes = [ 123 ],
+              dependencies = [] if buildTaskId is None else [ buildTaskId ],
+              provisioner = 'relops',
+              workerType = 'win2019',
+              priority = 'low',
+              features = {
+                'taskclusterProxy': True
+              },
+              commands = [
+                'git clone https://github.com/grenade/cloud-image-builder.git',
+                'cd cloud-image-builder',
+                'git reset --hard {}'.format(commitSha),
+                'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
+              ],
+              scopes = [
+                'secrets:get:project/relops/image-builder/dev'
+              ],
+              routes = [
+                'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
+                'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
+              ],
+              taskGroupId = taskGroupId)
+            taggingTaskId = slugid.nice()
+            taggingTaskIdsForPool.append(taggingTaskId)
+            createTask(
+              queue = queue,
+              image = 'python',
+              taskId = taggingTaskId,
+              taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
+              taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
+              maxRunMinutes = 180,
+              retries = 1,
+              retriggerOnExitCodes = [ 123 ],
+              dependencies = [ machineImageBuildTaskId ],
+              provisioner = 'relops',
+              workerType = 'decision',
+              priority = 'low',
+              features = {
+                'taskclusterProxy': True
+              },
+              env = {
+                'platform': platform,
+                'group': target['group'],
+                'key': key
+              },
+              commands = [
+                '/bin/bash',
+                '--login',
+                '-c',
+                'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
+              ],
+              scopes = [
+                'secrets:get:project/relops/image-builder/dev'
+              ],
+              taskGroupId = taskGroupId)
+          else:
+            print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
 
-      createTask(
-        queue = queue,
-        image = 'python',
-        taskId = slugid.nice(),
-        taskName = '04 :: generate {} {} worker pool configuration'.format(platform, key),
-        taskDescription = 'create worker pool configuration for {} {} which can be added to worker manager'.format(platform, key),
-        maxRunMinutes = 180,
-        retries = 1,
-        retriggerOnExitCodes = [ 123 ],
-        artifacts = [
-          {
-            'type': 'file',
-            'name': 'public/{}-{}.json'.format(platform, key),
-            'path': '{}-{}.json'.format(platform, key),
+        createTask(
+          queue = queue,
+          image = 'python',
+          taskId = slugid.nice(),
+          taskName = '04 :: generate {} {}/{} worker pool configuration'.format(platform, pool['domain'], pool['variant']),
+          taskDescription = 'create worker pool configuration for {} {}/{} which can be added to worker manager'.format(platform, pool['domain'], pool['variant']),
+          maxRunMinutes = 180,
+          retries = 1,
+          retriggerOnExitCodes = [ 123 ],
+          artifacts = [
+            {
+              'type': 'file',
+              'name': 'public/{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
+              'path': '{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
+            },
+            {
+              'type': 'file',
+              'name': 'public/{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
+              'path': '{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
+            }
+          ],
+          dependencies = taggingTaskIdsForPool,
+          provisioner = 'relops',
+          workerType = 'decision',
+          priority = 'low',
+          features = {
+            'taskclusterProxy': True
           },
-          {
-            'type': 'file',
-            'name': 'public/{}-{}.yaml'.format(platform, key),
-            'path': '{}-{}.yaml'.format(platform, key),
-          }
-        ],
-        dependencies = taggingTaskIdsForKey,
-        provisioner = 'relops',
-        workerType = 'decision',
-        priority = 'low',
-        features = {
-          'taskclusterProxy': True
-        },
-        env = {
-          'GITHUB_HEAD_SHA': commitSha,
-          'platform': platform,
-          'key': key
-        },
-        commands = [
-          '/bin/bash',
-          '--login',
-          '-c',
-          'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
-        ],
-        scopes = [
-          'secrets:get:project/relops/image-builder/dev'
-        ],
-        taskGroupId = taskGroupId)
+          env = {
+            'GITHUB_HEAD_SHA': commitSha,
+            'platform': platform,
+            'key': key,
+            'pool': '{}/{}'.format(pool['domain'], pool['variant'])
+          },
+          commands = [
+            '/bin/bash',
+            '--login',
+            '-c',
+            'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
+          ],
+          scopes = [
+            'secrets:get:project/relops/image-builder/dev'
+          ],
+          taskGroupId = taskGroupId)

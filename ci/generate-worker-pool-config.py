@@ -44,15 +44,15 @@ def getLatestImageId(resourceGroup, key):
 commitSha = os.getenv('GITHUB_HEAD_SHA')
 platform = os.getenv('platform')
 key = os.getenv('key')
+poolName = os.getenv('pool')
 subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
 config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(commitSha, key, platform)).read().decode())
+poolConfig = next(p for p in config['manager']['pool'] if '{}/{}'.format(p['domain'], p['variant']) == poolName)
 
-# todo change pool to list and iterate
-workerGroup, workerType = config['manager']['pool']['id'].split('/', 2)
 workerPool = {
-  'minCapacity': config['manager']['pool']['capacity']['minimum'],
-  'maxCapacity': config['manager']['pool']['capacity']['maximum'],
-  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in config['manager']['pool']['locations'], map(lambda x: {
+  'minCapacity': poolConfig['capacity']['minimum'],
+  'maxCapacity': poolConfig['capacity']['maximum'],
+  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in poolConfig['locations'], map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
@@ -70,27 +70,7 @@ workerPool = {
           'storageAccountType': 'StandardSSD_LRS' if x['disk'][0]['variant'] == 'ssd' else 'Standard_LRS'
         },
         'osType': 'Windows'
-      },
-      #'dataDisks': [
-      #  {
-      #    'lun': 0,
-      #    'caching': 'ReadWrite',
-      #    'createOption': 'Empty',
-      #    'diskSizeGB': x['disk'][1]['size'],
-      #    'managedDisk': {
-      #      'storageAccountType': 'StandardSSD_LRS' if x['disk'][1]['variant'] == 'ssd' else 'Standard_LRS'
-      #    }
-      #  },
-      #  {
-      #    'lun': 1,
-      #    'caching': 'ReadWrite',
-      #    'createOption': 'Empty',
-      #    'diskSizeGB': x['disk'][2]['size'],
-      #    'managedDisk': {
-      #      'storageAccountType': 'StandardSSD_LRS' if x['disk'][2]['variant'] == 'ssd' else 'Standard_LRS'
-      #    }
-      #  }
-      #]
+      }
     },
     'tags': { t['name']: t['value'] for t in x['tag'] },
     'priority': 'Spot',
@@ -99,7 +79,7 @@ workerPool = {
       'maxPrice': -1
     },
     'workerConfig': {}
-  }, filter(lambda x: workerGroup in x['group'], config['target']))))
+  }, filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target']))))
 }
 
 # create an artifact containing the worker pool config that can be used for manual worker manager updates in the taskcluster web ui
@@ -107,11 +87,11 @@ with open('../{}-{}.json'.format(platform, key), 'w') as file:
   json.dump(workerPool, file, indent = 2, sort_keys = True)
 
 # update the staging worker manager with a complete worker pool config
-firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in config['manager']['pool']['locations'])
+firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in poolConfig['locations'])
 occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
 
 # https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.azure.win10-64.latest/artifacts/public/unattend.xml
-machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: workerGroup in x['group'], config['target'])))
+machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target'])))
 
 # todo: get provenance of each machine build & disk build including task id and git sha
 #machineImageBuildDescriptions = []
@@ -121,7 +101,7 @@ machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['
 
 machineImageBuildsDescription = list(map(lambda x: '  - {} {}'.format(x.location, x.name), machineImages))
 description = [
-  '### experimental {} taskcluster worker'.format(config['manager']['pool']['id']),
+  '### experimental {} taskcluster worker'.format(poolConfig['id']),
   '#### provenance',
   '- operating system: **{}**'.format(config['image']['os']),
   '- os edition: **{}**'.format(config['image']['edition']),
@@ -136,15 +116,15 @@ description = [
   '\n'.join(machineImageBuildsDescription),
   '- applied occ revision: [{}]({})'.format(occRevision[0:7], 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
   '#### deployment',
-  '- platform: **{} ({})**'.format(platform, ', '.join(config['manager']['pool']['locations'])),
+  '- platform: **{} ({})**'.format(platform, ', '.join(poolConfig['locations'])),
   '- last staging worker pool update: {} [{}]({})'.format('{}'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' ')), os.getenv('TASK_ID'), 'https://firefox-ci-tc.services.mozilla.com/tasks/{}#artifacts'.format(os.getenv('TASK_ID')))
 ]
 
 providerConfig = {
   'description': '\n'.join(description),
-  'owner': config['manager']['pool']['owner'],
+  'owner': poolConfig['owner'],
   'emailOnError': True,
-  'providerId': config['manager']['pool']['provider'],
+  'providerId': poolConfig['provider'],
   'config': workerPool
 }
 configPath = '../{}-{}.yaml'.format(platform, key)
@@ -153,4 +133,4 @@ with open(configPath, 'w') as file:
   updateWorkerPool(
     workerManager = taskclusterStagingWorkerManagerClient,
     configPath = configPath,
-    workerPoolId = config['manager']['pool']['id'])
+    workerPoolId = poolConfig['id'])
