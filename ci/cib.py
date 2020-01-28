@@ -96,22 +96,28 @@ def diskImageManifestHasChanged(platform, key, currentRevision):
   return not (imageConfigUnchanged and isoConfigUnchanged and sharedFilesUnchanged)
 
 
-def machineImageManifestHasChanged(platform, key, currentRevision):
+def machineImageManifestHasChanged(platform, key, currentRevision, group):
   lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
 
-  targetConfigUnchanged = True
+  targetTagsUnchanged = True
 
   configFile = '{}-{}'.format(key, platform)
   currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, configFile)).read().decode())
   previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, configFile)).read().decode())
 
-  if currentConfig['target'] == previousConfig['target']:
-    print('info: no change detected for target definitions in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
-  else:
-    targetConfigUnchanged = False
-    print('info: change detected for target definitions in {}.yaml between last image build in revision: {} and current revision: {}'.format(configFile, lastRevision[0:7], currentRevision[0:7]))
+  currentTargetGroupConfig = next(t for t in currentConfig['target'] if t['group'] == group)
+  previousTargetGroupConfig = next(t for t in previousConfig['target'] if t['group'] == group)
 
-  return not targetConfigUnchanged
+  for tagKey in ['workerType', 'sourceOrganisation', 'sourceRepository', 'sourceRevision']:
+    currentTagValue = next(tag for tag in currentTargetGroupConfig['tag'] if tag['name'] == tagKey)['value']
+    previousTagValue = next(tag for tag in previousTargetGroupConfig['tag'] if tag['name'] == tagKey)['value']
+    if currentTagValue == previousTagValue:
+      print('info: no change detected for tag {} in target group {} in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, group, configFile, lastRevision[0:7], currentRevision[0:7]))
+    else:
+      targetTagsUnchanged = False
+      print('info: change detected for tag {} in target group {} in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, group, configFile, lastRevision[0:7], currentRevision[0:7]))
+
+  return not targetTagsUnchanged
 
 
 def machineImageExists(taskclusterIndex, platformClient, platform, group, key):

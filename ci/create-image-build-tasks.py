@@ -126,7 +126,7 @@ for platform in ['azure']:
       for pool in config['manager']['pool']:
         taggingTaskIdsForPool = []
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
-          queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha) or not machineImageExists(
+          queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
             taskclusterIndex = index,
             platformClient = azureComputeManagementClient,
             platform = platform,

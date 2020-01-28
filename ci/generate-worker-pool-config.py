@@ -101,7 +101,7 @@ machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['
 
 machineImageBuildsDescription = list(map(lambda x: '  - {} {}'.format(x.location, x.name), machineImages))
 description = [
-  '### experimental {} taskcluster worker'.format(poolConfig['id']),
+  '### experimental {}/{} taskcluster worker'.format(poolConfig['domain'], poolConfig['variant']),
   '#### provenance',
   '- operating system: **{}**'.format(config['image']['os']),
   '- os edition: **{}**'.format(config['image']['edition']),
@@ -133,4 +133,4 @@ with open(configPath, 'w') as file:
   updateWorkerPool(
     workerManager = taskclusterStagingWorkerManagerClient,
     configPath = configPath,
-    workerPoolId = poolConfig['id'])
+    workerPoolId = '{}/{}'.format(poolConfig['domain'], poolConfig['variant']))
