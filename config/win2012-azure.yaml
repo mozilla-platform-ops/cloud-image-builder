@@ -41,7 +41,16 @@ manager:
     - centralus
     owner: grenade@mozilla.com
     provider: azure
-  - domain: mpd001
+  - domain: mpd001-1
+    variant: win2012
+    capacity:
+      minimum: 0
+      maximum: 3
+    locations:
+    - centralus
+    owner: grenade@mozilla.com
+    provider: azure
+  - domain: mpd001-3
     variant: win2012
     capacity:
       minimum: 0
@@ -54,16 +63,16 @@ target:
 - platform: azure
   group: rg-central-us-gecko-1
   region: Central US
-  hostname:
+  hostname: &hostname
     format: vm-{0}
     slug:
       type: uuid
       length: 12
-  machine:
+  machine: &machine
     cpu: 2
     ram: 4
     format: Standard_A{0}
-  disk:
+  disk: &disk
   - os: true
     source: windowsserver2012r2-datacenter-en-us-x86-64
     variant: ssd
@@ -77,7 +86,7 @@ target:
   network:
     name: vn-central-us-gecko-1
     prefix: '10.0.0.0/24'
-    dns:
+    dns: &dns
     - '1.1.1.1'
     - '1.0.0.1'
     subnet:
@@ -85,7 +94,7 @@ target:
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-central-us-gecko-1
-      rules:
+      rules: &rules
       - name: allow-rdp
         description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
         access: Allow
@@ -108,7 +117,7 @@ target:
         SourcePortRange: '*'
         DestinationAddressPrefix: '*'
         DestinationPortRange: 22
-  tag:
+  tag: &tag-gecko-1
   - name: workerType
     value: gecko-1-b-win2012-azure
   - name: sourceOrganisation
@@ -117,394 +126,131 @@ target:
     value: OpenCloudConfig
   - name: sourceRevision
     value: 485d46a
+  bootstrap: &bootstrap
+    executions:
+    - name: set-registry-key-mozilla-generic-worker
+      shell: azure-powershell
+      commands:
+      - format: New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force;
+      - format: New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' -Force;
+      match:
+        format: .*
+    - name: set-registry-value-mozilla-generic-worker-client-id
+      shell: azure-powershell
+      commands:
+      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'clientId' -Value "$clientId" -Type 'String';
+        exec: true
+      match:
+        format: .*
+    - name: set-registry-value-mozilla-generic-worker-access-token
+      shell: azure-powershell
+      commands:
+      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value "$accessToken" -Type 'String';
+        exec: true
+      match:
+        format: .*
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-east-us-gecko-1
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-east-us-gecko-1
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-east-us-gecko-1
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-1-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-1
 - platform: azure
   group: rg-east-us-2-gecko-1
   region: East US 2
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-east-us-2-gecko-1
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-east-us-2-gecko-1
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-east-us-2-gecko-1
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-1-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-1
 - platform: azure
   group: rg-north-central-us-gecko-1
   region: North Central US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-north-central-us-gecko-1
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-north-central-us-gecko-1
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-north-central-us-gecko-1
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-1-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-1
 - platform: azure
   group: rg-south-central-us-gecko-1
   region: South Central US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-south-central-us-gecko-1
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-south-central-us-gecko-1
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-south-central-us-gecko-1
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-1-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-1
 - platform: azure
   group: rg-west-us-gecko-1
   region: West US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-west-us-gecko-1
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-west-us-gecko-1
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-west-us-gecko-1
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-1-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-1
 - platform: azure
   group: rg-central-us-gecko-3
   region: Central US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-central-us-gecko-3
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-central-us-gecko-3
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-central-us-gecko-3
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
+      rules: *rules
+  tag: &tag-gecko-3
   - name: workerType
     value: gecko-3-b-win2012-azure
   - name: sourceOrganisation
@@ -516,261 +262,107 @@ target:
 - platform: azure
   group: rg-east-us-gecko-3
   region: East US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-east-us-gecko-3
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-east-us-gecko-3
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-east-us-gecko-3
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-3-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-3
 - platform: azure
   group: rg-east-us-2-gecko-3
   region: East US 2
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-east-us-2-gecko-3
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-east-us-2-gecko-3
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-east-us-2-gecko-3
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-3-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-3
 - platform: azure
   group: rg-north-central-us-gecko-3
   region: North Central US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-north-central-us-gecko-3
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-north-central-us-gecko-3
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-north-central-us-gecko-3
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
-  - name: workerType
-    value: gecko-3-b-win2012-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: 485d46a
+      rules: *rules
+  tag: *tag-gecko-3
 - platform: azure
   group: rg-south-central-us-gecko-3
   region: South Central US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
     name: vn-south-central-us-gecko-3
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
       name: sn-south-central-us-gecko-3
       prefix: '10.0.0.0/24'
     flow:
       name: nsg-south-central-us-gecko-3
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
+      rules: *rules
+  tag: *tag-gecko-3
+- platform: azure
+  group: rg-west-us-gecko-3
+  region: West US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-west-us-gecko-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-west-us-gecko-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-west-us-gecko-3
+      rules: *rules
+  tag: *tag-gecko-3
+- platform: azure
+  group: rg-central-us-mpd001-1
+  region: Central US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-central-us-mpd001-1
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-central-us-mpd001-1
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-central-us-mpd001-1
+      rules: *rules
+  tag: &tag-mpd001-1
   - name: workerType
-    value: gecko-3-b-win2012-azure
+    value: mpd001-1-b-win2012-azure
   - name: sourceOrganisation
     value: mozilla-releng
   - name: sourceRepository
@@ -778,68 +370,197 @@ target:
   - name: sourceRevision
     value: 485d46a
 - platform: azure
-  group: rg-west-us-gecko-3
-  region: West US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk:
-  - os: true
-    source: windowsserver2012r2-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
+  group: rg-east-us-mpd001-1
+  region: East US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
   network:
-    name: vn-west-us-gecko-3
+    name: vn-east-us-mpd001-1
     prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
+    dns: *dns
     subnet:
-      name: sn-west-us-gecko-3
+      name: sn-east-us-mpd001-1
       prefix: '10.0.0.0/24'
     flow:
-      name: nsg-west-us-gecko-3
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
-        - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
-  tag:
+      name: nsg-east-us-mpd001-1
+      rules: *rules
+  tag: *tag-mpd001-1
+- platform: azure
+  group: rg-east-us-2-mpd001-1
+  region: East US 2
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-east-us-2-mpd001-1
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-east-us-2-mpd001-1
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-east-us-2-mpd001-1
+      rules: *rules
+  tag: *tag-mpd001-1
+- platform: azure
+  group: rg-north-central-us-mpd001-1
+  region: North Central US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-north-central-us-mpd001-1
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-north-central-us-mpd001-1
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-north-central-us-mpd001-1
+      rules: *rules
+  tag: *tag-mpd001-1
+- platform: azure
+  group: rg-south-central-us-mpd001-1
+  region: South Central US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-south-central-us-mpd001-1
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-south-central-us-mpd001-1
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-south-central-us-mpd001-1
+      rules: *rules
+  tag: *tag-mpd001-1
+- platform: azure
+  group: rg-west-us-mpd001-1
+  region: West US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-west-us-mpd001-1
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-west-us-mpd001-1
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-west-us-mpd001-1
+      rules: *rules
+  tag: *tag-mpd001-1
+- platform: azure
+  group: rg-central-us-mpd001-3
+  region: Central US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-central-us-mpd001-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-central-us-mpd001-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-central-us-mpd001-3
+      rules: *rules
+  tag: &tag-mpd001-3
   - name: workerType
-    value: gecko-3-b-win2012-azure
+    value: mpd001-3-b-win2012-azure
   - name: sourceOrganisation
     value: mozilla-releng
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
     value: 485d46a
+- platform: azure
+  group: rg-east-us-mpd001-3
+  region: East US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-east-us-mpd001-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-east-us-mpd001-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-east-us-mpd001-3
+      rules: *rules
+  tag: *tag-mpd001-3
+- platform: azure
+  group: rg-east-us-2-mpd001-3
+  region: East US 2
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-east-us-2-mpd001-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-east-us-2-mpd001-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-east-us-2-mpd001-3
+      rules: *rules
+  tag: *tag-mpd001-3
+- platform: azure
+  group: rg-north-central-us-mpd001-3
+  region: North Central US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-north-central-us-mpd001-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-north-central-us-mpd001-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-north-central-us-mpd001-3
+      rules: *rules
+  tag: *tag-mpd001-3
+- platform: azure
+  group: rg-south-central-us-mpd001-3
+  region: South Central US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-south-central-us-mpd001-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-south-central-us-mpd001-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-south-central-us-mpd001-3
+      rules: *rules
+  tag: *tag-mpd001-3
+- platform: azure
+  group: rg-west-us-mpd001-3
+  region: West US
+  hostname: *hostname
+  machine: *machine
+  disk: *disk
+  network:
+    name: vn-west-us-mpd001-3
+    prefix: '10.0.0.0/24'
+    dns: *dns
+    subnet:
+      name: sn-west-us-mpd001-3
+      prefix: '10.0.0.0/24'
+    flow:
+      name: nsg-west-us-mpd001-3
+      rules: *rules
+  tag: *tag-mpd001-3
