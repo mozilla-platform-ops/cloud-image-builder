@@ -21,6 +21,7 @@ taskclusterStagingOptions = {
   }
 }
 taskclusterStagingWorkerManagerClient = taskcluster.WorkerManager(taskclusterStagingOptions)
+taskclusterProductionWorkerManagerClient = taskcluster.WorkerManager(taskclusterProductionOptions)
 
 azureComputeManagementClient = ComputeManagementClient(
   ServicePrincipalCredentials(
@@ -133,4 +134,8 @@ with open(configPath, 'w') as file:
   updateWorkerPool(
     workerManager = taskclusterStagingWorkerManagerClient,
     configPath = configPath,
-    workerPoolId = '{}/{}'.format(poolConfig['domain'], poolConfig['variant']))
+    workerPoolId = '{}/{}-azure'.format(poolConfig['domain'], poolConfig['variant']))
+  updateWorkerPool(
+    workerManager = taskclusterProductionWorkerManagerClient,
+    configPath = configPath,
+    workerPoolId = '{}/{}-azure'.format(poolConfig['domain'], poolConfig['variant']))
