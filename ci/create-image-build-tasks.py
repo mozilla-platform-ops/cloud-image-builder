@@ -134,11 +134,12 @@ for platform in ['azure']:
             key = key)
           if queueMachineImageBuild:
             machineImageBuildTaskId = slugid.nice()
+            bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
             createTask(
               queue = queue,
               taskId = machineImageBuildTaskId,
-              taskName = '02 :: convert {} {} disk image to {} {}/{} machine image and deploy to {} {}'.format(platform, key, platform, pool['domain'], pool['variant'], platform, target['group']),
-              taskDescription = 'convert {} {} disk image to {} {}/{} machine image and deploy to {} {}'.format(platform, key, platform, pool['domain'], pool['variant'], platform, target['group']),
+              taskName = '02 :: build {} {}/{} machine image from {} {} disk image using bootstrap revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapRevision, platform, target['group']),
+              taskDescription = 'build {} {}/{} machine image from {} {} disk image using bootstrap revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapRevision, platform, target['group']),
               maxRunMinutes = 180,
               retries = 1,
               retriggerOnExitCodes = [ 123 ],
