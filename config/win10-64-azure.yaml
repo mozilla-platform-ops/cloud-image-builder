@@ -99,6 +99,8 @@ target:
     value: OpenCloudConfig
   - name: sourceRevision
     value: e1ba216
+  - name: deploymentId
+    value: e1ba216
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US

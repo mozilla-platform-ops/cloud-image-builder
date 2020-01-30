@@ -118,7 +118,7 @@ description = [
   '- applied occ revision: [{}]({})'.format(occRevision[0:7], 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
   '#### deployment',
   '- platform: **{} ({})**'.format(platform, ', '.join(poolConfig['locations'])),
-  '- last staging worker pool update: {} [{}]({})'.format('{}'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' ')), os.getenv('TASK_ID'), 'https://firefox-ci-tc.services.mozilla.com/tasks/{}#artifacts'.format(os.getenv('TASK_ID')))
+  '- last worker pool update (staging/production): {} [{}]({})'.format('{}'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' ')), os.getenv('TASK_ID'), 'https://firefox-ci-tc.services.mozilla.com/tasks/{}#artifacts'.format(os.getenv('TASK_ID')))
 ]
 
 providerConfig = {
