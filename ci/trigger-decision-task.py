@@ -46,6 +46,13 @@ createTask(
     'queue:create-task:low:relops/*',
     'queue:route:index.project.relops.cloud-image-builder.*',
     'queue:scheduler-id:-',
+    'worker-manager:manage-worker-pool:gecko-1/win*',
+    'worker-manager:manage-worker-pool:gecko-3/win*',
+    'worker-manager:manage-worker-pool:gecko-t/win*',
+    'worker-manager:manage-worker-pool:mpd001-1/win*',
+    'worker-manager:manage-worker-pool:mpd001-3/win*',
+    'worker-manager:manage-worker-pool:relops/win*',
+    'worker-manager:provider:azure',
     'secrets:get:project/relops/image-builder/dev'
   ]
 )

@@ -241,6 +241,8 @@ for platform in ['azure']:
             'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
           ],
           scopes = [
-            'secrets:get:project/relops/image-builder/dev'
+            'secrets:get:project/relops/image-builder/dev',
+            'worker-manager:manage-worker-pool:{}/{}-{}'.format(pool['domain'], pool['variant'], platform),
+            'worker-manager:provider:{}'.format(pool['provider'])
           ],
           taskGroupId = taskGroupId)
