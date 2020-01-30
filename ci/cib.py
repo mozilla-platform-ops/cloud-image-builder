@@ -109,14 +109,16 @@ def machineImageManifestHasChanged(platform, key, currentRevision, group):
   previousTargetGroupConfig = next(t for t in previousConfig['target'] if t['group'] == group)
 
   for tagKey in ['workerType', 'sourceOrganisation', 'sourceRepository', 'sourceRevision']:
-    currentTagValue = next(tag for tag in currentTargetGroupConfig['tag'] if tag['name'] == tagKey)['value']
-    previousTagValue = next(tag for tag in previousTargetGroupConfig['tag'] if tag['name'] == tagKey)['value']
-    if currentTagValue == previousTagValue:
-      print('info: no change detected for tag {} in target group {} in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, group, configFile, lastRevision[0:7], currentRevision[0:7]))
-    else:
+    try:
+      currentTagValue = next(tag for tag in currentTargetGroupConfig['tag'] if tag['name'] == tagKey)['value']
+      previousTagValue = next(tag for tag in previousTargetGroupConfig['tag'] if tag['name'] == tagKey)['value']
+      if currentTagValue == previousTagValue:
+        print('info: no change detected for tag {} in target group {} in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, group, configFile, lastRevision[0:7], currentRevision[0:7]))
+      else:
+        targetTagsUnchanged = False
+        print('info: change detected for tag {} in target group {} in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, group, configFile, lastRevision[0:7], currentRevision[0:7]))
+    except:
       targetTagsUnchanged = False
-      print('info: change detected for tag {} in target group {} in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, group, configFile, lastRevision[0:7], currentRevision[0:7]))
-
   return not targetTagsUnchanged
 
 
