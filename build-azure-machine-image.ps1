@@ -88,7 +88,11 @@ $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.
 $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
 foreach ($target in @($config.target | ? { (($_.platform -eq $targetCloudPlatform) -and $_.group -eq $group) })) {
-  $targetImageName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7));
+  $bootstrapRevision = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+  if ($bootstrapRevision.Length -gt 7) {
+    $bootstrapRevision = $bootstrapRevision.Substring(0, 7);
+  }
+  $targetImageName = ('{0}-{1}-{2}-{3}' -f $target.group.Replace('rg-', ''), $imageKey.Replace(('-{0}' -f $targetCloudPlatform), ''), $imageArtifactDescriptor.build.revision.Substring(0, 7), $bootstrapRevision);
   $existingImage = (Get-AzImage `
     -ResourceGroupName $target.group `
     -ImageName $targetImageName `
