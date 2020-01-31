@@ -98,7 +98,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: e1ba216
+    value: 7e9f65c
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US
