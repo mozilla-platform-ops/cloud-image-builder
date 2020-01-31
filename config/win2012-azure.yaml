@@ -130,27 +130,21 @@ target:
     value: 7e9f65c
   bootstrap: &bootstrap
     executions:
-    - name: set-registry-key-mozilla-generic-worker
+    - name: create-registry-key-mozilla-generic-worker
       shell: azure-powershell
       commands:
-      - format: New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force;
-      - format: New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' -Force;
-      match:
-        format: .*
-    - name: set-registry-value-mozilla-generic-worker-client-id
+      - New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force;
+      - New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' -Force;
+    - name: create-registry-value-mozilla-generic-worker-client-id
       shell: azure-powershell
       commands:
-      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'clientId' -Value "$clientId" -Type 'String';
-        exec: true
-      match:
-        format: .*
-    - name: set-registry-value-mozilla-generic-worker-access-token
+      - Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'clientId' -Value 'azure/gecko-1/win2012-azure' -Type 'String';
+    - name: create-registry-value-mozilla-generic-worker-access-token
       shell: azure-powershell
       commands:
-      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value "$accessToken" -Type 'String';
-        exec: true
-      match:
-        format: .*
+      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value '{0}' -Type 'String';
+        tokens:
+        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.accessToken.production.azure.'gecko-1'.win2012
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US

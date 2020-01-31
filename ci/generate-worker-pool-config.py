@@ -35,6 +35,8 @@ def getLatestImage(resourceGroup, key):
   pattern = re.compile('^{}-{}-([a-z0-9]{{7}})$'.format(resourceGroup.replace('rg-', ''), key))
   images = sorted([x for x in azureComputeManagementClient.images.list_by_resource_group(resourceGroup) if pattern.match(x.name)], key = lambda i: i.tags['diskImageCommitTime'], reverse=True)
   print('found {} {} images in {}'.format(len(images), key, resourceGroup))
+  if len(images) > 0:
+    print('latest image: {} ({})'.format(images[0].name, images[0].id))
   return images[0] if len(images) > 0 else None
 
 
@@ -130,11 +132,12 @@ providerConfig = {
 }
 configPath = '../{}-{}.yaml'.format(platform, key)
 with open(configPath, 'w') as file:
+  print('saving: {}'.format(configPath))
   yaml.dump(providerConfig, file, default_flow_style=False)
-  updateWorkerPool(
-    workerManager = taskclusterStagingWorkerManagerClient,
-    configPath = configPath,
-    workerPoolId = '{}/{}-azure'.format(poolConfig['domain'], poolConfig['variant']))
+  #updateWorkerPool(
+  #  workerManager = taskclusterStagingWorkerManagerClient,
+  #  configPath = configPath,
+  #  workerPoolId = '{}/{}-azure'.format(poolConfig['domain'], poolConfig['variant']))
   updateWorkerPool(
     workerManager = taskclusterProductionWorkerManagerClient,
     configPath = configPath,
