@@ -27,7 +27,7 @@ print('group: {}'.format(group))
 print('key: {}'.format(key))
 
 
-pattern = re.compile('^{}-{}-([a-z0-9]{{7}})$'.format(group.replace('rg-', ''), key))
+pattern = re.compile('^{}-{}-([a-z0-9]{{7}})-([a-z0-9]{{7}})$'.format(group.replace('rg-', ''), key))
 images = [x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)]
 for image in images:
   revision = pattern.search(image.name).group(1)

@@ -32,7 +32,7 @@ azureComputeManagementClient = ComputeManagementClient(
 
 
 def getLatestImage(resourceGroup, key):
-  pattern = re.compile('^{}-{}-([a-z0-9]{{7}})$'.format(resourceGroup.replace('rg-', ''), key))
+  pattern = re.compile('^{}-{}-([a-z0-9]{{7}})-([a-z0-9]{{7}})$'.format(resourceGroup.replace('rg-', ''), key))
   images = sorted([x for x in azureComputeManagementClient.images.list_by_resource_group(resourceGroup) if pattern.match(x.name)], key = lambda i: i.tags['diskImageCommitTime'], reverse=True)
   print('found {} {} images in {}'.format(len(images), key, resourceGroup))
   if len(images) > 0:
