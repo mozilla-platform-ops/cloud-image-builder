@@ -69,9 +69,9 @@ target:
       type: uuid
       length: 12
   machine: &machine
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
+    cpu: 8
+    ram: 16
+    format: Standard_F{0}s_v2
   disk: &disk
   - os: true
     source: windowsserver2012r2-datacenter-en-us-x86-64
