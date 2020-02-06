@@ -24,7 +24,7 @@ iso:
 manager:
   pool:
   - domain: gecko-1
-    variant: win2012
+    variant: win2012-azure
     capacity:
       minimum: 0
       maximum: 3
@@ -38,7 +38,7 @@ manager:
     owner: grenade@mozilla.com
     provider: azure
   - domain: gecko-3
-    variant: win2012
+    variant: win2012-azure
     capacity:
       minimum: 0
       maximum: 3
@@ -47,23 +47,23 @@ manager:
     owner: grenade@mozilla.com
     provider: azure
   - domain: mpd001-1
-    variant: win2012
+    variant: win2012-amazon
     capacity:
       minimum: 0
       maximum: 3
     locations:
     - centralus
     owner: grenade@mozilla.com
-    provider: azure
+    provider: amazon
   - domain: mpd001-3
-    variant: win2012
+    variant: win2012-amazon
     capacity:
       minimum: 0
       maximum: 3
     locations:
     - centralus
     owner: grenade@mozilla.com
-    provider: azure
+    provider: amazon
 target:
 - platform: azure
   group: rg-central-us-gecko-1
@@ -347,7 +347,7 @@ target:
       name: nsg-west-us-gecko-3
       rules: *rules
   tag: *tag-gecko-3
-- platform: azure
+- platform: amazon
   group: rg-central-us-mpd001-1
   region: Central US
   hostname: *hostname
@@ -365,14 +365,14 @@ target:
       rules: *rules
   tag: &tag-mpd001-1
   - name: workerType
-    value: mpd001-1-b-win2012-azure
+    value: mpd001-1-b-win2012-amazon
   - name: sourceOrganisation
     value: mozilla-releng
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
     value: 7e9f65c
-- platform: azure
+- platform: amazon
   group: rg-east-us-mpd001-1
   region: East US
   hostname: *hostname
@@ -389,7 +389,7 @@ target:
       name: nsg-east-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
-- platform: azure
+- platform: amazon
   group: rg-east-us-2-mpd001-1
   region: East US 2
   hostname: *hostname
@@ -406,7 +406,7 @@ target:
       name: nsg-east-us-2-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
-- platform: azure
+- platform: amazon
   group: rg-north-central-us-mpd001-1
   region: North Central US
   hostname: *hostname
@@ -423,7 +423,7 @@ target:
       name: nsg-north-central-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
-- platform: azure
+- platform: amazon
   group: rg-south-central-us-mpd001-1
   region: South Central US
   hostname: *hostname
@@ -440,7 +440,7 @@ target:
       name: nsg-south-central-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
-- platform: azure
+- platform: amazon
   group: rg-west-us-mpd001-1
   region: West US
   hostname: *hostname
@@ -457,7 +457,7 @@ target:
       name: nsg-west-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
-- platform: azure
+- platform: amazon
   group: rg-central-us-mpd001-3
   region: Central US
   hostname: *hostname
@@ -475,14 +475,14 @@ target:
       rules: *rules
   tag: &tag-mpd001-3
   - name: workerType
-    value: mpd001-3-b-win2012-azure
+    value: mpd001-3-b-win2012-amazon
   - name: sourceOrganisation
     value: mozilla-releng
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
     value: 7e9f65c
-- platform: azure
+- platform: amazon
   group: rg-east-us-mpd001-3
   region: East US
   hostname: *hostname
@@ -499,7 +499,7 @@ target:
       name: nsg-east-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
-- platform: azure
+- platform: amazon
   group: rg-east-us-2-mpd001-3
   region: East US 2
   hostname: *hostname
@@ -516,7 +516,7 @@ target:
       name: nsg-east-us-2-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
-- platform: azure
+- platform: amazon
   group: rg-north-central-us-mpd001-3
   region: North Central US
   hostname: *hostname
@@ -533,7 +533,7 @@ target:
       name: nsg-north-central-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
-- platform: azure
+- platform: amazon
   group: rg-south-central-us-mpd001-3
   region: South Central US
   hostname: *hostname
@@ -550,7 +550,7 @@ target:
       name: nsg-south-central-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
-- platform: azure
+- platform: amazon
   group: rg-west-us-mpd001-3
   region: West US
   hostname: *hostname

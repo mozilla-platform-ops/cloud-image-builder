@@ -136,4 +136,5 @@ def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
     except:
       image = None
       print('{} machine image: {} not found'.format(platform, imageName))
+  #elif platform == 'amazon':
   return image is not None

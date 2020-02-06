@@ -17,12 +17,14 @@ secrets = taskcluster.Secrets(taskclusterOptions)
 
 secret = secrets.get('project/relops/image-builder/dev')['secret']
 
-azureComputeManagementClient = ComputeManagementClient(
-  ServicePrincipalCredentials(
-    client_id = secret['azure']['id'],
-    secret = secret['azure']['key'],
-    tenant = secret['azure']['account']),
-  secret['azure']['subscription'])
+platformClient = {
+  'azure': ComputeManagementClient(
+    ServicePrincipalCredentials(
+      client_id = secret['azure']['id'],
+      secret = secret['azure']['key'],
+      tenant = secret['azure']['account']),
+    secret['azure']['subscription'])
+}
 
 if runEnvironment == 'travis':
   commitSha = os.getenv('TRAVIS_COMMIT')
@@ -66,9 +68,9 @@ elif runEnvironment == 'taskcluster':
 else:
   quit()
 
-for platform in ['azure']:
+for platform in ['amazon', 'azure']:
   for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019']:
-    configPath = '{}/../config/{}-{}.yaml'.format(os.path.dirname(__file__), key, platform)
+    configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
       queueDiskImageBuild = diskImageManifestHasChanged(platform, key, commitSha)
@@ -106,7 +108,7 @@ for platform in ['azure']:
             'git clone https://github.com/grenade/cloud-image-builder.git',
             'cd cloud-image-builder',
             'git reset --hard {}'.format(commitSha),
-            'powershell -File build-{}-disk-image.ps1 {}-{}'.format(platform, key, platform)
+            'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
           ],
           scopes = [
             'generic-worker:os-group:relops/win2019/Administrators',
@@ -128,7 +130,7 @@ for platform in ['azure']:
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
           queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
             taskclusterIndex = index,
-            platformClient = azureComputeManagementClient,
+            platformClient = platformClient[platform],
             platform = platform,
             group = target['group'],
             key = key)
@@ -154,7 +156,7 @@ for platform in ['azure']:
                 'git clone https://github.com/grenade/cloud-image-builder.git',
                 'cd cloud-image-builder',
                 'git reset --hard {}'.format(commitSha),
-                'powershell -File build-{}-machine-image.ps1 {}-{} {}'.format(platform, key, platform, target['group'])
+                'powershell -File build-machine-image.ps1 {} {} {}'.format(platform, key, target['group'])
               ],
               scopes = [
                 'secrets:get:project/relops/image-builder/dev'
@@ -242,7 +244,7 @@ for platform in ['azure']:
           ],
           scopes = [
             'secrets:get:project/relops/image-builder/dev',
-            'worker-manager:manage-worker-pool:{}/{}-{}'.format(pool['domain'], pool['variant'], platform),
+            'worker-manager:manage-worker-pool:{}/{}'.format(pool['domain'], pool['variant']),
             'worker-manager:provider:{}'.format(pool['provider'])
           ],
           taskGroupId = taskGroupId)

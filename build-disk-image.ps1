@@ -1,10 +1,15 @@
 param (
+  [Parameter(Mandatory = $true)]
+  [ValidateSet('amazon', 'azure', 'google')]
+  [string] $platform,
+
+  [Parameter(Mandatory = $true)]
+  [ValidateSet('win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019')]
   [string] $imageKey
 )
 
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
-$targetCloudPlatform = 'azure';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
 
 # constants and script config. these are probably ok as they are.
@@ -26,7 +31,7 @@ foreach ($rm in @(
   }
   Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
 }
-Write-Output -InputObject ('workFolder: {0}, revision: {1}, targetCloudPlatform: {2}, imageKey: {3}' -f $workFolder, $revision, $targetCloudPlatform, $imageKey);
+Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, imageKey: {3}' -f $workFolder, $revision, $platform, $imageKey);
 
 $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
 Set-AWSCredential `
@@ -34,31 +39,36 @@ Set-AWSCredential `
   -SecretKey $secret.amazon.key `
   -StoreAs 'default' | Out-Null;
 
-Connect-AzAccount `
-  -ServicePrincipal `
-  -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
-    -String $secret.azure.key `
-    -AsPlainText `
-    -Force))) `
-  -Tenant $secret.azure.account | Out-Null;
 
-$azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
-$azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
-$azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';
-if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
-  (New-Object Net.WebClient).DownloadFile($azcopyZipUrl, $azcopyZipPath);
-  if (Test-Path -Path $azcopyZipPath -ErrorAction SilentlyContinue) {
-    Write-Output -InputObject ('downloaded: {0} from: {1}' -f $azcopyZipPath, $azcopyZipUrl);
-    Expand-Archive -Path $azcopyZipPath -DestinationPath $workFolder;
-    try {
-      $extractedAzcopyExePath = (@(Get-ChildItem -Path ('{0}\azcopy.exe' -f $workFolder) -Recurse -ErrorAction SilentlyContinue -Force)[0].FullName);
-      Write-Output -InputObject ('extracted: {0} from: {1}' -f $extractedAzcopyExePath, $azcopyZipPath);
-      Copy-Item -Path $extractedAzcopyExePath -Destination $azcopyExePath;
-      if (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue) {
-        Write-Output -InputObject ('copied: {0} to: {1}' -f $extractedAzcopyExePath, $azcopyExePath);
+switch ($platform) {
+  'azure' {
+    Connect-AzAccount `
+      -ServicePrincipal `
+      -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
+        -String $secret.azure.key `
+        -AsPlainText `
+        -Force))) `
+      -Tenant $secret.azure.account | Out-Null;
+
+    $azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
+    $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
+    $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';
+    if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
+      (New-Object Net.WebClient).DownloadFile($azcopyZipUrl, $azcopyZipPath);
+      if (Test-Path -Path $azcopyZipPath -ErrorAction SilentlyContinue) {
+        Write-Output -InputObject ('downloaded: {0} from: {1}' -f $azcopyZipPath, $azcopyZipUrl);
+        Expand-Archive -Path $azcopyZipPath -DestinationPath $workFolder;
+        try {
+          $extractedAzcopyExePath = (@(Get-ChildItem -Path ('{0}\azcopy.exe' -f $workFolder) -Recurse -ErrorAction SilentlyContinue -Force)[0].FullName);
+          Write-Output -InputObject ('extracted: {0} from: {1}' -f $extractedAzcopyExePath, $azcopyZipPath);
+          Copy-Item -Path $extractedAzcopyExePath -Destination $azcopyExePath;
+          if (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue) {
+            Write-Output -InputObject ('copied: {0} to: {1}' -f $extractedAzcopyExePath, $azcopyExePath);
+          }
+        } catch {
+          Write-Output -InputObject ('failed to extract azcopy from: {0}. {1}' -f $azcopyZipPath, , $_.Exception.Message);
+        }
       }
-    } catch {
-      Write-Output -InputObject ('failed to extract azcopy from: {0}. {1}' -f $azcopyZipPath, , $_.Exception.Message);
     }
   }
 }
@@ -76,39 +86,39 @@ $exportImageName = ('{0}-{1}-{2}-{3}{4}-{5}.{6}' -f $config.image.os.ToLower().R
   $(if ($config.image.gpu) { '-gpu' } else { '' }),
   $config.image.type.ToLower(),
   $config.image.format.ToLower());
-$vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName);
+$vhdLocalPath = ('{0}{1}{2}-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName);
 
 if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   Write-Output -InputObject ('detected existing vhd: {0}, skipping image creation for {1}' -f $vhdLocalPath, $imageKey);
 } else {
   $isoLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.iso.source.key);
-  $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
-  $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
-  $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $targetCloudPlatform, $exportImageName.Replace('.', '-'));
+  $unattendLocalPath = ('{0}{1}{2}-unattend-{3}-{4}.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
+  $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
+  $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
   # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
   $productKey = (Get-Content -Path ('config\product-keys.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
   $drivers = @((Get-Content -Path ('config\drivers.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
-    $_.target.cloud.Contains($targetCloudPlatform) -and
+    $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
   $unattendCommands = @((Get-Content -Path ('config\unattend-commands.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
-    $_.target.cloud.Contains($targetCloudPlatform) -and
+    $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
   $packages = @((Get-Content -Path ('config\packages.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
-    $_.target.cloud.Contains($targetCloudPlatform) -and
+    $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
   $disableWindowsService = @((Get-Content -Path ('config\disable-windows-service.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
-    $_.target.cloud.Contains($targetCloudPlatform)
+    $_.target.cloud.Contains($platform)
   } | % { $_.name });
   if (-not (Test-Path -Path $isoLocalPath -ErrorAction SilentlyContinue)) {
     Get-CloudBucketResource `
@@ -142,7 +152,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     }
   } until ((Test-Path -Path $unattendLocalPath -ErrorAction SilentlyContinue) -or ($unattendGenerationAttemptCount -gt 9))
   if (-not (Test-Path -Path $unattendLocalPath -ErrorAction SilentlyContinue)) {
-    Write-Output -InputObject ('failed to genmerate unattend file at: {0}, in {1} attempts' -f $unattendLocalPath, $unattendGenerationAttemptCount);
+    Write-Output -InputObject ('failed to generate unattend file at: {0}, in {1} attempts' -f $unattendLocalPath, $unattendGenerationAttemptCount);
     exit 1
   }
   Remove-Item -Path $driversLocalPath -Force -Recurse -ErrorAction SilentlyContinue;
