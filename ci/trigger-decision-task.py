@@ -52,6 +52,7 @@ createTask(
     'worker-manager:manage-worker-pool:mpd001-1/win*',
     'worker-manager:manage-worker-pool:mpd001-3/win*',
     'worker-manager:manage-worker-pool:relops/win*',
+    'worker-manager:provider:aws',
     'worker-manager:provider:azure',
     'secrets:get:project/relops/image-builder/dev'
   ]
