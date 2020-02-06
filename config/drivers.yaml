@@ -115,7 +115,7 @@
     bucket: windows-ami-builder
     key: driver/aws-pv/xenvif.zip
 - name: AwsEnaNetworkDriver
-  infpath: "AwsEnaNetworkDriver\bin.10.0"
+  infpath: AwsEnaNetworkDriver\bin.10.0
   extract: true
   target:
     cloud:

@@ -32,6 +32,7 @@ manager:
     - centralus
     owner: grenade@mozilla.com
     provider: azure
+    platform: azure
 target:
 - platform: azure
   group: rg-central-us-gecko-t

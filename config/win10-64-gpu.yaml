@@ -32,6 +32,7 @@ manager:
     - eastus
     owner: grenade@mozilla.com
     provider: azure
+    platform: azure
 target:
 - platform: azure
   group: rg-east-us-gecko-t

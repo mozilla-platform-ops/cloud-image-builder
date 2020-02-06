@@ -37,6 +37,7 @@ manager:
     - westus
     owner: grenade@mozilla.com
     provider: azure
+    platform: azure
   - domain: gecko-3
     variant: win2012-azure
     capacity:
@@ -46,6 +47,7 @@ manager:
     - centralus
     owner: grenade@mozilla.com
     provider: azure
+    platform: azure
   - domain: mpd001-1
     variant: win2012-amazon
     capacity:
@@ -54,7 +56,8 @@ manager:
     locations:
     - centralus
     owner: grenade@mozilla.com
-    provider: amazon
+    provider: aws
+    platform: amazon
   - domain: mpd001-3
     variant: win2012-amazon
     capacity:
@@ -63,7 +66,8 @@ manager:
     locations:
     - centralus
     owner: grenade@mozilla.com
-    provider: amazon
+    provider: aws
+    platform: amazon
 target:
 - platform: azure
   group: rg-central-us-gecko-1
