@@ -125,7 +125,7 @@ for platform in ['amazon', 'azure']:
         buildTaskId = None
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
-      for pool in [p in config['manager']['pool'] if p['platform'] == platform] :
+      for pool in [p for p in config['manager']['pool'] if p['platform'] == platform] :
         taggingTaskIdsForPool = []
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
           queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
