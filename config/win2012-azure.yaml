@@ -30,6 +30,11 @@ manager:
       maximum: 3
     locations:
     - centralus
+    - northcentralus
+    - southcentralus
+    - eastus
+    - eastus2
+    - westus
     owner: grenade@mozilla.com
     provider: azure
   - domain: gecko-3
@@ -69,7 +74,7 @@ target:
       type: uuid
       length: 12
   machine: &machine
-    cpu: 8
+    cpu: 2
     ram: 16
     format: Standard_A{0}
   disk: &disk
