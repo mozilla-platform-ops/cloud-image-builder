@@ -24,7 +24,7 @@ iso:
 manager:
   pool:
   - domain: gecko-t
-    variant: win10-64
+    variant: win10-64-azure
     capacity:
       minimum: 0
       maximum: 3
