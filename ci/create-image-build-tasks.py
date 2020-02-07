@@ -217,13 +217,13 @@ for platform in ['amazon', 'azure']:
             artifacts = [
               {
                 'type': 'file',
-                'name': 'public/{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
-                'path': '{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
+                'name': 'public/{}-{}.json'.format(pool['domain'], pool['variant']),
+                'path': '{}-{}.json'.format(pool['domain'], pool['variant']),
               },
               {
                 'type': 'file',
-                'name': 'public/{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
-                'path': '{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
+                'name': 'public/{}-{}.yaml'.format(pool['domain'], pool['variant']),
+                'path': '{}-{}.yaml'.format(pool['domain'], pool['variant']),
               }
             ],
             dependencies = taggingTaskIdsForPool,

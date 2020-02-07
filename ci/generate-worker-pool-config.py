@@ -49,7 +49,7 @@ platform = os.getenv('platform')
 key = os.getenv('key')
 poolName = os.getenv('pool')
 subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
-config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}-{}.yaml'.format(commitSha, key, platform)).read().decode())
+config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(commitSha, key)).read().decode())
 poolConfig = next(p for p in config['manager']['pool'] if '{}/{}'.format(p['domain'], p['variant']) == poolName)
 
 workerPool = {
@@ -86,7 +86,7 @@ workerPool = {
 }
 
 # create an artifact containing the worker pool config that can be used for manual worker manager updates in the taskcluster web ui
-with open('../{}-{}.json'.format(platform, key), 'w') as file:
+with open('../{}.json'.format(poolName.replace('/', '-')), 'w') as file:
   json.dump(workerPool, file, indent = 2, sort_keys = True)
 
 # update the staging worker manager with a complete worker pool config
@@ -130,15 +130,15 @@ providerConfig = {
   'providerId': poolConfig['provider'],
   'config': workerPool
 }
-configPath = '../{}-{}.yaml'.format(platform, key)
+configPath = '../{}.yaml'.format(poolName.replace('/', '-'))
 with open(configPath, 'w') as file:
   print('saving: {}'.format(configPath))
   yaml.dump(providerConfig, file, default_flow_style=False)
   #updateWorkerPool(
   #  workerManager = taskclusterStagingWorkerManagerClient,
   #  configPath = configPath,
-  #  workerPoolId = '{}/{}-azure'.format(poolConfig['domain'], poolConfig['variant']))
+  #  workerPoolId = '{}'.format(poolName))
   updateWorkerPool(
     workerManager = taskclusterProductionWorkerManagerClient,
     configPath = configPath,
-    workerPoolId = '{}/{}'.format(poolConfig['domain'], poolConfig['variant']))
+    workerPoolId = '{}'.format(poolName))
