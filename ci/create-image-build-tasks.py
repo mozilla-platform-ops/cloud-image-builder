@@ -193,7 +193,7 @@ for platform in ['amazon', 'azure']:
                 '/bin/bash',
                 '--login',
                 '-c',
-                'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
+                'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml requests slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
               ],
               scopes = [
                 'secrets:get:project/relops/image-builder/dev'
