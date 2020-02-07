@@ -128,12 +128,12 @@ for platform in ['amazon', 'azure']:
       for pool in [p for p in config['manager']['pool'] if p['platform'] == platform] :
         taggingTaskIdsForPool = []
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
-          queueMachineImageBuild = queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
+          queueMachineImageBuild = platform in platformClient and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
             taskclusterIndex = index,
             platformClient = platformClient[platform],
             platform = platform,
             group = target['group'],
-            key = key)
+            key = key))
           if queueMachineImageBuild:
             machineImageBuildTaskId = slugid.nice()
             bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
@@ -202,49 +202,52 @@ for platform in ['amazon', 'azure']:
           else:
             print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
 
-        createTask(
-          queue = queue,
-          image = 'python',
-          taskId = slugid.nice(),
-          taskName = '04 :: generate {} {}/{} worker pool configuration'.format(platform, pool['domain'], pool['variant']),
-          taskDescription = 'create worker pool configuration for {} {}/{} which can be added to worker manager'.format(platform, pool['domain'], pool['variant']),
-          maxRunMinutes = 180,
-          retries = 1,
-          retriggerOnExitCodes = [ 123 ],
-          artifacts = [
-            {
-              'type': 'file',
-              'name': 'public/{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
-              'path': '{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
+        # todo: remove this hack which exists because non-azure builds don't yet work
+        queueWorkerPoolConfigurationTask = platform in platformClient
+        if queueWorkerPoolConfigurationTask:
+          createTask(
+            queue = queue,
+            image = 'python',
+            taskId = slugid.nice(),
+            taskName = '04 :: generate {} {}/{} worker pool configuration'.format(platform, pool['domain'], pool['variant']),
+            taskDescription = 'create worker pool configuration for {} {}/{} which can be added to worker manager'.format(platform, pool['domain'], pool['variant']),
+            maxRunMinutes = 180,
+            retries = 1,
+            retriggerOnExitCodes = [ 123 ],
+            artifacts = [
+              {
+                'type': 'file',
+                'name': 'public/{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
+                'path': '{}-{}-{}.json'.format(platform, pool['domain'], pool['variant']),
+              },
+              {
+                'type': 'file',
+                'name': 'public/{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
+                'path': '{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
+              }
+            ],
+            dependencies = taggingTaskIdsForPool,
+            provisioner = 'relops',
+            workerType = 'decision',
+            priority = 'low',
+            features = {
+              'taskclusterProxy': True
             },
-            {
-              'type': 'file',
-              'name': 'public/{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
-              'path': '{}-{}-{}.yaml'.format(platform, pool['domain'], pool['variant']),
-            }
-          ],
-          dependencies = taggingTaskIdsForPool,
-          provisioner = 'relops',
-          workerType = 'decision',
-          priority = 'low',
-          features = {
-            'taskclusterProxy': True
-          },
-          env = {
-            'GITHUB_HEAD_SHA': commitSha,
-            'platform': platform,
-            'key': key,
-            'pool': '{}/{}'.format(pool['domain'], pool['variant'])
-          },
-          commands = [
-            '/bin/bash',
-            '--login',
-            '-c',
-            'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
-          ],
-          scopes = [
-            'secrets:get:project/relops/image-builder/dev',
-            'worker-manager:manage-worker-pool:{}/{}'.format(pool['domain'], pool['variant']),
-            'worker-manager:provider:{}'.format(pool['provider'])
-          ],
-          taskGroupId = taskGroupId)
+            env = {
+              'GITHUB_HEAD_SHA': commitSha,
+              'platform': platform,
+              'key': key,
+              'pool': '{}/{}'.format(pool['domain'], pool['variant'])
+            },
+            commands = [
+              '/bin/bash',
+              '--login',
+              '-c',
+              'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
+            ],
+            scopes = [
+              'secrets:get:project/relops/image-builder/dev',
+              'worker-manager:manage-worker-pool:{}/{}'.format(pool['domain'], pool['variant']),
+              'worker-manager:provider:{}'.format(pool['provider'])
+            ],
+            taskGroupId = taskGroupId)
