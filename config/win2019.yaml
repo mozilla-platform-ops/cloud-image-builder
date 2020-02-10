@@ -30,6 +30,7 @@ manager:
       maximum: 2
     locations:
     - centralus
+    lifecycle: normal
     owner: grenade@mozilla.com
     provider: azure
     platform: azure
