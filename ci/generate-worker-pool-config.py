@@ -67,7 +67,7 @@ workerPool = {
     },
     'osProfile': {
       'adminUsername': 'azureuser',
-      'adminPassword': ''.join(passwordCharPool[ord(c) % len(passwordCharPool)] for c in os.urandom(36))
+      'adminPassword': ''.join(passwordCharPool[c % len(passwordCharPool)] for c in os.urandom(36))
     },
     'storageProfile': {
       'imageReference': {
