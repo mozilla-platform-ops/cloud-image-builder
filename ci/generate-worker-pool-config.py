@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import string
 import taskcluster
 import urllib.request
 import yaml
@@ -52,6 +53,8 @@ subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
 config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(commitSha, key)).read().decode())
 poolConfig = next(p for p in config['manager']['pool'] if '{}/{}'.format(p['domain'], p['variant']) == poolName)
 
+passwordCharPool = string.ascii_letters + string.digits + string.punctuation
+
 workerPool = {
   'minCapacity': poolConfig['capacity']['minimum'],
   'maxCapacity': poolConfig['capacity']['maximum'],
@@ -61,6 +64,10 @@ workerPool = {
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
     'hardwareProfile': {
       'vmSize': x['machine']['format'].format(x['machine']['cpu'])
+    },
+    'osProfile': {
+      'adminUsername': 'azureuser',
+      'adminPassword': ''.join(passwordCharPool[ord(c) % len(passwordCharPool)] for c in os.urandom(36))
     },
     'storageProfile': {
       'imageReference': {
