@@ -65,10 +65,6 @@ workerPool = {
     'hardwareProfile': {
       'vmSize': x['machine']['format'].format(x['machine']['cpu'])
     },
-    'osProfile': {
-      'adminUsername': 'azureuser',
-      'adminPassword': ''.join(passwordCharPool[c % len(passwordCharPool)] for c in os.urandom(36))
-    },
     'storageProfile': {
       'imageReference': {
         'id': getLatestImageId(x['group'], key)
