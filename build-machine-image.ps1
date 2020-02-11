@@ -429,13 +429,13 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
 
                 # set secrets in the instance registry
-                $workerGroup = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
-                $workerType = $imageKey.Replace(('-{0}' -f $target.platform), '');
-                $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerGroup"."$workerType");
+                $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
+                $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
+                $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
                 if (($accessToken) -and ($accessToken.Length -eq 44)) {
-                  Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $workerType)
+                  Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 } else {
-                  Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerGroup, $workerType);
+                  Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
                   try {
                     Remove-AzVm `
                       -ResourceGroupName $target.group `
@@ -447,7 +447,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   }
                   exit 123;
                 }
-                Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerGroup, $imageKey, $accessToken);
+                Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
                 $setSecretsCommandResult = (Invoke-AzVMRunCommand `
                   -ResourceGroupName $target.group `
                   -VMName $instanceName `
