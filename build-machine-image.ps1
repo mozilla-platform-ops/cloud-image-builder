@@ -426,7 +426,27 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               $successfulOccRunDetected = $false;
 
               if ($config.image.architecture -eq 'x86-64') {
-                (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/rundsc.ps1', ('{0}\rundsc.ps1' -f $env:Temp));
+                $occOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
+                $occRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
+                $occRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+                $rundscUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1' -f $occOrg, $occRepo, $occRef);
+                $rundscPath = ('{0}\rundsc.ps1' -f $env:Temp)
+                (New-Object Net.WebClient).DownloadFile($rundscUrl, $rundscPath);
+                if (Test-Path -Path $rundscPath -ErrorAction SilentlyContinue) {
+                  Write-Output -InputObject ('downloaded {0} from {1}' -f $rundscPath, $rundscUrl);
+                } else {
+                  Write-Output -InputObject ('failed to download {0} from {1}' -f $rundscPath, $rundscUrl);
+                  try {
+                    Remove-AzVm `
+                      -ResourceGroupName $target.group `
+                      -Name $instanceName `
+                      -Force;
+                    Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+                  } catch {
+                    Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
+                  }
+                  exit 1;
+                }
 
                 # set secrets in the instance registry
                 $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
