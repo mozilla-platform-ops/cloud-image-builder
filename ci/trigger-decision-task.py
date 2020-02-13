@@ -8,7 +8,7 @@ from cib import createTask, updateWorkerPool
 
 workerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
-commit = json.loads(urllib.request.urlopen('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(revision)).read().decode())['commit']
+commit = json.loads(urllib.request.urlopen('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT'))).read().decode())['commit']
 
 updateWorkerPool(
   workerManager = workerManager,
