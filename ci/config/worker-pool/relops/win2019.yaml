@@ -28,8 +28,6 @@ config:
           DeleteOnTermination: true
           VolumeSize: 120
           VolumeType: gp2
-      #IamInstanceProfile: &IamInstanceProfile
-      #  Arn: 'arn:aws:iam::692406183521:instance-profile/windows-ami-builder'
       InstanceMarketOptions: &InstanceMarketOptions
         MarketType: spot
     workerConfig: &workerConfig
@@ -68,7 +66,6 @@ config:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -83,7 +80,6 @@ config:
       - sg-e43d0d8f
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -98,7 +94,6 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -113,7 +108,6 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -128,7 +122,6 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -143,7 +136,6 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -158,7 +150,6 @@ config:
       - sg-27d72d57
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -173,7 +164,6 @@ config:
       - sg-f581719d
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -188,7 +178,6 @@ config:
       - sg-f581719d
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -203,7 +192,6 @@ config:
       - sg-f581719d
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -218,7 +206,6 @@ config:
       - sg-fee02b98
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -233,7 +220,6 @@ config:
       - sg-fee02b98
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -248,7 +234,6 @@ config:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -263,7 +248,6 @@ config:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
@@ -278,7 +262,264 @@ config:
       - sg-3bd7bf41
       InstanceType: c5.4xlarge
       BlockDeviceMappings: *BlockDeviceMappings
-      #IamInstanceProfile: *IamInstanceProfile
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: eu-central-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c28c48c5f3099bc0
+      Placement:
+        AvailabilityZone: eu-central-1a
+      SubnetId: subnet-935645fb
+      SecurityGroupIds:
+      - sg-e43d0d8f
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: &BlockDeviceMappings
+      - DeviceName: /dev/sda1
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 40
+          VolumeType: gp2
+      - DeviceName: /dev/sdb
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 120
+          VolumeType: gp2
+      InstanceMarketOptions: &InstanceMarketOptions
+        MarketType: spot
+    workerConfig: &workerConfig
+      genericWorker:
+        config:
+          idleTimeoutSecs: 900
+          cachesDir: Z:\caches
+          cleanUpTaskDirs: true
+          deploymentId: f37dd7ee1cae
+          disableReboots: true
+          downloadsDir: Z:\downloads
+          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
+          livelogExecutable: C:\generic-worker\livelog.exe
+          livelogPUTPort: 60022
+          numberOfTasksToRun: 0
+          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
+          runTasksAsCurrentUser: false
+          sentryProject: generic-worker
+          shutdownMachineOnIdle: false
+          shutdownMachineOnInternalError: true
+          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
+          taskclusterProxyPort: 80
+          tasksDir: Z:\
+          wstAudience: firefoxcitc
+          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
+    additionalUserData: &additionalUserData
+      workerType: relops-image-builder
+  - region: eu-central-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c28c48c5f3099bc0
+      Placement:
+        AvailabilityZone: eu-central-1b
+      SubnetId: subnet-6988da13
+      SecurityGroupIds:
+      - sg-e43d0d8f
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: eu-central-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c28c48c5f3099bc0
+      Placement:
+        AvailabilityZone: eu-central-1c
+      SubnetId: subnet-114d525b
+      SecurityGroupIds:
+      - sg-e43d0d8f
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c4cce189ee7ff81d
+      Placement:
+        AvailabilityZone: us-east-1a
+      SubnetId: subnet-566e060c
+      SecurityGroupIds:
+      - sg-27d72d57
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c4cce189ee7ff81d
+      Placement:
+        AvailabilityZone: us-east-1b
+      SubnetId: subnet-f2c93496
+      SecurityGroupIds:
+      - sg-27d72d57
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c4cce189ee7ff81d
+      Placement:
+        AvailabilityZone: us-east-1c
+      SubnetId: subnet-c52454e9
+      SecurityGroupIds:
+      - sg-27d72d57
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c4cce189ee7ff81d
+      Placement:
+        AvailabilityZone: us-east-1d
+      SubnetId: subnet-e7e6ccaf
+      SecurityGroupIds:
+      - sg-27d72d57
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0c4cce189ee7ff81d
+      Placement:
+        AvailabilityZone: us-east-1f
+      SubnetId: subnet-7f720d73
+      SecurityGroupIds:
+      - sg-27d72d57
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0606b956ab30b8c74
+      Placement:
+        AvailabilityZone: us-east-2a
+      SubnetId: subnet-6d481604
+      SecurityGroupIds:
+      - sg-f581719d
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0606b956ab30b8c74
+      Placement:
+        AvailabilityZone: us-east-2b
+      SubnetId: subnet-b5db40ce
+      SecurityGroupIds:
+      - sg-f581719d
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-0606b956ab30b8c74
+      Placement:
+        AvailabilityZone: us-east-2c
+      SubnetId: subnet-ab62c0e6
+      SecurityGroupIds:
+      - sg-f581719d
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-00cf1f9fab491ea96
+      Placement:
+        AvailabilityZone: us-west-1b
+      SubnetId: subnet-7641632e
+      SecurityGroupIds:
+      - sg-fee02b98
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-00cf1f9fab491ea96
+      Placement:
+        AvailabilityZone: us-west-1c
+      SubnetId: subnet-48a9b82c
+      SecurityGroupIds:
+      - sg-fee02b98
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-05c55165b6265be6e
+      Placement:
+        AvailabilityZone: us-west-2a
+      SubnetId: subnet-d948b6bf
+      SecurityGroupIds:
+      - sg-3bd7bf41
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-05c55165b6265be6e
+      Placement:
+        AvailabilityZone: us-west-2b
+      SubnetId: subnet-2eaaba67
+      SecurityGroupIds:
+      - sg-3bd7bf41
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-05c55165b6265be6e
+      Placement:
+        AvailabilityZone: us-west-2c
+      SubnetId: subnet-540a9f0f
+      SecurityGroupIds:
+      - sg-3bd7bf41
+      InstanceType: c4.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
       InstanceMarketOptions: *InstanceMarketOptions
     workerConfig: *workerConfig
     additionalUserData: *additionalUserData
