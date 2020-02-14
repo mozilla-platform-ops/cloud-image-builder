@@ -28,6 +28,11 @@ config:
           DeleteOnTermination: true
           VolumeSize: 120
           VolumeType: gp2
+      - DeviceName: /dev/sdc
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 120
+          VolumeType: gp2
       InstanceMarketOptions: &InstanceMarketOptions
         MarketType: spot
     workerConfig: &workerConfig
