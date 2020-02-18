@@ -79,9 +79,9 @@ target:
       type: uuid
       length: 12
   machine: &machine
-    cpu: 2
+    cpu: 4
     ram: 16
-    format: Standard_A{0}
+    format: Standard_DS{0}_v2
   disk: &disk
   - os: true
     source: windowsserver2012r2-datacenter-en-us-x86-64
@@ -135,9 +135,9 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: cb86eb2
+    value: 9fc7fd9
   - name: deploymentId
-    value: cb86eb2
+    value: 9fc7fd9
   bootstrap: &bootstrap
     executions:
     - name: create-registry-key-mozilla-generic-worker
@@ -264,9 +264,9 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: cb86eb2
+    value: 9fc7fd9
   - name: deploymentId
-    value: cb86eb2
+    value: 9fc7fd9
 - platform: azure
   group: rg-east-us-gecko-3
   region: East US
@@ -376,7 +376,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: cb86eb2
+    value: 9fc7fd9
 - platform: amazon
   group: rg-east-us-mpd001-1
   region: East US
@@ -486,7 +486,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: cb86eb2
+    value: 9fc7fd9
 - platform: amazon
   group: rg-east-us-mpd001-3
   region: East US
