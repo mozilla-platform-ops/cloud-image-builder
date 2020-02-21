@@ -44,9 +44,9 @@ target:
       type: uuid
       length: 12
   machine: &machine
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
+    cpu: 3
+    ram: 14
+    format: Standard_DS{0}_v2
   disk: &disk
   - os: true
     source: windows10-professional-en-us-x86-64
