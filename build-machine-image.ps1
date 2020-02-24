@@ -583,7 +583,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
                   if ($secondOccTriggerCommandResult.Status -eq 'Succeeded') {
 
-                    Set-Content -Path ('{0}\dirdsc.ps1' -f $env:Temp) -Value 'Get-ChildItem -Path "C:\dsc"';
+                    Set-Content -Path ('{0}\dirgw.ps1' -f $env:Temp) -Value 'Get-ChildItem -Path "C:\generic-worker"';
                     $dirDscCommandOutput = '';
                     $dirDscIteration = 0;
                     do {
@@ -591,7 +591,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                         -ResourceGroupName $target.group `
                         -VMName $instanceName `
                         -CommandId 'RunPowerShellScript' `
-                        -ScriptPath ('{0}\dirdsc.ps1' -f $env:Temp) `
+                        -ScriptPath ('{0}\dirgw.ps1' -f $env:Temp) `
                         -ErrorAction SilentlyContinue);
                       Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $(if ($dirDscResult -and $dirDscResult.Status) { $dirDscResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
                       if ($dirDscResult.Value) {
@@ -601,7 +601,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                       } else {
                         Write-Output -InputObject ('dir dsc (iteration {0}) command did not return a value' -f $dirDscIteration);
                       }
-                      if ($dirDscCommandOutput -match 'task-claim-state.valid') {
+                      if ($dirDscCommandOutput -match 'ed25519-private.key') {
                         Write-Output -InputObject ('dir dsc (iteration {0}) detected occ completion on: {1}' -f $dirDscIteration, $instanceName);
                         $successfulOccRunDetected = $true;
                       } else {
@@ -609,8 +609,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                         Start-Sleep -Seconds 30;
                       }
                       $dirDscIteration += 1;
-                    } until ($dirDscCommandOutput -match 'task-claim-state.valid')
-                    Remove-Item -Path ('{0}\dirdsc.ps1' -f $env:Temp);
+                    } until ($dirDscCommandOutput -match 'ed25519-private.key')
+                    Remove-Item -Path ('{0}\dirgw.ps1' -f $env:Temp);
                   }
                 }
               }
