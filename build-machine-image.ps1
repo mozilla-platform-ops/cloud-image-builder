@@ -88,7 +88,7 @@ if (-not ($config)) {
   Write-Output -InputObject ('error: failed to find image config for {0}' -f $imageKey);
   exit 1
 }
-$imageArtifactDescriptorUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_PROXY_URL, $platform, $imageKey);
+$imageArtifactDescriptorUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
 try {
   $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageArtifactDescriptorUri)));
   $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')))
@@ -444,7 +444,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('disk-{0}' -f $resourceId), $_.Exception.Message);
                 }
                 try {
-                  $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_PROXY_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
+                  $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_ROOT_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
                   [DateTime] $taskStart = $taskDefinition.created;
                   [DateTime] $taskExpiry = $taskStart.AddSeconds($taskDefinition.payload.maxRunTime);
                   if ($taskExpiry -lt (Get-Date).AddMinutes(30)) {
@@ -452,7 +452,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     exit 123;
                   }
                 } catch {
-                  Write-Output -InputObject ('failed to determine task expiry time using proxy url {0} and task id: {1}. {2}' -f $env:TASKCLUSTER_PROXY_URL, $env:TASK_ID, $_.Exception.Message);
+                  Write-Output -InputObject ('failed to determine task expiry time using root url {0} and task id: {1}. {2}' -f $env:TASKCLUSTER_ROOT_URL, $env:TASK_ID, $_.Exception.Message);
                 }
                 $sleepInSeconds = (Get-Random -Minimum (3 * 60) -Maximum (10 * 60));
                 Write-Output -InputObject ('provisioning of vm: {0}, failed on attempt: {1}. retrying in {2:1} minutes...' -f $instanceName, $newCloudInstanceInstantiationAttempts, ($sleepInSeconds / 60));
