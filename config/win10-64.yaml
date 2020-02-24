@@ -100,9 +100,9 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 9fc7fd9
+    value: 11408fe
   - name: deploymentId
-    value: 9fc7fd9
+    value: 11408fe
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US
