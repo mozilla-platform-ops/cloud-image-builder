@@ -40,7 +40,7 @@ foreach ($rm in @(
 }
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, imageKey: {3}' -f $workFolder, $revision, $platform, $imageKey);
 
-$secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
+$secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
 Set-AWSCredential `
   -AccessKey $secret.amazon.id `
   -SecretKey $secret.amazon.key `
@@ -88,7 +88,7 @@ if (-not ($config)) {
   Write-Output -InputObject ('error: failed to find image config for {0}' -f $imageKey);
   exit 1
 }
-$imageArtifactDescriptorUri = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{0}.{1}.latest/artifacts/public/image-bucket-resource.json' -f $platform, $imageKey);
+$imageArtifactDescriptorUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_PROXY_URL, $platform, $imageKey);
 try {
   $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageArtifactDescriptorUri)));
   $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')))
@@ -425,7 +425,26 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 # if we reach here, we most likely hit an azure quota exception which we may recover from when some quota becomes available.
                 # retry until within 30 minutes of task expiry time, then exit with a code that will prompt a task retry
                 try {
-                  $taskDefinition = (Invoke-WebRequest -Uri ('http://{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_PROXY_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
+                  $azDisk = (Get-AzDisk `
+                    -ResourceGroupName $target.group `
+                    -DiskName ('disk-{0}' -f $resourceId) `
+                    -ErrorAction SilentlyContinue);
+                  if ($azDisk) {
+                    Write-Output -InputObject ('removing aborted AzDisk {0} / {1} / {2}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name);
+                    if (Remove-AzDisk `
+                      -ResourceGroupName $azDisk.ResourceGroupName `
+                      -DiskName $azDisk.Name `
+                      -Force) {
+                      Write-Output -InputObject ('removed aborted AzDisk {0} / {1} / {2}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name);
+                    } else {
+                      Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name);
+                    }
+                  }
+                } catch {
+                  Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('disk-{0}' -f $resourceId), $_.Exception.Message);
+                }
+                try {
+                  $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_PROXY_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
                   [DateTime] $taskStart = $taskDefinition.created;
                   [DateTime] $taskExpiry = $taskStart.AddSeconds($taskDefinition.payload.maxRunTime);
                   if ($taskExpiry -lt (Get-Date).AddMinutes(30)) {
