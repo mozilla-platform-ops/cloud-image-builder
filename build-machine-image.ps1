@@ -386,39 +386,55 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             foreach ($tag in $target.tag) {
               $tags[$tag.name] = $tag.value;
             }
-            # todo: get instance screenshots
-            New-CloudInstanceFromImageExport `
-              -platform $target.platform `
-              -localImagePath $vhdLocalPath `
-              -targetResourceId $resourceId `
-              -targetResourceGroupName $target.group `
-              -targetResourceRegion $target.region `
-              -targetInstanceMachineVariantFormat $target.machine.format `
-              -targetInstanceCpuCount $target.machine.cpu `
-              -targetInstanceRamGb $target.machine.ram `
-              -targetInstanceName $instanceName `
-              -targetInstanceDisks @($target.disk | % {@{ 'Variant' = $_.variant; 'SizeInGB' = $_.size; 'Os' = $_.os }}) `
-              -targetInstanceTags $tags `
-              -targetVirtualNetworkName $target.network.name `
-              -targetVirtualNetworkAddressPrefix $target.network.prefix `
-              -targetVirtualNetworkDnsServers $target.network.dns `
-              -targetSubnetName $target.network.subnet.name `
-              -targetSubnetAddressPrefix $target.network.subnet.prefix
 
+            $newCloudInstanceInstantiationAttempts = 0;
             do {
+              # todo: get instance screenshots
+              New-CloudInstanceFromImageExport `
+                -platform $target.platform `
+                -localImagePath $vhdLocalPath `
+                -targetResourceId $resourceId `
+                -targetResourceGroupName $target.group `
+                -targetResourceRegion $target.region `
+                -targetInstanceMachineVariantFormat $target.machine.format `
+                -targetInstanceCpuCount $target.machine.cpu `
+                -targetInstanceRamGb $target.machine.ram `
+                -targetInstanceName $instanceName `
+                -targetInstanceDisks @($target.disk | % {@{ 'Variant' = $_.variant; 'SizeInGB' = $_.size; 'Os' = $_.os }}) `
+                -targetInstanceTags $tags `
+                -targetVirtualNetworkName $target.network.name `
+                -targetVirtualNetworkAddressPrefix $target.network.prefix `
+                -targetVirtualNetworkDnsServers $target.network.dns `
+                -targetSubnetName $target.network.subnet.name `
+                -targetSubnetAddressPrefix $target.network.subnet.prefix;
+              $newCloudInstanceInstantiationAttempts += 1;
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
               if ($azVm) {
                 if (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState) {
-                  Write-Output -InputObject ('provisioning of vm: {0}, {1}' -f $instanceName, $azVm.ProvisioningState.ToLower());
+                  Write-Output -InputObject ('provisioning of vm: {0}, {1} on attempt: {2}' -f $instanceName, $azVm.ProvisioningState.ToLower(), $newCloudInstanceInstantiationAttempts);
                 } else {
-                  Write-Output -InputObject ('provisioning of vm: {0}, in progress with state: {1}' -f $instanceName, $azVm.ProvisioningState.ToLower());
+                  Write-Output -InputObject ('provisioning of vm: {0}, in progress with state: {1} on attempt: {2}' -f $instanceName, $azVm.ProvisioningState.ToLower(), $newCloudInstanceInstantiationAttempts);
                   Start-Sleep -Seconds 60
                 }
               } else {
-                Write-Output -InputObject ('provisioning of vm: {0}, failed before it started' -f $instanceName);
-                exit 123;
+                # if we reach here, we most likely hit an azure quota exception which we may recover from when some quota becomes available.
+                # retry until within 30 minutes of task expiry time, then exit with a code that will prompt a task retry
+                try {
+                  $taskDefinition = (Invoke-WebRequest -Uri ('http://{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_PROXY_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
+                  [DateTime] $taskStart = $taskDefinition.created;
+                  [DateTime] $taskExpiry = $taskStart.AddSeconds($taskDefinition.payload.maxRunTime);
+                  if ($taskExpiry -lt (Get-Date).AddMinutes(30)) {
+                    Write-Output -InputObject ('provisioning of vm: {0}, failed on attempt: {1}. passing control to task retry logic...' -f $instanceName, $newCloudInstanceInstantiationAttempts);
+                    exit 123;
+                  }
+                } catch {
+                  Write-Output -InputObject ('failed to determine task expiry time using proxy url {0} and task id: {1}. {2}' -f $env:TASKCLUSTER_PROXY_URL, $env:TASK_ID, $_.Exception.Message);
+                }
+                $sleepInSeconds = (Get-Random -Minimum (3 * 60) -Maximum (10 * 60));
+                Write-Output -InputObject ('provisioning of vm: {0}, failed on attempt: {1}. retrying in {2:1} minutes...' -f $instanceName, $newCloudInstanceInstantiationAttempts, ($sleepInSeconds / 60));
+                Start-Sleep -Seconds $sleepInSeconds;
               }
-            } until ((-not $azVm) -or (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState))
+            } until (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState)
             Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
