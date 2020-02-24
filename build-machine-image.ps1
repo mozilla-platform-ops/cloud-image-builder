@@ -31,7 +31,12 @@ foreach ($rm in @(
   } else {
     Install-Module -Name $rm.module -RequiredVersion $rm.version -AllowClobber;
   }
-  Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+  try {
+    Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+  } catch {
+    Write-Output -InputObject ('import of required module: {0}, version: {1}, failed. {2}' -f $rm.module, $rm.version, $_.Exception.Message);
+    exit 123;
+  }
 }
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, imageKey: {3}' -f $workFolder, $revision, $platform, $imageKey);
 

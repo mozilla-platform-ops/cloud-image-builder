@@ -100,7 +100,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 6b9700b
+    value: 19cc0cc
 - platform: azure
   group: rg-east-us-relops
   region: East US
