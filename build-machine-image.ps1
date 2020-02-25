@@ -392,6 +392,16 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               $tags[$tag.name] = $tag.value;
             }
 
+            # check (again) that another task hasn't already created the image
+            $existingImage = (Get-AzImage `
+              -ResourceGroupName $target.group `
+              -ImageName $targetImageName `
+              -ErrorAction SilentlyContinue);
+            if ($existingImage) {
+              Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
+              exit;
+            }
+
             $newCloudInstanceInstantiationAttempts = 0;
             do {
               # todo: get instance screenshots
@@ -664,6 +674,17 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   }
                 }
               }
+
+              # check (again) that another task hasn't already created the image
+              $existingImage = (Get-AzImage `
+                -ResourceGroupName $target.group `
+                -ImageName $targetImageName `
+                -ErrorAction SilentlyContinue);
+              if ($existingImage) {
+                Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
+                exit;
+              }
+
               if ($successfulOccRunDetected -or ($config.image.architecture -ne 'x86-64')) {
                 New-CloudImageFromInstance `
                   -platform $target.platform `
