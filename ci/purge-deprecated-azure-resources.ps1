@@ -3,6 +3,7 @@ param (
     'disk',
     'image',
     'ni',
+    'nsg',
     'pia',
     'snap',
     'vm'
@@ -104,22 +105,22 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 }
 
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'nsg')) {
-  $orphanedAzNetworkSecurityGroups = @(Get-AzNetworkSecurityGroup | ? { -not $_.NetworkInterFaces });
-  Write-Output -InputObject ('removing {0} orphaned AzNetworkSecurityGroup objects' -f $orphanedAzNetworkSecurityGroups.Length);
+  $orphanedAzNetworkSecurityGroups = @(Get-AzNetworkSecurityGroup | ? { ((-not $_.NetworkInterFaces) -and ($_.Name.StartsWith('nsg-')) -and (($_.Name.EndsWith('-relops')) -or ($_.Name.EndsWith('-gecko-1')) -or ($_.Name.EndsWith('-gecko-3')) -or ($_.Name.EndsWith('-gecko-t')))) });
+  Write-Output -InputObject ('removing {0} stale AzNetworkSecurityGroup objects' -f $orphanedAzNetworkSecurityGroups.Length);
   foreach ($orphanedAzNetworkSecurityGroup in $orphanedAzNetworkSecurityGroups) {
     try {
-      Write-Output -InputObject ('removing orphaned AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
+      Write-Output -InputObject ('removing stale AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
       if (Remove-AzNetworkSecurityGroup `
         -ResourceGroupName $orphanedAzNetworkSecurityGroup.ResourceGroupName `
         -Name $orphanedAzNetworkSecurityGroup.Name `
         -AsJob `
         -Force) {
-        Write-Output -InputObject ('removed orphaned AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
+        Write-Output -InputObject ('removed stale AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
       } else {
-        Write-Output -InputObject ('failed to remove orphaned AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
+        Write-Output -InputObject ('failed to remove stale AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
       }
     } catch {
-      Write-Output -InputObject ('exception removing orphaned AzNetworkSecurityGroup {0} / {1} / {2}. {3}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name, $_.Exception.Message);
+      Write-Output -InputObject ('exception removing stale AzNetworkSecurityGroup {0} / {1} / {2}. {3}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name, $_.Exception.Message);
     }
   }
 }
