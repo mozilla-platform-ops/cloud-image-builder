@@ -421,7 +421,12 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 -targetVirtualNetworkAddressPrefix $target.network.prefix `
                 -targetVirtualNetworkDnsServers $target.network.dns `
                 -targetSubnetName $target.network.subnet.name `
-                -targetSubnetAddressPrefix $target.network.subnet.prefix;
+                -targetSubnetAddressPrefix $target.network.subnet.prefix `
+                -targetFirewallConfigurationName $target.network.flow.name `
+                -targetFirewallRules $target.network.flow.rules;
+
+
+
               $newCloudInstanceInstantiationAttempts += 1;
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
               if ($azVm) {
@@ -685,11 +690,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     Write-Output -InputObject ('public ip address : "{0}", determined for: ip-{1}' -f $azPublicIpAddress.IpAddress, $resourceId);
                   } else {
                     Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}' -f $resourceId);
-                    exit 1
+                    exit 1;
                   }
                 } catch {
                   Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}. {1}' -f $resourceId, $_.Exception.Message);
-                  exit 1
+                  exit 1;
                 }
                 $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
                 try {
@@ -699,18 +704,30 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('fetched disk image unattend file for: {0}, from: {1}' -f $imageKey, $imageUnattendFileUri);
                 } catch {
                   Write-Output -InputObject ('error: failed to decompress or parse xml from: {0}. {1}' -f $imageUnattendFileUri, $_.Exception.Message);
-                  exit 1
+                  exit 1;
                 }
                 $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.Value;
                 if ($imagePassword) {
                   Write-Output -InputObject ('image password : "{0}", extracted from: {1}' -f $imagePassword, $imageUnattendFileUri);
                 } else {
                   Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
-                  exit 1
+                  exit 1;
                 }
                 $credential = (New-Object `
                   -TypeName 'System.Management.Automation.PSCredential' `
                   -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
+                try {
+                  # modify azure security group to allow winrm from public ip of task instance
+                  $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
+                  $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
+                  $existingWinrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm');
+                  $allowedIps = @(@($taskRunnerIpAddress) + $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix);
+                  Set-AzNetworkSecurityRuleConfig -Name 'allow-winrm' -NetworkSecurityGroup $azNetworkSecurityGroup -SourceAddressPrefix $allowedIps;
+                  Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $allowedIps));
+                } catch {
+                  Write-Output -InputObject ('error: failed to modify winrm security configuration. {0}' -f $_.Exception.Message);
+                  exit 1;
+                }
 
                 try {
                   Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
@@ -725,8 +742,12 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   }
                 } catch {
                   Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
-                  exit 1
+                  exit 1;
                 }
+
+                # modify azure security group to remove public ip of task instance from winrm exceptions
+                Set-AzNetworkSecurityRuleConfig -Name 'allow-winrm' -NetworkSecurityGroup $azNetworkSecurityGroup -SourceAddressPrefix $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix;
+                Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
               }
 
               # check (again) that another task hasn't already created the image
