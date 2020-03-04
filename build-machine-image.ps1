@@ -681,7 +681,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     -ResourceGroupName $target.group `
                     -Name ('ip-{0}' -f $resourceId) `
                     -ErrorAction SilentlyContinue);
-                  if ($azPublicIpAddress && $azPublicIpAddress.IpAddress) {
+                  if ($azPublicIpAddress -and $azPublicIpAddress.IpAddress) {
                     Write-Output -InputObject ('public ip address : "{0}", determined for: ip-{1}' -f $azPublicIpAddress.IpAddress, $resourceId);
                   } else {
                     Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}' -f $resourceId);
