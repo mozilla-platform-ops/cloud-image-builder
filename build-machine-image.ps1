@@ -468,7 +468,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   try {
                     $azPublicIpAddress = (Get-AzPublicIpAddress `
                       -ResourceGroupName $target.group `
-                      -Name ('ni-{0}' -f $resourceId) `
+                      -Name ('ip-{0}' -f $resourceId) `
                       -ErrorAction SilentlyContinue);
                     if ($azPublicIpAddress) {
                       $deleteIpAttempts += 1;
@@ -676,12 +676,21 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
               } else {
                 # bootstrap over winrm for architectures that do not have an azure vm agent
-                $azPublicIpAddress = (Get-AzPublicIpAddress `
-                  -ResourceGroupName $target.group `
-                  -Name ('ni-{0}' -f $resourceId) `
-                  -ErrorAction SilentlyContinue);
-
-
+                try {
+                  $azPublicIpAddress = (Get-AzPublicIpAddress `
+                    -ResourceGroupName $target.group `
+                    -Name ('ip-{0}' -f $resourceId) `
+                    -ErrorAction SilentlyContinue);
+                  if ($azPublicIpAddress && $azPublicIpAddress.IpAddress) {
+                    Write-Output -InputObject ('public ip address : "{0}", determined for: ip-{1}' -f $azPublicIpAddress.IpAddress, $resourceId);
+                  } else {
+                    Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}' -f $resourceId);
+                    exit 1
+                  }
+                } catch {
+                  Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}. {1}' -f $resourceId, $_.Exception.Message);
+                  exit 1
+                }
                 $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
                 try {
                   $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageUnattendFileUri)));
@@ -694,16 +703,15 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
                 $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value;
                 if ($imagePassword) {
-                  Write-Output -InputObject ('image password with length: {0}, extracted from: {1}' -f $imagePassword.Length, $imageUnattendFileUri);
+                  Write-Output -InputObject ('image password : "{0}", extracted from: {1}' -f $imagePassword, $imageUnattendFileUri);
                 } else {
                   Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
                   exit 1
                 }
-
                 $credential = (New-Object `
                   -TypeName 'System.Management.Automation.PSCredential' `
                   -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
-                Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -credential $credential -ScriptBlock {
+                Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
 
                   # todo:
                   # - set secrets in the instance registry
