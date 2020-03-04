@@ -112,6 +112,7 @@ target:
         Direction: Inbound
         Priority: 110
         SourceAddressPrefix:
+        - 185.189.196.104
         - 185.189.196.216
         SourcePortRange: '*'
         DestinationAddressPrefix: '*'
@@ -123,6 +124,7 @@ target:
         Direction: Inbound
         Priority: 111
         SourceAddressPrefix:
+        - 185.189.196.104
         - 185.189.196.216
         SourcePortRange: '*'
         DestinationAddressPrefix: '*'

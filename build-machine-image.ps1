@@ -91,7 +91,7 @@ if (-not ($config)) {
 $imageArtifactDescriptorUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
 try {
   $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageArtifactDescriptorUri)));
-  $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')))
+  $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
   $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
   Write-Output -InputObject ('fetched disk image config for: {0}, from: {1}' -f $imageKey, $imageArtifactDescriptorUri);
 } catch {
@@ -537,11 +537,30 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               $successfulOccRunDetected = $false;
 
+              $occOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
+              $occRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
+              $occRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+              $rundscUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1' -f $occOrg, $occRepo, $occRef);
+              $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
+              $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
+              $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
+              if (($accessToken) -and ($accessToken.Length -eq 44)) {
+                Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
+              } else {
+                Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
+                try {
+                  Remove-AzVm `
+                    -ResourceGroupName $target.group `
+                    -Name $instanceName `
+                    -Force;
+                  Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+                } catch {
+                  Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
+                }
+                exit 123;
+              }
+
               if ($config.image.architecture -eq 'x86-64') {
-                $occOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
-                $occRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
-                $occRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
-                $rundscUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1' -f $occOrg, $occRepo, $occRef);
                 $rundscPath = ('{0}\rundsc.ps1' -f $env:Temp)
                 (New-Object Net.WebClient).DownloadFile($rundscUrl, $rundscPath);
                 if (Test-Path -Path $rundscPath -ErrorAction SilentlyContinue) {
@@ -561,24 +580,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
 
                 # set secrets in the instance registry
-                $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
-                $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
-                $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
-                if (($accessToken) -and ($accessToken.Length -eq 44)) {
-                  Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
-                } else {
-                  Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
-                  try {
-                    Remove-AzVm `
-                      -ResourceGroupName $target.group `
-                      -Name $instanceName `
-                      -Force;
-                    Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                  } catch {
-                    Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                  }
-                  exit 123;
-                }
                 Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
                 $setSecretsCommandResult = (Invoke-AzVMRunCommand `
                   -ResourceGroupName $target.group `
@@ -672,6 +673,45 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     } until ($dirDscCommandOutput -match 'ed25519-private.key')
                     Remove-Item -Path ('{0}\dirgw.ps1' -f $env:Temp);
                   }
+                }
+              } else {
+                # bootstrap over winrm for architectures that do not have an azure vm agent
+                $azPublicIpAddress = (Get-AzPublicIpAddress `
+                  -ResourceGroupName $target.group `
+                  -Name ('ni-{0}' -f $resourceId) `
+                  -ErrorAction SilentlyContinue);
+
+
+                $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
+                try {
+                  $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageUnattendFileUri)));
+                  $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
+                  [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
+                  Write-Output -InputObject ('fetched disk image unattend file for: {0}, from: {1}' -f $imageKey, $imageUnattendFileUri);
+                } catch {
+                  Write-Output -InputObject ('error: failed to decompress or parse xml from: {0}. {1}' -f $imageUnattendFileUri, $_.Exception.Message);
+                  exit 1
+                }
+                $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value;
+                if ($imagePassword) {
+                  Write-Output -InputObject ('image password with length: {0}, extracted from: {1}' -f $imagePassword.Length, $imageUnattendFileUri);
+                } else {
+                  Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
+                  exit 1
+                }
+
+                $credential = (New-Object `
+                  -TypeName 'System.Management.Automation.PSCredential' `
+                  -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
+                Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -credential $credential -ScriptBlock {
+
+                  # todo:
+                  # - set secrets in the instance registry
+                  # - rename host
+                  # - run bootstrap
+                  # - halt system
+
+                  Get-UICulture
                 }
               }
 

@@ -77,6 +77,7 @@ target:
         Direction: Inbound
         Priority: 110
         SourceAddressPrefix:
+        - 185.189.196.104
         - 185.189.196.216
         SourcePortRange: '*'
         DestinationAddressPrefix: '*'
@@ -88,10 +89,23 @@ target:
         Direction: Inbound
         Priority: 111
         SourceAddressPrefix:
+        - 185.189.196.104
         - 185.189.196.216
         SourcePortRange: '*'
         DestinationAddressPrefix: '*'
         DestinationPortRange: 22
+      - name: allow-winrm
+        description: 'allow: inbound tcp connections, for: winrm, from: whitelist, to: any host, on port: 5986'
+        access: Allow
+        Protocol: Tcp
+        Direction: Inbound
+        Priority: 112
+        SourceAddressPrefix:
+        - 185.189.196.104
+        - 185.189.196.216
+        SourcePortRange: '*'
+        DestinationAddressPrefix: '*'
+        DestinationPortRange: 5986
   tag: &tag
   - name: workerType
     value: gecko-t-win7-32-azure
