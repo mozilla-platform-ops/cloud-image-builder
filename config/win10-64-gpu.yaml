@@ -73,27 +73,29 @@ target:
       - name: allow-rdp
         description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
         access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 110
-        SourceAddressPrefix:
+        protocol: Tcp
+        direction: Inbound
+        priority: 110
+        sourceAddressPrefix:
         - 185.189.196.104
         - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 3389
+        - 185.189.199.208
+        sourcePortRange: '*'
+        destinationAddressPrefix: '*'
+        destinationPortRange: 3389
       - name: allow-ssh
         description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
         access: Allow
-        Protocol: Tcp
-        Direction: Inbound
-        Priority: 111
-        SourceAddressPrefix:
+        protocol: Tcp
+        direction: Inbound
+        priority: 111
+        sourceAddressPrefix:
         - 185.189.196.104
         - 185.189.196.216
-        SourcePortRange: '*'
-        DestinationAddressPrefix: '*'
-        DestinationPortRange: 22
+        - 185.189.199.208
+        sourcePortRange: '*'
+        destinationAddressPrefix: '*'
+        destinationPortRange: 22
   tag:
   - name: workerType
     value: gecko-t-win10-64-gpu-azure
