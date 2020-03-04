@@ -706,7 +706,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('error: failed to decompress or parse xml from: {0}. {1}' -f $imageUnattendFileUri, $_.Exception.Message);
                   exit 1;
                 }
-                $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.Value;
+                $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
                 if ($imagePassword) {
                   Write-Output -InputObject ('image password : "{0}", extracted from: {1}' -f $imagePassword, $imageUnattendFileUri);
                 } else {
