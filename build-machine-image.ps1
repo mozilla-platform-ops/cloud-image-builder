@@ -711,15 +711,21 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 $credential = (New-Object `
                   -TypeName 'System.Management.Automation.PSCredential' `
                   -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
-                Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
 
-                  # todo:
-                  # - set secrets in the instance registry
-                  # - rename host
-                  # - run bootstrap
-                  # - halt system
+                try {
+                  Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
 
-                  Get-UICulture
+                    # todo:
+                    # - set secrets in the instance registry
+                    # - rename host
+                    # - run bootstrap
+                    # - halt system
+
+                    Get-UICulture
+                  }
+                } catch {
+                  Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
+                  exit 1
                 }
               }
 
