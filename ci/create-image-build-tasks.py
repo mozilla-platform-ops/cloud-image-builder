@@ -149,8 +149,12 @@ for platform in ['amazon', 'azure']:
               provisioner = 'relops',
               workerType = 'win2019',
               priority = 'low',
+              osGroups = [
+                'Administrators'
+              ],
               features = {
-                'taskclusterProxy': True
+                'taskclusterProxy': True,
+                'runAsAdministrator': True
               },
               commands = [
                 'git clone https://github.com/grenade/cloud-image-builder.git',
@@ -159,6 +163,8 @@ for platform in ['amazon', 'azure']:
                 'powershell -File build-machine-image.ps1 {} {} {}'.format(platform, key, target['group'])
               ],
               scopes = [
+                'generic-worker:os-group:relops/win2019/Administrators',
+                'generic-worker:run-as-administrator:relops/win2019',
                 'secrets:get:project/relops/image-builder/dev'
               ],
               routes = [
@@ -175,7 +181,7 @@ for platform in ['amazon', 'azure']:
               taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
               taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
               maxRunMinutes = 180,
-              retries = 1,
+              retries = 4,
               retriggerOnExitCodes = [ 123 ],
               dependencies = [ machineImageBuildTaskId ],
               provisioner = 'relops',
