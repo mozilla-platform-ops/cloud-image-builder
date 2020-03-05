@@ -105,7 +105,7 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 }
 
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'nsg')) {
-  $orphanedAzNetworkSecurityGroups = @(Get-AzNetworkSecurityGroup | ? { ((-not $_.NetworkInterFaces) -and ($_.Name.StartsWith('nsg-')) -and (($_.Name.EndsWith('-relops')) -or ($_.Name.EndsWith('-gecko-1')) -or ($_.Name.EndsWith('-gecko-3')) -or ($_.Name.EndsWith('-gecko-t')))) });
+  $orphanedAzNetworkSecurityGroups = @(Get-AzNetworkSecurityGroup | ? { ((-not $_.NetworkInterFaces) -and ($_.Name.StartsWith('nsg-')) -and (($_.Name.EndsWith('-relops')) -or ($_.Name.EndsWith('-gecko-1')) -or ($_.Name.EndsWith('-gecko-3')) -or ($_.Name.EndsWith('-gecko-t')) -or ($_.Name.EndsWith('-mpd001-1')) -or ($_.Name.EndsWith('-mpd001-3')))) });
   Write-Output -InputObject ('removing {0} stale AzNetworkSecurityGroup objects' -f $orphanedAzNetworkSecurityGroups.Length);
   foreach ($orphanedAzNetworkSecurityGroup in $orphanedAzNetworkSecurityGroups) {
     try {
