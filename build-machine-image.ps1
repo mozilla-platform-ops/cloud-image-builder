@@ -745,12 +745,21 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   exit 1;
                 }
 
-                $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-                Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
-                $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
-                Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
-                Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+                # enable remoting and add remote azure instance to trusted host list
+                #try {
+                #  Enable-PSRemoting -SkipNetworkProfileCheck -Force
+                #  Write-Output -InputObject 'powershell remoting enabled for session';
+                #  $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
+                #  Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
+                #  $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
+                #  Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
+                #  Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+                #} catch {
+                #  Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+                #  exit 1;
+                #}
 
+                # run remote bootstrap scripts over winrm
                 try {
                   Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
 
@@ -780,8 +789,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
                 }
 
-                Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
-                Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+                #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
+                #Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
               }
 
               # check (again) that another task hasn't already created the image
