@@ -708,7 +708,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
                 $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
                 if ($imagePassword) {
-                  Write-Output -InputObject ('image password : "{0}", extracted from: {1}' -f $imagePassword, $imageUnattendFileUri);
+                  Write-Output -InputObject ('image password with length: {0}, extracted from: {1}' -f $imagePassword.Length, $imageUnattendFileUri);
                 } else {
                   Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
                   exit 1;
@@ -722,12 +722,26 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
                   $existingWinrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm');
                   $allowedIps = @(@($taskRunnerIpAddress) + $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix);
-                  Set-AzNetworkSecurityRuleConfig -Name 'allow-winrm' -NetworkSecurityGroup $azNetworkSecurityGroup -SourceAddressPrefix $allowedIps;
-                  Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $allowedIps));
+                  $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+                    -Name 'allow-winrm' `
+                    -NetworkSecurityGroup $azNetworkSecurityGroup `
+                    -SourceAddressPrefix $allowedIps);
+                  if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+                    $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+                    Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+                  } else {
+                    Write-Output -InputObject ('error: failed to modify winrm security configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+                    exit 1;
+                  }
                 } catch {
                   Write-Output -InputObject ('error: failed to modify winrm security configuration. {0}' -f $_.Exception.Message);
                   exit 1;
                 }
+
+                $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
+                $trustedHostsForBootstrap = $(if ($trustedHostsPreBootstrap) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
+                Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap
+                Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
 
                 try {
                   Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
@@ -746,8 +760,20 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
 
                 # modify azure security group to remove public ip of task instance from winrm exceptions
-                Set-AzNetworkSecurityRuleConfig -Name 'allow-winrm' -NetworkSecurityGroup $azNetworkSecurityGroup -SourceAddressPrefix $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix;
-                Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
+                $allowedIps = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
+                $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+                  -Name 'allow-winrm' `
+                  -NetworkSecurityGroup $azNetworkSecurityGroup `
+                  -SourceAddressPrefix $allowedIps);
+                if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+                  $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+                  Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+                } else {
+                  Write-Output -InputObject ('error: failed to reset winrm security configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+                }
+                
+                Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsPreBootstrap
+                Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
               }
 
               # check (again) that another task hasn't already created the image
