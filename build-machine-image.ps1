@@ -746,18 +746,19 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
 
                 # enable remoting and add remote azure instance to trusted host list
-                #try {
-                #  Enable-PSRemoting -SkipNetworkProfileCheck -Force
-                #  Write-Output -InputObject 'powershell remoting enabled for session';
-                #  $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-                #  Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
-                #  $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
-                #  Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
-                #  Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-                #} catch {
-                #  Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-                #  exit 1;
-                #}
+                try {
+                  #Enable-PSRemoting -SkipNetworkProfileCheck -Force
+                  #Write-Output -InputObject 'powershell remoting enabled for session';
+                  $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
+                  Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
+                  $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
+                  #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
+                  & winrm @('set', 'winrm/config/client', ('@{TrustedHosts="{0}"}' -f $trustedHostsForBootstrap))
+                  Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+                } catch {
+                  Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+                  exit 1;
+                }
 
                 # run remote bootstrap scripts over winrm
                 try {
@@ -790,7 +791,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
 
                 #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
-                #Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+                & winrm @('set', 'winrm/config/client', ('@{TrustedHosts="{0}"}' -f $trustedHostsPreBootstrap))
+                Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
               }
 
               # check (again) that another task hasn't already created the image
