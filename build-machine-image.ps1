@@ -35,6 +35,8 @@ foreach ($rm in @(
     Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
   } catch {
     Write-Output -InputObject ('import of required module: {0}, version: {1}, failed. {2}' -f $rm.module, $rm.version, $_.Exception.Message);
+    # if we get here, the instance is borked and will throw exceptions on all subsequent tasks.
+    & shutdown @('/s', '/t', '3', '/c', 'borked powershell module library detected', '/f', '/d', '1:1');
     exit 123;
   }
 }
@@ -681,6 +683,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
               } else {
                 # bootstrap over winrm for architectures that do not have an azure vm agent
+
+                # determine public ip of remote azure instance
                 try {
                   $azPublicIpAddress = (Get-AzPublicIpAddress `
                     -ResourceGroupName $target.group `
@@ -696,6 +700,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}. {1}' -f $resourceId, $_.Exception.Message);
                   exit 1;
                 }
+
+                # determine administrator password of remote azure instance
                 $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
                 try {
                   $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageUnattendFileUri)));
@@ -716,8 +722,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 $credential = (New-Object `
                   -TypeName 'System.Management.Automation.PSCredential' `
                   -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
+
+                # modify security group of remote azure instance to allow winrm from public ip of local task instance
                 try {
-                  # modify azure security group to allow winrm from public ip of task instance
                   $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
                   $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
                   $existingWinrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm');
@@ -730,16 +737,17 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
                     Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
                   } else {
-                    Write-Output -InputObject ('error: failed to modify winrm security configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+                    Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
                     exit 1;
                   }
                 } catch {
-                  Write-Output -InputObject ('error: failed to modify winrm security configuration. {0}' -f $_.Exception.Message);
+                  Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
                   exit 1;
                 }
 
                 $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-                $trustedHostsForBootstrap = $(if ($trustedHostsPreBootstrap) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
+                Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
+                $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
                 Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap
                 Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
 
@@ -767,13 +775,13 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   -SourceAddressPrefix $allowedIps);
                 if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
                   $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-                  Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+                  Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
                 } else {
-                  Write-Output -InputObject ('error: failed to reset winrm security configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+                  Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
                 }
-                
-                Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsPreBootstrap
-                Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+
+                Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' })
+                Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
               }
 
               # check (again) that another task hasn't already created the image
