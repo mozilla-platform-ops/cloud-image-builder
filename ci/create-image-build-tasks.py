@@ -82,6 +82,8 @@ for platform in ['amazon', 'azure']:
           taskName = '01 :: build {} {} disk image from {} {} iso'.format(platform, key, config['image']['os'], config['image']['edition']),
           taskDescription = 'build a customised {} disk image file for {}, from iso file {} and upload to cloud storage'.format(key, platform, os.path.basename(config['iso']['source']['key'])),
           maxRunMinutes = 180,
+          retries = 1,
+          retriggerOnExitCodes = [ 123 ],
           provisioner = 'relops',
           workerType = 'win2019',
           priority = 'high',
