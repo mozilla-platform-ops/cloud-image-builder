@@ -1,7 +1,7 @@
 ---
 - unattend:
   - description: remove winhttp proxy
-    command: C:\Windows\System32\netsh.exe winhttp reset proxy
+    command: 'C:\Windows\System32\netsh.exe winhttp reset proxy'
   target:
     cloud:
     - azure
@@ -41,7 +41,7 @@
     - false
 - unattend:
   - description: enable windows firewall for all profiles (domain, public, private)
-    command: C:\Windows\System32\netsh.exe advfirewall set allprofiles state on
+    command: 'C:\Windows\System32\netsh.exe advfirewall set allprofiles state on'
   target:
     cloud:
     - azure
@@ -61,7 +61,7 @@
     - false
 - unattend:
   - description: enable remote desktop firewall exception
-    command: C:\Windows\System32\netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes
+    command: 'C:\Windows\System32\netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes'
   target:
     cloud:
     - amazon
@@ -83,7 +83,7 @@
     - false
 - unattend:
   - description: enable powershell remoting
-    command: C:\Windows\System32\winrm.cmd quickconfig -quiet
+    command: 'C:\Windows\System32\winrm.cmd quickconfig -quiet -transport:http -force'
   target:
     cloud:
     - azure
@@ -103,7 +103,7 @@
     - false
 - unattend:
   - description: accept powershell remoting connections from all hosts
-    command: C:\Windows\System32\winrm.cmd set winrm/config/client @{TrustedHosts="*"}
+    command: 'C:\Windows\System32\winrm.cmd set winrm/config/client @{TrustedHosts="*"}'
   target:
     cloud:
     - azure
@@ -123,7 +123,7 @@
     - false
 - unattend:
   - description: enable remote management firewall exception
-    command: C:\Windows\System32\netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any
+    command: 'C:\Windows\System32\netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any'
   target:
     cloud:
     - azure
@@ -143,7 +143,7 @@
     - false
 - unattend:
   - description: enable file and printer sharing firewall exception (allows icmp response on azure vnet)
-    command: C:\Windows\System32\netsh.exe advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes
+    command: 'C:\Windows\System32\netsh.exe advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes'
   target:
     cloud:
     - azure
