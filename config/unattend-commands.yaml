@@ -102,8 +102,28 @@
     - true
     - false
 - unattend:
+  - description: accept powershell remoting connections from all hosts
+    command: C:\Windows\System32\winrm.cmd set winrm/config/client @{TrustedHosts="*"}
+  target:
+    cloud:
+    - azure
+    os:
+    - Windows 7
+    - Windows 8.1
+    - Windows 10
+    - Windows Server 2012 R2
+    - Windows Server 2016
+    - Windows Server 2019
+    - Windows Server
+    architecture:
+    - x86
+    - x86-64
+    gpu:
+    - true
+    - false
+- unattend:
   - description: enable remote management firewall exception
-    command: C:\Windows\System32\netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes
+    command: C:\Windows\System32\netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any
   target:
     cloud:
     - azure
