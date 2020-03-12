@@ -9,6 +9,21 @@ import yaml
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 
+from cachetools import cached, TTLCache
+cache = TTLCache(maxsize=100, ttl=300)
+
+
+@cached(cache)
+def get_commit(revision):
+  try:
+    response = urllib.request.urlopen('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(revision))
+  except urllib.error.HTTPError as e:
+    print(e.code)
+    print(e.read())
+    exit(123 if e.code == 403 else 1)
+  return json.loads(response.read().decode())
+
+
 secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
 secret = secretsClient.get('project/relops/image-builder/dev')['secret']
 
@@ -32,13 +47,7 @@ if platform == 'azure':
   images = [x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)]
   for image in images:
     revision = pattern.search(image.name).group(1)
-    try:
-      response = urllib.request.urlopen('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(revision))
-    except urllib.error.HTTPError as e:
-      print(e.code)
-      print(e.read())
-      exit(123 if e.code == 403 else 1)
-    commit = json.loads(response.read().decode())
+    commit = get_commit(revision)
     print('image: {}, has revision: {}'.format(image.name, revision))
     if image.tags:
       print(', '.join(['%s:: %s' % (key, value) for (key, value) in image.tags.items()]))
@@ -73,7 +82,7 @@ if platform == 'azure':
   snapshots = [x for x in azureComputeManagementClient.snapshots.list_by_resource_group(group) if pattern.match(x.name)]
   for snapshot in snapshots:
     revision = pattern.search(snapshot.name).group(1)
-    commit = json.loads(urllib.request.urlopen('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(revision)).read().decode())
+    commit = get_commit(revision)
     print('snapshot: {}, has revision: {}'.format(snapshot.name, revision))
     if snapshot.tags:
       print(', '.join(['%s:: %s' % (key, value) for (key, value) in snapshot.tags.items()]))
