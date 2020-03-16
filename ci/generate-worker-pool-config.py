@@ -79,7 +79,36 @@ workerPool = {
       }
     },
     'tags': { t['name']: t['value'] for t in x['tag'] },
-    'workerConfig': {}
+    'workerConfig': {
+      'genericWorker': {
+        'config': {
+          'idleTimeoutSecs': 90,
+          'cachesDir': 'Z:\\caches',
+          'cleanUpTaskDirs': True,
+          'deploymentId': commitSha[0:7],
+          'disableReboots': True,
+          'downloadsDir': 'Z:\\downloads',
+          'ed25519SigningKeyLocation': 'C:\\generic-worker\\ed25519-private.key',
+          'livelogExecutable': 'C:\\generic-worker\\livelog.exe',
+          'livelogPUTPort': 60022,
+          'numberOfTasksToRun': 0,
+          'provisionerId': poolConfig['domain'],
+          'runAfterUserCreation': 'C:\\generic-worker\\task-user-init.cmd',
+          'runTasksAsCurrentUser': False,
+          'sentryProject': 'generic-worker',
+          'shutdownMachineOnIdle': False,
+          'shutdownMachineOnInternalError': True,
+          'taskclusterProxyExecutable': 'C:\\generic-worker\\taskcluster-proxy.exe',
+          'taskclusterProxyPort': 80,
+          'tasksDir': 'Z:\\',
+          'workerGroup': x['group'],
+          'workerLocation': '{{"cloud":"azure","region":"{}","availabilityZone":"{}"}}'.format(x['region'].lower().replace(' ', ''), x['region'].lower().replace(' ', '')),
+          'workerType': poolConfig['variant'],
+          'wstAudience': 'firefoxcitc',
+          'wstServerURL': 'https://firefoxci-websocktunnel.services.mozilla.com'
+        }
+      }
+    }
   }, filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target']))))
 }
 if 'lifecycle' in poolConfig and poolConfig['lifecycle'] == 'spot':
