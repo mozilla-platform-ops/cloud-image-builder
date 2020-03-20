@@ -139,9 +139,9 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 5ab75cb
+    value: b7b9e6f
   - name: deploymentId
-    value: 5ab75cb
+    value: b7b9e6f
   bootstrap: &bootstrap
     executions:
     - name: create-registry-key-mozilla-generic-worker
@@ -268,9 +268,9 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 5ab75cb
+    value: b7b9e6f
   - name: deploymentId
-    value: 5ab75cb
+    value: b7b9e6f
 - platform: azure
   group: rg-east-us-gecko-3
   region: East US
@@ -380,7 +380,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 5ab75cb
+    value: b7b9e6f
 - platform: amazon
   group: rg-east-us-mpd001-1
   region: East US
@@ -490,7 +490,7 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 5ab75cb
+    value: b7b9e6f
 - platform: amazon
   group: rg-east-us-mpd001-3
   region: East US
