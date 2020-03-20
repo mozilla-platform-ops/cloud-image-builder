@@ -48,6 +48,8 @@ elif runEnvironment == 'taskcluster':
     taskName = '00 :: purge deprecated azure resources',
     taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
     maxRunMinutes = 60,
+    retries = 1,
+    retriggerOnExitCodes = [ 123 ],
     provisioner = 'relops',
     workerType = 'win2019',
     priority = 'high',

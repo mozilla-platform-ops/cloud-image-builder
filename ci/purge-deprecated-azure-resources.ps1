@@ -25,7 +25,14 @@ foreach ($rm in @(
   } else {
     Install-Module -Name $rm.module -RequiredVersion $rm.version -AllowClobber;
   }
-  Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+  try {
+    Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+  } catch {
+    Write-Output -InputObject ('import of required module: {0}, version: {1}, failed. {2}' -f $rm.module, $rm.version, $_.Exception.Message);
+    # if we get here, the instance is borked and will throw exceptions on all subsequent tasks.
+    & shutdown @('/s', '/t', '3', '/c', 'borked powershell module library detected', '/f', '/d', '1:1');
+    exit 123;
+  }
 }
 
 $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
