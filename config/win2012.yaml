@@ -140,6 +140,8 @@ target:
     value: OpenCloudConfig
   - name: sourceRevision
     value: b7b9e6f
+  - name: sourceScript
+    value: userdata/rundsc.ps1
   - name: deploymentId
     value: b7b9e6f
   bootstrap: &bootstrap
@@ -264,11 +266,13 @@ target:
   - name: workerType
     value: gecko-3-b-win2012-azure
   - name: sourceOrganisation
-    value: mozilla-releng
+    value: mozilla-platform-ops
   - name: sourceRepository
-    value: OpenCloudConfig
+    value: ronin_puppet
   - name: sourceRevision
-    value: b7b9e6f
+    value: cloud_windows
+  - name: sourceScript
+    value: provisioners/windows/azure/azure-bootstrap.ps1
   - name: deploymentId
     value: b7b9e6f
 - platform: azure
@@ -376,11 +380,13 @@ target:
   - name: workerType
     value: mpd001-1-b-win2012-amazon
   - name: sourceOrganisation
-    value: mozilla-releng
+    value: mozilla-platform-ops
   - name: sourceRepository
-    value: OpenCloudConfig
+    value: ronin_puppet
   - name: sourceRevision
-    value: b7b9e6f
+    value: cloud_windows
+  - name: sourceScript
+    value: provisioners/windows/azure/azure-bootstrap.ps1
 - platform: amazon
   group: rg-east-us-mpd001-1
   region: East US
@@ -486,11 +492,13 @@ target:
   - name: workerType
     value: mpd001-3-b-win2012-amazon
   - name: sourceOrganisation
-    value: mozilla-releng
+    value: mozilla-platform-ops
   - name: sourceRepository
-    value: OpenCloudConfig
+    value: ronin_puppet
   - name: sourceRevision
-    value: b7b9e6f
+    value: cloud_windows
+  - name: sourceScript
+    value: provisioners/windows/azure/azure-bootstrap.ps1
 - platform: amazon
   group: rg-east-us-mpd001-3
   region: East US

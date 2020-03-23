@@ -544,10 +544,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               $successfulOccRunDetected = $false;
 
-              $occOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
-              $occRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
-              $occRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
-              $rundscUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1' -f $occOrg, $occRepo, $occRef);
+              $bootstrapOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
+              $bootstrapRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
+              $bootstrapRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+              $bootstrapScript = @($target.tag | ? { $_.name -eq 'sourceScript' })[0].value;
+              $bootstrapUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}' -f $bootstrapOrg, $bootstrapRepo, $bootstrapRef, $bootstrapScript);
               $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
               $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
               $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
@@ -586,100 +587,56 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   exit 1;
                 }
 
-                # set secrets in the instance registry
-                Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
-                $setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                  -ResourceGroupName $target.group `
-                  -VMName $instanceName `
-                  -CommandId 'RunPowerShellScript' `
-                  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-                Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
+                # set secrets in the instance registry. this is only needed if we aren't using worker-runner
+                #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
+                #$setSecretsCommandResult = (Invoke-AzVMRunCommand `
+                #  -ResourceGroupName $target.group `
+                #  -VMName $instanceName `
+                #  -CommandId 'RunPowerShellScript' `
+                #  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
+                #Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                #Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
+                #Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
+                #Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
 
-                # the first time occ runs, it renames the instance and reboots
-                $firstOccTriggerCommandResult = (Invoke-AzVMRunCommand `
+                $bootstrapTriggerCommandResult = (Invoke-AzVMRunCommand `
                   -ResourceGroupName $target.group `
                   -VMName $instanceName `
                   -CommandId 'RunPowerShellScript' `
                   -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-                Write-Output -InputObject ('first occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($firstOccTriggerCommandResult -and $firstOccTriggerCommandResult.Status) { $firstOccTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                Write-Output -InputObject ('first occ trigger std out: {0}' -f $firstOccTriggerCommandResult.Value[0].Message);
-                Write-Output -InputObject ('first occ trigger std err: {0}' -f $firstOccTriggerCommandResult.Value[1].Message);
+                Write-Output -InputObject ('bootstrap trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($bootstrapTriggerCommandResult -and $bootstrapTriggerCommandResult.Status) { $bootstrapTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                Write-Output -InputObject ('bootstrap trigger std out: {0}' -f $bootstrapTriggerCommandResult.Value[0].Message);
+                Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
 
-                if ($firstOccTriggerCommandResult.Status -eq 'Succeeded') {
-
-                  Set-Content -Path ('{0}\computername.ps1' -f $env:Temp) -Value '$env:ComputerName';
-                  $echoHostnameCommandOutput = '';
+                if ($bootstrapTriggerCommandResult.Status -eq 'Succeeded') {
+                  Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "last_run_exit").last_run_exit -in @(0, 2)) { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
+                  $verifyBootstrapCompletionCommandOutput = '';
+                  $verifyBootstrapCompletionIteration = 0;
                   do {
-                    $echoHostnameResult = (Invoke-AzVMRunCommand `
+                    $verifyBootstrapCompletionResult = (Invoke-AzVMRunCommand `
                       -ResourceGroupName $target.group `
                       -VMName $instanceName `
                       -CommandId 'RunPowerShellScript' `
-                      -ScriptPath ('{0}\computername.ps1' -f $env:Temp) `
+                      -ScriptPath ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) `
                       -ErrorAction SilentlyContinue);
-                    Write-Output -InputObject ('echo hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($echoHostnameResult -and $echoHostnameResult.Status) { $echoHostnameResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                    if ($echoHostnameResult.Value) {
-                      $echoHostnameCommandOutput = $echoHostnameResult.Value[0].Message;
-                      Write-Output -InputObject ('echo hostname std out: {0}' -f $echoHostnameResult.Value[0].Message);
-                      Write-Output -InputObject ('echo hostname std err: {0}' -f $echoHostnameResult.Value[1].Message);
+                    Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $verifyBootstrapCompletionIteration, $(if ($verifyBootstrapCompletionResult -and $verifyBootstrapCompletionResult.Status) { $verifyBootstrapCompletionResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                    if ($verifyBootstrapCompletionResult.Value) {
+                      $verifyBootstrapCompletionCommandOutput = $verifyBootstrapCompletionResult.Value[0].Message;
+                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std out: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[0].Message);
+                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std err: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[1].Message);
                     } else {
-                      Write-Output -InputObject 'echo hostname command did not return a value';
+                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command did not return a value' -f $verifyBootstrapCompletionIteration);
                     }
-                    if ($echoHostnameCommandOutput -match $instanceName) {
-                      Write-Output -InputObject ('host rename to: {0}, detected' -f $instanceName);
+                    if ($verifyBootstrapCompletionCommandOutput -match 'completed') {
+                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) detected bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
+                      $successfulOccRunDetected = $true;
                     } else {
-                      Write-Output -InputObject ('awaiting host rename to: {0}' -f $instanceName);
+                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) awaiting bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
                       Start-Sleep -Seconds 30;
                     }
-                  } until ($echoHostnameCommandOutput -match $instanceName)
-                  Remove-Item -Path ('{0}\computername.ps1' -f $env:Temp);
-                  # todo: validate that the instance rebooted after the host rename.
-
-                  # the second time occ runs, it invokes dsc
-                  $secondOccTriggerCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp));
-                  Remove-Item -Path ('{0}\rundsc.ps1' -f $env:Temp);
-
-                  Write-Output -InputObject ('seccond occ trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($secondOccTriggerCommandResult -and $secondOccTriggerCommandResult.Status) { $secondOccTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('seccond occ trigger std out: {0}' -f $secondOccTriggerCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('seccond occ trigger std err: {0}' -f $secondOccTriggerCommandResult.Value[1].Message);
-
-                  if ($secondOccTriggerCommandResult.Status -eq 'Succeeded') {
-
-                    Set-Content -Path ('{0}\dirgw.ps1' -f $env:Temp) -Value 'Get-ChildItem -Path "C:\generic-worker"';
-                    $dirDscCommandOutput = '';
-                    $dirDscIteration = 0;
-                    do {
-                      $dirDscResult = (Invoke-AzVMRunCommand `
-                        -ResourceGroupName $target.group `
-                        -VMName $instanceName `
-                        -CommandId 'RunPowerShellScript' `
-                        -ScriptPath ('{0}\dirgw.ps1' -f $env:Temp) `
-                        -ErrorAction SilentlyContinue);
-                      Write-Output -InputObject ('dir dsc (iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $dirDscIteration, $(if ($dirDscResult -and $dirDscResult.Status) { $dirDscResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                      if ($dirDscResult.Value) {
-                        $dirDscCommandOutput = $dirDscResult.Value[0].Message;
-                        Write-Output -InputObject ('dir dsc (iteration {0}) std out: {1}' -f $dirDscIteration, $dirDscResult.Value[0].Message);
-                        Write-Output -InputObject ('dir dsc (iteration {0}) std err: {1}' -f $dirDscIteration, $dirDscResult.Value[1].Message);
-                      } else {
-                        Write-Output -InputObject ('dir dsc (iteration {0}) command did not return a value' -f $dirDscIteration);
-                      }
-                      if ($dirDscCommandOutput -match 'ed25519-private.key') {
-                        Write-Output -InputObject ('dir dsc (iteration {0}) detected occ completion on: {1}' -f $dirDscIteration, $instanceName);
-                        $successfulOccRunDetected = $true;
-                      } else {
-                        Write-Output -InputObject ('dir dsc (iteration {0}) awaiting occ completion on: {1}' -f $dirDscIteration, $instanceName);
-                        Start-Sleep -Seconds 30;
-                      }
-                      $dirDscIteration += 1;
-                    } until ($dirDscCommandOutput -match 'ed25519-private.key')
-                    Remove-Item -Path ('{0}\dirgw.ps1' -f $env:Temp);
-                  }
+                    $verifyBootstrapCompletionIteration += 1;
+                  } until ($verifyBootstrapCompletionCommandOutput -match 'completed')
+                  Remove-Item -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp);
                 }
               } else {
                 # bootstrap over winrm for architectures that do not have an azure vm agent

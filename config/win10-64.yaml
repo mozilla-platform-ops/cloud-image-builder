@@ -100,13 +100,15 @@ target:
   - name: workerType
     value: gecko-t-win10-64-azure
   - name: sourceOrganisation
-    value: mozilla-releng
+    value: mozilla-platform-ops
   - name: sourceRepository
-    value: OpenCloudConfig
+    value: ronin_puppet
   - name: sourceRevision
-    value: b7b9e6f
+    value: 9bad2b7
+  - name: sourceScript
+    value: provisioners/windows/azure/azure-bootstrap.ps1
   - name: deploymentId
-    value: b7b9e6f
+    value: 9bad2b7
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US

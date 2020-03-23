@@ -105,6 +105,10 @@ target:
     value: OpenCloudConfig
   - name: sourceRevision
     value: b7b9e6f
+  - name: sourceScript
+    value: userdata/rundsc.ps1
+  - name: deploymentId
+    value: b7b9e6f
 - platform: azure
   group: rg-east-us-relops
   region: East US
