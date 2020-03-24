@@ -40,7 +40,8 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
       'description': taskDescription,
       'owner': 'grenade@mozilla.com',
       'source': 'https://github.com/mozilla-platform-ops/cloud-image-builder'
-    }
+    },
+    'schedulerId': 'taskcluster-github'
   }
   if taskGroupId is not None:
     payload['taskGroupId'] = taskGroupId
