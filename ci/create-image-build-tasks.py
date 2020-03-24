@@ -7,8 +7,7 @@ from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 
 
-runEnvironment = 'travis' if os.getenv('TRAVIS_COMMIT') is not None else 'taskcluster' if os.getenv('TASK_ID') is not None else None
-taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] } if runEnvironment == 'taskcluster' else taskcluster.optionsFromEnvironment()
+taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
 
 auth = taskcluster.Auth(taskclusterOptions)
 queue = taskcluster.Queue(taskclusterOptions)
@@ -26,49 +25,36 @@ platformClient = {
     secret['azure']['subscription'])
 }
 
-if runEnvironment == 'travis':
-  commitSha = os.getenv('TRAVIS_COMMIT')
-  taskGroupId = slugid.nice()
-  createTask(
-    queue = queue,
-    taskId = taskGroupId,
-    taskName = '00 :: task group placeholder',
-    taskDescription = 'this task only serves as a task grouping when triggered from travis. it does no actual work',
-    provisioner = 'relops',
-    workerType = 'win2019',
-    commands = [ 'echo "task: {}, sha: {}"'.format(taskGroupId, commitSha) ])
-elif runEnvironment == 'taskcluster':
-  commitSha = os.getenv('GITHUB_HEAD_SHA')
-  taskGroupId = os.getenv('TASK_ID')
-  print('debug: auth.currentScopes')
-  print(auth.currentScopes())
-  createTask(
-    queue = queue,
-    taskId = slugid.nice(),
-    taskName = '00 :: purge deprecated azure resources',
-    taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
-    maxRunMinutes = 60,
-    retries = 1,
-    retriggerOnExitCodes = [ 123 ],
-    provisioner = 'relops',
-    workerType = 'win2019',
-    priority = 'high',
-    features = {
-      'taskclusterProxy': True
-    },
-    commands = [
-      'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
-      'cd cloud-image-builder',
-      'git reset --hard {}'.format(commitSha),
-      'powershell -File ci\\purge-deprecated-azure-resources.ps1'
-    ],
-    scopes = [
-      'secrets:get:project/relops/image-builder/dev'
-    ],
-    taskGroupId = taskGroupId
-  )
-else:
-  quit()
+commitSha = os.getenv('GITHUB_HEAD_SHA')
+taskGroupId = os.getenv('TASK_ID')
+print('debug: auth.currentScopes')
+print(auth.currentScopes())
+azurePurgeTaskId = slugid.nice()
+createTask(
+  queue = queue,
+  taskId = azurePurgeTaskId,
+  taskName = '00 :: purge deprecated azure resources',
+  taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
+  maxRunMinutes = 60,
+  retries = 5,
+  retriggerOnExitCodes = [ 123 ],
+  provisioner = 'relops',
+  workerType = 'win2019',
+  priority = 'high',
+  features = {
+    'taskclusterProxy': True
+  },
+  commands = [
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
+    'cd cloud-image-builder',
+    'git reset --hard {}'.format(commitSha),
+    'powershell -File ci\\purge-deprecated-azure-resources.ps1'
+  ],
+  scopes = [
+    'secrets:get:project/relops/image-builder/dev'
+  ],
+  taskGroupId = taskGroupId
+)
 
 for platform in ['amazon', 'azure']:
   for key in ['win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu']:
@@ -141,15 +127,20 @@ for platform in ['amazon', 'azure']:
           if queueMachineImageBuild:
             machineImageBuildTaskId = slugid.nice()
             bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
+            machineImageBuildDependencies = []
+            if platform == 'azure':
+              machineImageBuildDependencies.append(azurePurgeTaskId)
+            if buildTaskId is not None:
+              machineImageBuildDependencies.append(buildTaskId)
             createTask(
               queue = queue,
               taskId = machineImageBuildTaskId,
               taskName = '02 :: build {} {}/{} machine image from {} {} disk image using bootstrap revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapRevision, platform, target['group']),
               taskDescription = 'build {} {}/{} machine image from {} {} disk image using bootstrap revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapRevision, platform, target['group']),
               maxRunMinutes = 180,
-              retries = 1,
+              retries = 5,
               retriggerOnExitCodes = [ 123 ],
-              dependencies = [] if buildTaskId is None else [ buildTaskId ],
+              dependencies = machineImageBuildDependencies,
               provisioner = 'relops',
               workerType = 'win2019',
               priority = 'low',
