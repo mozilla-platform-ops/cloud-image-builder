@@ -104,7 +104,7 @@ target:
   - name: sourceRepository
     value: ronin_puppet
   - name: sourceRevision
-    value: 9bad2b7
+    value: cloud_windows
   - name: sourceScript
     value: provisioners/windows/azure/azure-bootstrap.ps1
   - name: deploymentId
