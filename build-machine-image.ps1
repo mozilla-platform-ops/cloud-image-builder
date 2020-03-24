@@ -569,12 +569,12 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               }
 
               if ($config.image.architecture -eq 'x86-64') {
-                $rundscPath = ('{0}\rundsc.ps1' -f $env:Temp)
-                (New-Object Net.WebClient).DownloadFile($rundscUrl, $rundscPath);
-                if (Test-Path -Path $rundscPath -ErrorAction SilentlyContinue) {
-                  Write-Output -InputObject ('downloaded {0} from {1}' -f $rundscPath, $rundscUrl);
+                $bootstrapPath = ('{0}\bootstrap.ps1' -f $env:Temp)
+                (New-Object Net.WebClient).DownloadFile($bootstrapUrl, $bootstrapPath);
+                if (Test-Path -Path $bootstrapPath -ErrorAction SilentlyContinue) {
+                  Write-Output -InputObject ('downloaded {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
                 } else {
-                  Write-Output -InputObject ('failed to download {0} from {1}' -f $rundscPath, $rundscUrl);
+                  Write-Output -InputObject ('failed to download {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
                   try {
                     Remove-AzVm `
                       -ResourceGroupName $target.group `
@@ -603,7 +603,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   -ResourceGroupName $target.group `
                   -VMName $instanceName `
                   -CommandId 'RunPowerShellScript' `
-                  -ScriptPath ('{0}\rundsc.ps1' -f $env:Temp)); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
+                  -ScriptPath $bootstrapPath); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
                 Write-Output -InputObject ('bootstrap trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($bootstrapTriggerCommandResult -and $bootstrapTriggerCommandResult.Status) { $bootstrapTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
                 Write-Output -InputObject ('bootstrap trigger std out: {0}' -f $bootstrapTriggerCommandResult.Value[0].Message);
                 Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
