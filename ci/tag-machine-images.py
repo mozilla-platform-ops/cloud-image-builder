@@ -16,7 +16,7 @@ cache = TTLCache(maxsize=100, ttl=300)
 @cached(cache)
 def get_commit(revision):
   try:
-    response = urllib.request.urlopen('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(revision))
+    response = urllib.request.urlopen('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(revision))
   except urllib.error.HTTPError as e:
     print(e.code)
     print(e.read())
@@ -53,7 +53,7 @@ if platform == 'azure':
       print(', '.join(['%s:: %s' % (key, value) for (key, value) in image.tags.items()]))
     else:
       print('image has no tags. adding tags...')
-      configUrl = 'https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(revision, key)
+      configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(revision, key)
       if requests.head(configUrl).status_code == requests.codes.ok:
         config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
         image.tags = {
@@ -88,7 +88,7 @@ if platform == 'azure':
       print(', '.join(['%s:: %s' % (key, value) for (key, value) in snapshot.tags.items()]))
     else:
       print('snapshot has no tags. adding tags...')
-      configUrl = 'https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(revision, key)
+      configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(revision, key)
       if requests.head(configUrl).status_code == requests.codes.ok:
         config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
         snapshot.tags = {

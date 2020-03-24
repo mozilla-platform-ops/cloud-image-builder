@@ -50,7 +50,7 @@ platform = os.getenv('platform')
 key = os.getenv('key')
 poolName = os.getenv('pool')
 subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
-config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(commitSha, key)).read().decode())
+config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commitSha, key)).read().decode())
 poolConfig = next(p for p in config['manager']['pool'] if '{}/{}'.format(p['domain'], p['variant']) == poolName)
 
 passwordCharPool = string.ascii_letters + string.digits + string.punctuation

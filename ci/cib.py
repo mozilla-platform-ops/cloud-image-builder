@@ -39,7 +39,7 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
       'name': taskName,
       'description': taskDescription,
       'owner': 'grenade@mozilla.com',
-      'source': 'https://github.com/grenade/cloud-image-builder'
+      'source': 'https://github.com/mozilla-platform-ops/cloud-image-builder'
     }
   }
   if taskGroupId is not None:
@@ -63,8 +63,8 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
 def diskImageManifestHasChanged(platform, key, currentRevision):
   try:
     lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
-    currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, key)).read().decode())
-    previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, key)).read().decode())
+    currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, key)).read().decode())
+    previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, key)).read().decode())
   except:
     return True
 
@@ -86,8 +86,8 @@ def diskImageManifestHasChanged(platform, key, currentRevision):
 
   # todo: parse shared config files for change specific to platform/key
   for sharedFile in ['disable-windows-service', 'drivers', 'packages', 'unattend-commands']:
-    currentContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, sharedFile)).read().decode()
-    previousContents = urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, sharedFile)).read().decode()
+    currentContents = urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, sharedFile)).read().decode()
+    previousContents = urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, sharedFile)).read().decode()
     if currentContents == previousContents:
       print('info: no change detected in {}.yaml between last image build in revision: {} and current revision: {}'.format(sharedFile, lastRevision[0:7], currentRevision[0:7]))
     else:
@@ -100,8 +100,8 @@ def diskImageManifestHasChanged(platform, key, currentRevision):
 def machineImageManifestHasChanged(platform, key, currentRevision, group):
   try:
     lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
-    currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, key)).read().decode())
-    previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/grenade/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, key)).read().decode())
+    currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, key)).read().decode())
+    previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, key)).read().decode())
   except:
     return True
 

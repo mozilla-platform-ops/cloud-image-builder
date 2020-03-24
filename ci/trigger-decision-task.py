@@ -8,7 +8,7 @@ from cib import createTask, updateWorkerPool
 
 workerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
-commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/grenade/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT')), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
+commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT')), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
 
 updateWorkerPool(
   workerManager = workerManager,
@@ -37,7 +37,7 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'git clone https://github.com/grenade/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/{}.py'.format(os.getenv('TRAVIS_COMMIT'), 'pool-deploy' if commit['message'].startswith('pool-deploy') else 'create-image-build-tasks')
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/{}.py'.format(os.getenv('TRAVIS_COMMIT'), 'pool-deploy' if commit['message'].startswith('pool-deploy') else 'create-image-build-tasks')
   ],
   scopes = [
     'generic-worker:os-group:relops/win2019/Administrators',
