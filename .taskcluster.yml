@@ -1,7 +1,7 @@
 ---
 version: 0
 tasks:
-- provisionerId: releng-3
+- provisionerId: relops
   workerType: decision
   scopes:
   - 'generic-worker:os-group:relops/win2019/Administrators'
