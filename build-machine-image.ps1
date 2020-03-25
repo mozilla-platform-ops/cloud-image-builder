@@ -104,7 +104,7 @@ $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.
 $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
 foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.group -eq $group) })) {
-  $bootstrapRevision = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+  $bootstrapRevision = @($target.tag | ? { $_.name -eq 'deploymentId' })[0].value;
   if ($bootstrapRevision.Length -gt 7) {
     $bootstrapRevision = $bootstrapRevision.Substring(0, 7);
   }
@@ -567,6 +567,10 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
                 exit 123;
               }
+              $tooltoolToken = ($secret.tooltoolToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
+              if (($tooltoolToken) -and ($tooltoolToken.Length -eq 44)) {
+                Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
+              }
 
               if ($config.image.architecture -eq 'x86-64') {
                 $bootstrapPath = ('{0}\bootstrap.ps1' -f $env:Temp)
@@ -587,7 +591,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   exit 1;
                 }
 
-                # set secrets in the instance registry. this is only needed if we aren't using worker-runner
+                # set secrets in the instance registry
                 #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
                 #$setSecretsCommandResult = (Invoke-AzVMRunCommand `
                 #  -ResourceGroupName $target.group `
@@ -598,6 +602,15 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 #Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
                 #Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
                 #Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
+                Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "tooltool" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\tooltool" -Name "token" -Value "{0}" -Type "String"' -f $tooltoolToken);
+                $setSecretsCommandResult = (Invoke-AzVMRunCommand `
+                  -ResourceGroupName $target.group `
+                  -VMName $instanceName `
+                  -CommandId 'RunPowerShellScript' `
+                  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
+                Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
+                Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
 
                 $bootstrapTriggerCommandResult = (Invoke-AzVMRunCommand `
                   -ResourceGroupName $target.group `
