@@ -66,7 +66,9 @@ if ($groups.Length -eq 0) {
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'vm')) {
   foreach ($group in $groups) {
     $deallocatedAzVms = @(Get-AzVm -ResourceGroupName $group -Status | ? { $_.PowerState -eq 'Provisioning succeeded' } | % { (Get-AzVm -Name $_.Name -ResourceGroupName $_.ResourceGroupName -Status) | ? { $_.Statuses -and $_.Statuses[2].Code -match 'deallocated' } });
-    Write-Output -InputObject ('removing {0} deallocated AzVm objects in {1}' -f $deallocatedAzVms.Length, $group);
+    if ($deallocatedAzVms.Length -gt 0) {
+      Write-Output -InputObject ('removing {0} deallocated AzVm objects in {1}' -f $deallocatedAzVms.Length, $group);
+    }
     foreach ($deallocatedAzVm in $deallocatedAzVms) {
       try {
         Write-Output -InputObject ('removing deallocated AzVm {0} / {1}' -f $deallocatedAzVm.ResourceGroupName, $deallocatedAzVm.Name);
@@ -90,7 +92,9 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'ni')) {
   foreach ($group in $groups) {
     $orphanedAzNetworkInterfaces = @(Get-AzNetworkInterface -ResourceGroupName $group | ? { $_.VirtualMachine -eq $null });
-    Write-Output -InputObject ('removing {0} orphaned AzNetworkInterface objects in {1}' -f $orphanedAzNetworkInterfaces.Length, $group);
+    if ($orphanedAzNetworkInterfaces.Length -gt 0) {
+      Write-Output -InputObject ('removing {0} orphaned AzNetworkInterface objects in {1}' -f $orphanedAzNetworkInterfaces.Length, $group);
+    }
     foreach ($orphanedAzNetworkInterface in $orphanedAzNetworkInterfaces) {
       try {
         Write-Output -InputObject ('removing orphaned AzNetworkInterface {0} / {1} / {2}' -f $orphanedAzNetworkInterface.Location, $orphanedAzNetworkInterface.ResourceGroupName, $orphanedAzNetworkInterface.Name);
@@ -113,7 +117,9 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'pia')) {
   foreach ($group in $groups) {
     $orphanedAzPublicIpAddresses = @(Get-AzPublicIpAddress -ResourceGroupName $group | ? { $_.IpAddress -eq 'Not Assigned' });
-    Write-Output -InputObject ('removing {0} orphaned AzPublicIpAddress objects in {1}' -f $orphanedAzPublicIpAddresses.Length, $group);
+    if ($orphanedAzPublicIpAddresses.Length -gt 0) {
+      Write-Output -InputObject ('removing {0} orphaned AzPublicIpAddress objects in {1}' -f $orphanedAzPublicIpAddresses.Length, $group);
+    }
     foreach ($orphanedAzPublicIpAddress in $orphanedAzPublicIpAddresses) {
       try {
         Write-Output -InputObject ('removing orphaned AzPublicIpAddress {0} / {1} / {2}' -f $orphanedAzPublicIpAddress.Location, $orphanedAzPublicIpAddress.ResourceGroupName, $orphanedAzPublicIpAddress.Name);
@@ -136,7 +142,9 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'nsg')) {
   foreach ($group in $groups) {
     $orphanedAzNetworkSecurityGroups = @(Get-AzNetworkSecurityGroup -ResourceGroupName $group | ? { ((-not $_.NetworkInterFaces) -and ($_.Name.StartsWith('nsg-')) -and (($_.Name.EndsWith('-relops')) -or ($_.Name.EndsWith('-gecko-1')) -or ($_.Name.EndsWith('-gecko-3')) -or ($_.Name.EndsWith('-gecko-t')) -or ($_.Name.EndsWith('-mpd001-1')) -or ($_.Name.EndsWith('-mpd001-3')))) });
-    Write-Output -InputObject ('removing {0} stale AzNetworkSecurityGroup objects in {1}' -f $orphanedAzNetworkSecurityGroups.Length, $group);
+    if ($orphanedAzNetworkSecurityGroups.Length -gt 0) {
+      Write-Output -InputObject ('removing {0} stale AzNetworkSecurityGroup objects in {1}' -f $orphanedAzNetworkSecurityGroups.Length, $group);
+    }
     foreach ($orphanedAzNetworkSecurityGroup in $orphanedAzNetworkSecurityGroups) {
       try {
         Write-Output -InputObject ('removing stale AzNetworkSecurityGroup {0} / {1} / {2}' -f $orphanedAzNetworkSecurityGroup.Location, $orphanedAzNetworkSecurityGroup.ResourceGroupName, $orphanedAzNetworkSecurityGroup.Name);
@@ -159,7 +167,9 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'vn')) {
   foreach ($group in $groups) {
     $orphanedAzVirtualNetworks = @(Get-AzVirtualNetwork -ResourceGroupName $group | ? { (-not $_.Subnets) -or (-not $_.Subnets[0].IpConfigurations) });
-    Write-Output -InputObject ('removing {0} orphaned AzVirtualNetwork objects in {1}' -f $orphanedAzVirtualNetworks.Length, $group);
+    if ($orphanedAzVirtualNetworks.Length -gt 0) {
+      Write-Output -InputObject ('removing {0} orphaned AzVirtualNetwork objects in {1}' -f $orphanedAzVirtualNetworks.Length, $group);
+    }
     foreach ($orphanedAzVirtualNetwork in $orphanedAzVirtualNetworks) {
       Write-Output -InputObject ('removing orphaned AzVirtualNetwork {0} / {1} / {2}' -f $orphanedAzVirtualNetwork.Location, $orphanedAzVirtualNetwork.ResourceGroupName, $orphanedAzVirtualNetwork.Name);
       foreach ($orphanedAzVirtualNetworkSubnetConfig in $orphanedAzVirtualNetwork.Subnets) {
@@ -174,7 +184,9 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
 if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains 'disk')) {
   foreach ($group in $groups) {
     $orphanedAzDisks = @(Get-AzDisk -ResourceGroupName $group | ? { $_.DiskState -eq 'Unattached' });
-    Write-Output -InputObject ('removing {0} orphaned AzDisk objects in {1}' -f $orphanedAzDisks.Length, $group);
+    if ($orphanedAzDisks.Length -gt 0) {
+      Write-Output -InputObject ('removing {0} orphaned AzDisk objects in {1}' -f $orphanedAzDisks.Length, $group);
+    }
     foreach ($orphanedAzDisk in $orphanedAzDisks) {
       try {
         Write-Output -InputObject ('removing orphaned AzDisk {0} / {1} / {2}' -f $orphanedAzDisk.Location, $orphanedAzDisk.ResourceGroupName, $orphanedAzDisk.Name);
@@ -233,7 +245,7 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
     $rgImages = @($allAzImages | ? { $_.Name.StartsWith(('{0}-' -f $prefix)) });
     $keys = @($rgImages | % { $_.Name.SubString(0, ($_.Name.Length - 8)).Replace(('{0}-' -f $prefix), '').Trim() } | Select-Object -Unique);
     foreach ($key in $keys) {
-      $workerImages = @($rgImages | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) } | % { Add-Member -InputObject $_ -MemberType 'NoteProperty' -Name 'TimeCreated' -Value ([DateTime]$_.Tags['diskImageCommitTime']) -PassThru -Force } | Sort-Object -Property 'TimeCreated' -Descending);
+      $workerImages = @($rgImages | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) && $_.Tags.ContainsKey('diskImageCommitTime') } | % { Add-Member -InputObject $_ -MemberType 'NoteProperty' -Name 'TimeCreated' -Value ([DateTime]$_.Tags['diskImageCommitTime']) -PassThru -Force } | Sort-Object -Property 'TimeCreated' -Descending);
       if ($workerImages.Length -gt 2) {
         # delete all but newest and penultimate image
         for ($i = ($workerImages.Length -1); $i -gt 1; $i --) {
