@@ -96,6 +96,21 @@ target:
         sourcePortRange: '*'
         destinationAddressPrefix: '*'
         destinationPortRange: 22
+      - name: allow-winrm
+        description: 'allow: inbound tcp connections, for: winrm over http and https, from: whitelist, to: any host, on ports: 5985, 5986'
+        access: Allow
+        protocol: Tcp
+        direction: Inbound
+        priority: 112
+        sourceAddressPrefix:
+        - 185.189.196.104
+        - 185.189.196.216
+        - 185.189.199.208
+        sourcePortRange: '*'
+        destinationAddressPrefix: '*'
+        destinationPortRange:
+        - 5985
+        - 5986
   tag:
   - name: workerType
     value: gecko-t-win10-64-gpu-azure

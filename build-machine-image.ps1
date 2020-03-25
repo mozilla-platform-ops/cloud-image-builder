@@ -684,12 +684,26 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 try {
                   $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
                   $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
-                  $existingWinrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm');
-                  $allowedIps = @(@($taskRunnerIpAddress) + $existingWinrmAzNetworkSecurityRuleConfig.SourceAddressPrefix);
-                  $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-                    -Name 'allow-winrm' `
-                    -NetworkSecurityGroup $azNetworkSecurityGroup `
-                    -SourceAddressPrefix $allowedIps);
+                  $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
+                  if ($winrmAzNetworkSecurityRuleConfig) {
+                    $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+                      -Name 'allow-winrm' `
+                      -NetworkSecurityGroup $azNetworkSecurityGroup `
+                      -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
+                  } else {
+                    $winrmRuleFromConfig = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
+                    $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
+                      -Name $winrmRuleFromConfig.name `
+                      -Description $winrmRuleFromConfig.Description `
+                      -Access $winrmRuleFromConfig.Access `
+                      -Protocol $winrmRuleFromConfig.Protocol `
+                      -Direction $winrmRuleFromConfig.Direction `
+                      -Priority $winrmRuleFromConfig.Priority `
+                      -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
+                      -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
+                      -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
+                      -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
+                  }
                   if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
                     $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
                     Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
