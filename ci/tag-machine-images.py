@@ -45,7 +45,7 @@ def get_commits(org, repo):
 @cached(cache)
 def guess_config(key, group, diskImageRevision, bootstrapRevision):
   commits = get_commits('mozilla-platform-ops', 'cloud-image-builder')
-  cut_index = next((i for i, c in enumerate(commits) if c['sha'].startswith(diskImageRevision)))
+  cut_index = next((i for i, c in enumerate(commits) if c['sha'].startswith(diskImageRevision)), len(commits) - 1)
   config = None
   for commit in commits[0:cut_index]:
     configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commit.sha, key)
