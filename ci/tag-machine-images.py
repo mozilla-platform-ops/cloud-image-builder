@@ -15,7 +15,7 @@ cache = TTLCache(maxsize=100, ttl=300)
 
 @cached(cache)
 def get_commit(org, repo, revision):
-  commit = next((c for c in get_commits(org, repo) if c.sha.startswith(revision)), None)
+  commit = next((c for c in get_commits(org, repo) if c['sha'].startswith(revision)), None)
   if commit is not None:
     return commit
   try:
@@ -45,7 +45,7 @@ def get_commits(org, repo):
 @cached(cache)
 def guess_config(key, group, diskImageRevision, bootstrapRevision):
   commits = get_commits('mozilla-platform-ops', 'cloud-image-builder')
-  cut_index = next((i for i, c in enumerate(commits) if c.sha.startswith(diskImageRevision)))
+  cut_index = next((i for i, c in enumerate(commits) if c['sha'].startswith(diskImageRevision)))
   config = None
   for commit in commits[0:cut_index]:
     configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commit.sha, key)
