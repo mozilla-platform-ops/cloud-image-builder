@@ -114,7 +114,7 @@ def machineImageManifestHasChanged(platform, key, currentRevision, group):
     print('info: new target group {} detected, in {}.yaml since last image build in revision: {} and current revision: {}'.format(group, key, lastRevision[0:7], currentRevision[0:7]))
     return True
 
-  for tagKey in ['workerType', 'sourceOrganisation', 'sourceRepository', 'sourceRevision']:
+  for tagKey in ['workerType', 'sourceOrganisation', 'sourceRepository', 'sourceRevision', 'sourceScript', 'deploymentId']:
     currentTagValue = next((tag for tag in currentTargetGroupConfig['tag'] if tag['name'] == tagKey), { 'value': '' })['value']
     previousTagValue = next((tag for tag in previousTargetGroupConfig['tag'] if tag['name'] == tagKey), { 'value': '' })['value']
     if currentTagValue == previousTagValue:

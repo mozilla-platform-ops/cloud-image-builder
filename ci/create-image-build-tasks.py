@@ -127,6 +127,8 @@ for platform in ['amazon', 'azure']:
           if queueMachineImageBuild:
             machineImageBuildTaskId = slugid.nice()
             bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
+            bootstrapRepository = next(x for x in target['tag'] if x['name'] == 'sourceRepository')['value']
+            bootstrapOrganisation = next(x for x in target['tag'] if x['name'] == 'sourceOrganisation')['value']
             machineImageBuildDependencies = []
             if platform == 'azure':
               machineImageBuildDependencies.append(azurePurgeTaskId)
@@ -135,8 +137,8 @@ for platform in ['amazon', 'azure']:
             createTask(
               queue = queue,
               taskId = machineImageBuildTaskId,
-              taskName = '02 :: build {} {}/{} machine image from {} {} disk image using bootstrap revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapRevision, platform, target['group']),
-              taskDescription = 'build {} {}/{} machine image from {} {} disk image using bootstrap revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapRevision, platform, target['group']),
+              taskName = '02 :: build {} {}/{} machine image from {} {} disk image using {}/{} revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapOrganisation, bootstrapRepository, bootstrapRevision, platform, target['group']),
+              taskDescription = 'build {} {}/{} machine image from {} {} disk image using {}/{} revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapOrganisation, bootstrapRepository, bootstrapRevision, platform, target['group']),
               maxRunMinutes = 180,
               retries = 5,
               retriggerOnExitCodes = [ 123 ],
