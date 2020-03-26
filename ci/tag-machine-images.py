@@ -18,7 +18,7 @@ def get_commit(org, repo, revision):
   try:
     response = urllib.request.urlopen('https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, revision))
   except urllib.error.HTTPError as e:
-    print(e.code)
+    print('error code {} on commit lookup for {}/{}/{}'.format(e.code, org, repo, revision))
     print(e.read())
     exit(123 if e.code == 403 else 1)
   return json.loads(response.read().decode())
