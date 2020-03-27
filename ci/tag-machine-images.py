@@ -92,7 +92,6 @@ if platform == 'azure':
       print('image has no tags. creating tags...')
     config = guess_config(key, group, diskImageRevision, bootstrapRevision)
     if config is not None:
-      config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
       configTargetGroup = next((t for t in config['target'] if t['group'] == group), None)
       org = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceOrganisation'), { 'value': '' })['value']
       repo = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRepository'), { 'value': '' })['value']
@@ -147,7 +146,6 @@ if platform == 'azure':
       print('snapshot has no tags. creating tags...')
     config = guess_config(key, group, diskImageRevision, bootstrapRevision)
     if config is not None:
-      config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
       configTargetGroup = next((t for t in config['target'] if t['group'] == group), None)
       org = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceOrganisation'), { 'value': '' })['value']
       repo = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRepository'), { 'value': '' })['value']
