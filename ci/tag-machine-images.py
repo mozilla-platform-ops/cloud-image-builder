@@ -56,6 +56,8 @@ def guess_config(key, group, diskImageRevision, bootstrapRevision):
       sourceRevision = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRevision'), { 'value': None })['value']
       if sourceRevision == bootstrapRevision or deploymentId == bootstrapRevision:
         break
+      else:
+        config = None
   return config
 
 
