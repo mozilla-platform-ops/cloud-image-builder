@@ -101,17 +101,17 @@ if platform == 'azure':
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
         'diskImageCommitSha': diskImageCommit['sha'],
-        'diskImageCommitMessage': diskImageCommit['commit']['message'],
+        'diskImageCommitMessage': diskImageCommit['commit']['message'].split('\n')[0],
 
         #'machineImageCommitDate': machineImageCommit['commit']['committer']['date'][0:10],
         #'machineImageCommitTime': machineImageCommit['commit']['committer']['date'],
         #'machineImageCommitSha': machineImageCommit['sha'],
-        #'machineImageCommitMessage': machineImageCommit['commit']['message'],
+        #'machineImageCommitMessage': machineImageCommit['commit']['message'].split('\n')[0],
 
         'bootstrapCommitDate': bootstrapCommit['commit']['committer']['date'][0:10],
         'bootstrapCommitTime': bootstrapCommit['commit']['committer']['date'],
         'bootstrapCommitSha': bootstrapCommit['sha'],
-        'bootstrapCommitMessage': bootstrapCommit['commit']['message'],
+        'bootstrapCommitMessage': bootstrapCommit['commit']['message'].split('\n')[0],
         'bootstrapCommitOrg': org,
         'bootstrapCommitRepo': repo,
 
@@ -155,17 +155,17 @@ if platform == 'azure':
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
         'diskImageCommitSha': diskImageCommit['sha'],
-        'diskImageCommitMessage': diskImageCommit['commit']['message'],
+        'diskImageCommitMessage': diskImageCommit['commit']['message'].split('\n')[0],
 
         #'machineImageCommitDate': machineImageCommit['commit']['committer']['date'][0:10],
         #'machineImageCommitTime': machineImageCommit['commit']['committer']['date'],
         #'machineImageCommitSha': machineImageCommit['sha'],
-        #'machineImageCommitMessage': machineImageCommit['commit']['message'],
+        #'machineImageCommitMessage': machineImageCommit['commit']['message'].split('\n')[0],
 
         'bootstrapCommitDate': bootstrapCommit['commit']['committer']['date'][0:10],
         'bootstrapCommitTime': bootstrapCommit['commit']['committer']['date'],
         'bootstrapCommitSha': bootstrapCommit['sha'],
-        'bootstrapCommitMessage': bootstrapCommit['commit']['message'],
+        'bootstrapCommitMessage': bootstrapCommit['commit']['message'].split('\n')[0],
         'bootstrapCommitOrg': org,
         'bootstrapCommitRepo': repo,
 
