@@ -48,7 +48,7 @@ def guess_config(key, group, diskImageRevision, bootstrapRevision):
   cut_index = next((i for i, c in enumerate(commits) if c['sha'].startswith(diskImageRevision)), len(commits) - 1)
   config = None
   for commit in commits[0:cut_index]:
-    configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commit.sha, key)
+    configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commit['sha'], key)
     if requests.head(configUrl).status_code == requests.codes.ok:
       config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
       configTargetGroup = next((t for t in config['target'] if t['group'] == group))
