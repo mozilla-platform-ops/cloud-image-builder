@@ -4,7 +4,7 @@ param (
   [string] $platform,
 
   [Parameter(Mandatory = $true)]
-  [ValidateSet('win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019')]
+  [ValidateSet('win10-64-occ', 'win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019')]
   [string] $imageKey
 )
 
