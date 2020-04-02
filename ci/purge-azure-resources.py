@@ -20,6 +20,15 @@ def relops_resource_group_filter(rg):
     )
   )
 
+def deallocated_vm_filter(rg, vm):
+  if vm.provisioning_state != 'Succeeded':
+    return False
+  instance = computeClient.virtual_machines.instance_view(rg, vm.name)
+  return (
+    vm.provisioning_state == 'Succeeded'
+    and True
+    # todo: figure out what vm properties contain the deallocated state and add them here
+  )
 
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
   secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
@@ -34,4 +43,9 @@ computeClient = ComputeManagementClient(azureCredentials, secret['subscription']
 resourceClient = ResourceManagementClient(azureCredentials, secret['subscription'])
 
 groups = sys.argv[1:] if len(sys.argv) > 1 else map(lambda x: x.name, filter(relops_resource_group_filter, resourceClient.resource_groups.list()))
-print('groups: {}'.format(', '.join(groups)))
+
+for group in groups:
+  deallocatedVirtualMachines = filter(lambda vm: deallocated_vm_filter(group, vm), computeClient.virtual_machines.list(group))
+  for vm in deallocatedVirtualMachines:
+    instance = computeClient.virtual_machines.instance_view(group, vm.name)
+    print('{}: '.format(vm.name, ', '.join(map(lambda s: s.code, instance.statuses))))

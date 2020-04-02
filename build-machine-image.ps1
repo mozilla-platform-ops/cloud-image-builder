@@ -542,7 +542,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
-              $successfulOccRunDetected = $false;
+              $successfulBootstrapDetected = $false;
 
               $bootstrapOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
               $bootstrapRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
@@ -589,7 +589,18 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
                   }
                   exit 1;
-                }
+                }      
+
+                Set-Content -Path ('{0}\sethostname.ps1' -f $env:Temp) -Value ('[Environment]::SetEnvironmentVariable("COMPUTERNAME", "{0}", "Machine"); $env:COMPUTERNAME = "{0}"; (Get-WmiObject Win32_ComputerSystem).Rename("{0}");' -f $instanceName);
+                $setHostnameCommandResult = (Invoke-AzVMRunCommand `
+                  -ResourceGroupName $target.group `
+                  -VMName $instanceName `
+                  -CommandId 'RunPowerShellScript' `
+                  -ScriptPath ('{0}\sethostname.ps1' -f $env:Temp));
+                Write-Output -InputObject ('set hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setHostnameCommandResult -and $setHostnameCommandResult.Status) { $setHostnameCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                Write-Output -InputObject ('set hostname std out: {0}' -f $setHostnameCommandResult.Value[0].Message);
+                Write-Output -InputObject ('set hostname std err: {0}' -f $setHostnameCommandResult.Value[1].Message);
+                Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
 
                 # set secrets in the instance registry
                 #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
@@ -642,7 +653,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     }
                     if ($verifyBootstrapCompletionCommandOutput -match 'completed') {
                       Write-Output -InputObject ('verify bootstrap completion(iteration {0}) detected bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                      $successfulOccRunDetected = $true;
+                      $successfulBootstrapDetected = $true;
                     } else {
                       Write-Output -InputObject ('verify bootstrap completion(iteration {0}) awaiting bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
                       Start-Sleep -Seconds 30;
@@ -789,7 +800,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 exit;
               }
 
-              if ($successfulOccRunDetected -or ($config.image.architecture -ne 'x86-64')) {
+              if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
                 New-CloudImageFromInstance `
                   -platform $target.platform `
                   -resourceGroupName $target.group `
