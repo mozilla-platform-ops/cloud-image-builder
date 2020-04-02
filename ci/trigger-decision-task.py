@@ -3,19 +3,24 @@ import os
 import slugid
 import taskcluster
 import urllib.request
-from cib import createTask, updateWorkerPool
+from cib import createTask, updateRole, updateWorkerPool
 
 
-workerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
+taskclusterAuth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
+taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
 commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT')), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
 
+updateRole(
+  auth = taskclusterAuth,
+  configPath = 'ci/config/role/branch-master.yaml',
+  roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
 updateWorkerPool(
-  workerManager = workerManager,
+  workerManager = taskclusterWorkerManager,
   configPath = 'ci/config/worker-pool/relops/decision.yaml',
   workerPoolId = 'relops/decision')
 updateWorkerPool(
-  workerManager = workerManager,
+  workerManager = taskclusterWorkerManager,
   configPath = 'ci/config/worker-pool/relops/win2019.yaml',
   workerPoolId = 'relops/win2019')
 

@@ -5,6 +5,20 @@ import yaml
 from datetime import datetime, timedelta
 
 
+def updateRole(auth, configPath, roleId):
+  with open(configPath, 'r') as stream:
+    payload = yaml.safe_load(stream)
+    try:
+      auth.role(roleId = roleId)
+      print('info: role {} existence detected'.format(roleId))
+      auth.updateRole(roleId, payload)
+      print('info: role {} updated'.format(roleId))
+    except:
+      print('info: role {} absence detected'.format(roleId))
+      auth.createRole(roleId, payload)
+      print('info: role {} created'.format(roleId))
+
+
 def updateWorkerPool(workerManager, configPath, workerPoolId):
   with open(configPath, 'r') as stream:
     payload = yaml.safe_load(stream)
