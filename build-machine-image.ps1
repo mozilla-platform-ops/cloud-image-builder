@@ -633,7 +633,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
 
                 if ($bootstrapTriggerCommandResult.Status -eq 'Succeeded') {
-                  Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "bootstrap_stage").bootstrap_stage -like 'complete') { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
+                  Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "bootstrap_stage").bootstrap_stage -like "complete") { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
                   $verifyBootstrapCompletionCommandOutput = '';
                   $verifyBootstrapCompletionIteration = 0;
                   do {
