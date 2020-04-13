@@ -46,7 +46,7 @@ tasks:
     - '/bin/bash'
     - '--login'
     - '-c'
-    - 'pip install azure boto3 pyyaml slugid taskcluster urllib3 && git clone --quiet {{event.head.repo.url}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder fetch && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder checkout {{event.head.repo.branch}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder reset --hard {{event.head.sha}} && python ./cloud-image-builder/ci/create-image-build-tasks.py'
+    - 'pip install azure-mgmt-compute boto3 pyyaml slugid taskcluster urllib3 && git clone --quiet {{event.head.repo.url}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder fetch && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder checkout {{event.head.repo.branch}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder reset --hard {{event.head.sha}} && python ./cloud-image-builder/ci/create-image-build-tasks.py'
   metadata:
     name: '00 :: decision task'
     description: determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same
