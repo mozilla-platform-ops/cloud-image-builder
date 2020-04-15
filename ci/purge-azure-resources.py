@@ -15,6 +15,7 @@ cache = TTLCache(maxsize=100, ttl=300)
 def get_instance(rg_name, vm_name):
   return computeClient.virtual_machines.instance_view(rg_name, vm_name)
 
+
 def relops_resource_group_filter(rg):
   return (
     rg.name.startswith('rg-')
@@ -29,6 +30,7 @@ def relops_resource_group_filter(rg):
     )
   )
 
+
 def deallocated_vm_filter(rg, vm):
   if vm.provisioning_state != 'Succeeded':
     return False
@@ -37,14 +39,18 @@ def deallocated_vm_filter(rg, vm):
     and any(status for status in get_instance(rg, vm.name).statuses if status.code == 'PowerState/deallocated')
   )
 
+
 def orphaned_ni_filter(rg, ni):
   return ni.virtual_machine is None
+
 
 def orphaned_pia_filter(rg, pia):
   return pia.ip_address is None
 
+
 def orphaned_disk_filter(rg, disk):
   return disk.disk_state == 'Unattached'
+
 
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
   secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
