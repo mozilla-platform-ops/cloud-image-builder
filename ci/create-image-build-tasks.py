@@ -74,7 +74,7 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard && pip install azure-mgmt-compute azure-mgmt-network azure-mgmt-resource cachetools taskcluster {} && python ci/purge-azure-resources.py'.format(commitSha)
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install azure-mgmt-compute azure-mgmt-network azure-mgmt-resource cachetools taskcluster && python ci/purge-azure-resources.py'.format(commitSha)
   ],
   scopes = [
     'secrets:get:project/relops/image-builder/dev'
