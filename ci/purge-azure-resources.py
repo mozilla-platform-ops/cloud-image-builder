@@ -31,25 +31,28 @@ def relops_resource_group_filter(rg):
   )
 
 
-def deallocated_vm_filter(rg, vm):
-  if vm.provisioning_state != 'Succeeded':
+def purge_filter(resource_type, resource_group, resource):
+  if resource_type == 'virtual machine':
+    return resource.provisioning_state == 'Succeeded' and any(status for status in get_instance(resource_group, resource.name).statuses if status.code == 'PowerState/deallocated')
+  elif resource_type == 'network interface':
+    return resource.virtual_machine is None
+  elif resource_type == 'public ip address':
+    return resource.ip_address is None
+  elif resource_type == 'disk':
+    return resource.disk_state == 'Unattached'
+  else:
     return False
-  return (
-    vm.provisioning_state == 'Succeeded'
-    and any(status for status in get_instance(rg, vm.name).statuses if status.code == 'PowerState/deallocated')
-  )
 
 
-def orphaned_ni_filter(rg, ni):
-  return ni.virtual_machine is None
-
-
-def orphaned_pia_filter(rg, pia):
-  return pia.ip_address is None
-
-
-def orphaned_disk_filter(rg, disk):
-  return disk.disk_state == 'Unattached'
+def purge_action(resource_type, resource_group, resource):
+  if resource_type == 'virtual machine':
+    computeClient.virtual_machines.delete(resource_group, resource.name)
+  elif resource_type == 'network interface':
+    networkClient.network_interfaces.delete(resource_group, resource.name)
+  elif resource_type == 'public ip address':
+    networkClient.public_ip_addresses.delete(resource_group, resource.name)
+  elif resource_type == 'disk':
+    computeClient.disks.delete(resource_group, resource.name)
 
 
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
@@ -70,37 +73,41 @@ targetGroups = sys.argv[1:] if len(sys.argv) > 1 else list(map(lambda x: x.name,
 
 print('scanning subscription (total resource groups: {}, target resource groups: {}): '.format(len(allGroups), len(targetGroups)))
 
+
 for group in targetGroups:
   print('- scanning resource group {}:'.format(group))
-
-  allVirtualMachines = list(computeClient.virtual_machines.list(group))
-  deallocatedVirtualMachines = list(filter(lambda vm: deallocated_vm_filter(group, vm), allVirtualMachines))
-  print('  - total virtual machines: {}, deallocated virtual machines: {}'.format(len(allVirtualMachines), len(deallocatedVirtualMachines)))
-  for vm in deallocatedVirtualMachines:
-    print('    - deallocated virtual machine: {}'.format(vm.name))
-    computeClient.virtual_machines.delete(group, vm.name)
-    print('      deleted deallocated virtual machine {}'.format(vm.name))
-
-  allNetworkInterfaces = list(networkClient.network_interfaces.list(group))
-  orphanedNetworkInterfaces = list(filter(lambda ni: orphaned_ni_filter(group, ni), allNetworkInterfaces))
-  print('  - total network interfaces: {}, orphaned network interfaces: {}'.format(len(allNetworkInterfaces), len(orphanedNetworkInterfaces)))
-  for ni in orphanedNetworkInterfaces:
-    print('    - orphaned network interface: {}'.format(ni.name))
-    networkClient.network_interfaces.delete(group, ni.name)
-    print('      deleted orphaned network interface {}'.format(ni.name))
-
-  allPublicIpAddresses = list(networkClient.public_ip_addresses.list(group))
-  orphanedPublicIpAddresses = list(filter(lambda pia: orphaned_pia_filter(group, pia), allPublicIpAddresses))
-  print('  - total public ip addresses: {}, orphaned public ip addresses: {}'.format(len(allPublicIpAddresses), len(orphanedPublicIpAddresses)))
-  for pia in orphanedPublicIpAddresses:
-    print('    - orphaned public ip address: {}'.format(pia.name))
-    networkClient.public_ip_addresses.delete(group, pia.name)
-    print('      deleted orphaned public ip address {}'.format(pia.name))
-
-  allDisks = list(computeClient.disks.list_by_resource_group(group))
-  orphanedDisks = list(filter(lambda disk: orphaned_disk_filter(group, disk), allDisks))
-  print('  - total disks: {}, orphaned disks: {}'.format(len(allDisks), len(orphanedDisks)))
-  for disk in orphanedDisks:
-    print('    - orphaned disk: {}'.format(disk.name))
-    computeClient.disks.delete(group, disk.name)
-    print('      deleted orphaned disk {}'.format(disk.name))
+  resources = [
+    {
+      'type-singular': 'virtual machine',
+      'type-plural': 'virtual machines',
+      'filter-descriptor': 'deallocated',
+      'list': computeClient.virtual_machines.list(group)
+    },
+    {
+      'type-singular': 'network interface',
+      'type-plural': 'network interfaces',
+      'filter-descriptor': 'orphaned',
+      'list': networkClient.network_interfaces.list(group)
+    },
+    {
+      'type-singular': 'public ip address',
+      'type-plural': 'public ip addresses',
+      'filter-descriptor': 'orphaned',
+      'list': networkClient.public_ip_addresses.list(group)
+    },
+    {
+      'type-singular': 'disk',
+      'type-plural': 'disks',
+      'filter-descriptor': 'orphaned',
+      'list': computeClient.disks.list_by_resource_group(group)
+    }
+  ]
+  for resource in resources:
+    all_resources = list(resource['list'])
+    filtered_resources = list(filter(lambda x: purge_filter(resource['type-singular'], group, x), all_resources))
+    print('  - {}:'.format(resource['type-plural']))
+    print('    - total: {}'.format(len(all_resources)))
+    print('    - {}: {}'.format(resource['filter-descriptor'], len(filtered_resources)))
+    for resource_item in filtered_resources:
+      purge_action(resource['type-singular'], group, resource_item.name)
+      print('      - deleted: {}'.format(resource_item.name))
