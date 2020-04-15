@@ -32,8 +32,8 @@ print(auth.currentScopes())
 azurePurgeTaskId = slugid.nice()
 createTask(
   queue = queue,
-  taskId = azurePurgeTaskId,
-  taskName = '00 :: purge deprecated azure resources',
+  taskId = slugid.nice(),
+  taskName = '00 :: purge deprecated azure resources - powershell (slow)',
   taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
   maxRunMinutes = 60,
   retries = 5,
@@ -49,6 +49,32 @@ createTask(
     'cd cloud-image-builder',
     'git reset --hard {}'.format(commitSha),
     'powershell -File ci\\purge-deprecated-azure-resources.ps1'
+  ],
+  scopes = [
+    'secrets:get:project/relops/image-builder/dev'
+  ],
+  taskGroupId = taskGroupId
+)
+createTask(
+  queue = queue,
+  image = 'python',
+  taskId = azurePurgeTaskId,
+  taskName = '00 :: purge deprecated azure resources - python (fast)',
+  taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
+  maxRunMinutes = 60,
+  retries = 5,
+  retriggerOnExitCodes = [ 123 ],
+  provisioner = 'relops',
+  workerType = 'decision',
+  priority = 'high',
+  features = {
+    'taskclusterProxy': True
+  },
+  commands = [
+    '/bin/bash',
+    '--login',
+    '-c',
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard && pip install azure-mgmt-compute azure-mgmt-network azure-mgmt-resource cachetools taskcluster {} && python ci/purge-azure-resources.py'.format(commitSha)
   ],
   scopes = [
     'secrets:get:project/relops/image-builder/dev'
