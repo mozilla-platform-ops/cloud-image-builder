@@ -120,7 +120,7 @@ target:
   - name: sourceScript
     value: provisioners/windows/azure/azure-bootstrap.ps1
   - name: deploymentId
-    value: cc4c48d
+    value: 8218c21
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US
