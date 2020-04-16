@@ -542,6 +542,95 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+              if ($target.executions) {
+                foreach ($execution in $target.executions) {
+                  $scriptContent = [String]::Join('; ', $(
+                    $execution.commands | % {
+                      # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
+                      if ($_.format -and $_.tokens) {
+                        ($_.format -f @($_.tokens | % $($_)))
+                      } else {
+                        $_
+                      }
+                    }
+                  ));
+                  $scriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
+                  Set-Content -Path $scriptPath -Value $scriptContent;
+                  Write-Output -InputObject ('invoking bootstrap execution: {0}, with shell: {1}, on: {2}/{3}' -f $execution.name, $execution.shell, $target.group, $instanceName);
+                  switch ($execution.shell) {
+                    'azure-powershell' {
+                      $runCommandResult = (Invoke-AzVMRunCommand `
+                        -ResourceGroupName $target.group `
+                        -VMName $instanceName `
+                        -CommandId 'RunPowerShellScript' `
+                        -ScriptPath $scriptPath);
+                      Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has status: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Status.ToLower());
+                      Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has std out: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[0].Message);
+                      Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has std err: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
+                      if ($execution.test) {
+                        if ($execution.test.std) {
+                          if ($execution.test.std.out) {
+                            if ($execution.test.std.out.like) {
+                              if ($runCommandResult.Value[0].Message -like $execution.test.std.out.like) {
+                                if ($execution.on.success) {
+                                  Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has triggered success action: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.success);
+                                  switch ($execution.on.success) {
+                                    'reboot' {
+                                      Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
+                                    }
+                                    default {
+                                      Write-Output -InputObject ('no implementation found for std out likeness success action: {4}' -f $execution.on.success);
+                                    }
+                                  }
+                                }
+                              } else {
+                                if ($execution.on.failure) {
+                                  Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has triggered failure action: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.failure);
+                                  switch ($execution.on.failure) {
+                                    'reboot' {
+                                      Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
+                                    }
+                                    'retry' {
+                                      try {
+                                        Remove-AzVm `
+                                          -ResourceGroupName $target.group `
+                                          -Name $instanceName `
+                                          -Force;
+                                        Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+                                      } catch {
+                                        Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
+                                      }
+                                      exit 123;
+                                    }
+                                    'fail' {
+                                      try {
+                                        Remove-AzVm `
+                                          -ResourceGroupName $target.group `
+                                          -Name $instanceName `
+                                          -Force;
+                                        Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+                                      } catch {
+                                        Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
+                                      }
+                                      exit 1;
+                                    }
+                                    default {
+                                      Write-Output -InputObject ('no implementation found for std out likeness failure action: {4}' -f $execution.on.failure);
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                          if ($execution.test.std.err) {
+                            Write-Output -InputObject ('no implementation found for std err test action');
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
               $successfulBootstrapDetected = $false;
 
               $bootstrapOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;

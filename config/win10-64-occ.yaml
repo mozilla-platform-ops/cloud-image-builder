@@ -118,11 +118,11 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: 5e93395
+    value: ca3c0aa
   - name: sourceScript
     value: userdata/rundsc.ps1
   - name: deploymentId
-    value: 5e93395
+    value: ca3c0aa
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US

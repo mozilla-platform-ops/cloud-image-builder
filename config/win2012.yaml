@@ -137,28 +137,11 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: b7b9e6f
+    value: ca3c0aa
   - name: sourceScript
     value: userdata/rundsc.ps1
   - name: deploymentId
-    value: b7b9e6f
-  bootstrap: &bootstrap
-    executions:
-    - name: create-registry-key-mozilla-generic-worker
-      shell: azure-powershell
-      commands:
-      - New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force;
-      - New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' -Force;
-    - name: create-registry-value-mozilla-generic-worker-client-id
-      shell: azure-powershell
-      commands:
-      - Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'clientId' -Value 'azure/gecko-1/win2012-azure' -Type 'String';
-    - name: create-registry-value-mozilla-generic-worker-access-token
-      shell: azure-powershell
-      commands:
-      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value '{0}' -Type 'String';
-        tokens:
-        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.accessToken.production.azure.'gecko-1'.win2012
+    value: ca3c0aa
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US
@@ -264,15 +247,15 @@ target:
   - name: workerType
     value: gecko-3-b-win2012-azure
   - name: sourceOrganisation
-    value: mozilla-platform-ops
+    value: mozilla-releng
   - name: sourceRepository
-    value: ronin_puppet
+    value: OpenCloudConfig
   - name: sourceRevision
-    value: cloud_windows
+    value: ca3c0aa
   - name: sourceScript
-    value: provisioners/windows/azure/azure-bootstrap.ps1
+    value: userdata/rundsc.ps1
   - name: deploymentId
-    value: b7b9e6f
+    value: ca3c0aa
 - platform: azure
   group: rg-east-us-gecko-3
   region: East US

@@ -102,11 +102,41 @@ target:
   - name: sourceRepository
     value: OpenCloudConfig
   - name: sourceRevision
-    value: b7b9e6f
+    value: ca3c0aa
   - name: sourceScript
     value: userdata/rundsc.ps1
   - name: deploymentId
-    value: b7b9e6f
+    value: ca3c0aa
+  bootstrap: &bootstrap
+    executions:
+    - name: set-computer-name
+      shell: azure-powershell
+      commands:
+      - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+      - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
+      - $env:COMPUTERNAME = $instanceName
+      - (Get-WmiObject Win32_ComputerSystem).Rename($instanceName)
+      test:
+        std:
+          out:
+            like: $instanceName
+      on:
+        success: reboot
+    - name: create-registry-key-mozilla-generic-worker
+      shell: azure-powershell
+      commands:
+      - New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force
+      - New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' -Force
+    - name: create-registry-value-mozilla-generic-worker-client-id
+      shell: azure-powershell
+      commands:
+      - Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'clientId' -Value 'azure/relops/win2019-azure' -Type 'String';
+    - name: create-registry-value-mozilla-generic-worker-access-token
+      shell: azure-powershell
+      commands:
+      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value '{0}' -Type 'String';
+        tokens:
+        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.accessToken.production.azure.relops.'win2019-azure'
 - platform: azure
   group: rg-east-us-relops
   region: East US
@@ -124,6 +154,7 @@ target:
       name: nsg-east-us-relops
       rules: *rules
   tag: *tag
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-east-us-2-relops
   region: East US 2
@@ -141,6 +172,7 @@ target:
       name: nsg-east-us-2-relops
       rules: *rules
   tag: *tag
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-north-central-us-relops
   region: North Central US
@@ -158,6 +190,7 @@ target:
       name: nsg-north-central-us-relops
       rules: *rules
   tag: *tag
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-south-central-us-relops
   region: South Central US
@@ -175,6 +208,7 @@ target:
       name: nsg-south-central-us-relops
       rules: *rules
   tag: *tag
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-west-us-relops
   region: West US

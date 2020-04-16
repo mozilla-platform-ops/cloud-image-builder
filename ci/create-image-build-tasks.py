@@ -83,7 +83,7 @@ createTask(
 )
 
 for platform in ['amazon', 'azure']:
-  for key in ['win10-64-occ', 'win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu']:
+  for key in ['win10-64-occ', 'win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2019']:
     configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
