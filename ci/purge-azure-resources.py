@@ -44,15 +44,15 @@ def purge_filter(resource_type, resource_group, resource):
     return False
 
 
-def purge_action(resource_type, resource_group, resource):
+def purge_action(resource_type, resource_group, resource_name):
   if resource_type == 'virtual machine':
-    computeClient.virtual_machines.delete(resource_group, resource.name)
+    computeClient.virtual_machines.delete(resource_group, resource_name)
   elif resource_type == 'network interface':
-    networkClient.network_interfaces.delete(resource_group, resource.name)
+    networkClient.network_interfaces.delete(resource_group, resource_name)
   elif resource_type == 'public ip address':
-    networkClient.public_ip_addresses.delete(resource_group, resource.name)
+    networkClient.public_ip_addresses.delete(resource_group, resource_name)
   elif resource_type == 'disk':
-    computeClient.disks.delete(resource_group, resource.name)
+    computeClient.disks.delete(resource_group, resource_name)
 
 
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
