@@ -427,8 +427,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 -targetFirewallConfigurationName $target.network.flow.name `
                 -targetFirewallRules $target.network.flow.rules;
 
-
-
               $newCloudInstanceInstantiationAttempts += 1;
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
               if ($azVm) {
@@ -543,7 +541,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
+                $beI = 0;
+                $beC = $target.bootstrap.executions.Length;
+                Write-Output -InputObject ('detected {0} bootstrap command execution configurations for: {1}/{2}' -f $beC, $target.group, $instanceName);
                 foreach ($execution in $target.bootstrap.executions) {
+                  $beI += 1;
                   $runCommandScriptContent = [String]::Join('; ', $(
                     $execution.commands | % {
                       # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
@@ -556,7 +558,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   ));
                   $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
                   Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
-                  Write-Output -InputObject ('invoking bootstrap execution: {0}, with shell: {1}, on: {2}/{3}' -f $execution.name, $execution.shell, $target.group, $instanceName);
+                  Write-Output -InputObject ('invoking bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
                   switch ($execution.shell) {
                     'azure-powershell' {
                       $runCommandResult = (Invoke-AzVMRunCommand `
@@ -565,16 +567,24 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                         -CommandId 'RunPowerShellScript' `
                         -ScriptPath $runCommandScriptPath);
                       Remove-Item -Path $runCommandScriptPath;
-                      Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has status: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Status.ToLower());
-                      Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has std out: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[0].Message);
-                      Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has std err: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
+                      Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has status: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Status.ToLower());
+                      if ($runCommandResult.Value[0].Message) {
+                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std out:\n{6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[0].Message);
+                      } else {
+                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std out stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
+                      }
+                      if ($runCommandResult.Value[1].Message) {
+                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std err: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
+                      } else {
+                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std err stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
+                      }
                       if ($execution.test) {
                         if ($execution.test.std) {
                           if ($execution.test.std.out) {
                             if ($execution.test.std.out.like) {
                               if ($runCommandResult.Value[0].Message -like $execution.test.std.out.like) {
                                 if ($execution.on.success) {
-                                  Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has triggered success action: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.success);
+                                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered success action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.success);
                                   switch ($execution.on.success) {
                                     'reboot' {
                                       Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
@@ -586,7 +596,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                                 }
                               } else {
                                 if ($execution.on.failure) {
-                                  Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has triggered failure action: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.failure);
+                                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered failure action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.failure);
                                   switch ($execution.on.failure) {
                                     'reboot' {
                                       Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
@@ -630,45 +640,29 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                       }
                     }
                   }
+                  Write-Output -InputObject ('completed bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
                 }
-              }
-              $successfulBootstrapDetected = $false;
-
-              $bootstrapOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
-              $bootstrapRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
-              $bootstrapRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
-              $bootstrapScript = @($target.tag | ? { $_.name -eq 'sourceScript' })[0].value;
-              $bootstrapUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}' -f $bootstrapOrg, $bootstrapRepo, $bootstrapRef, $bootstrapScript);
-              $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
-              $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
-              $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
-              if (($accessToken) -and ($accessToken.Length -eq 44)) {
-                Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
+                # todo: implement successful bootstrap detection for yaml bootstrap sequences
+                $successfulBootstrapDetected = $true;
               } else {
-                Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
-                try {
-                  Remove-AzVm `
-                    -ResourceGroupName $target.group `
-                    -Name $instanceName `
-                    -Force;
-                  Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                } catch {
-                  Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                }
-                exit 123;
-              }
-              $tooltoolToken = ($secret.tooltoolToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
-              if (($tooltoolToken) -and ($tooltoolToken.Length -eq 44)) {
-                Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
-              }
+                Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
 
-              if ($config.image.architecture -eq 'x86-64') {
-                $bootstrapPath = ('{0}\bootstrap.ps1' -f $env:Temp)
-                (New-Object Net.WebClient).DownloadFile($bootstrapUrl, $bootstrapPath);
-                if (Test-Path -Path $bootstrapPath -ErrorAction SilentlyContinue) {
-                  Write-Output -InputObject ('downloaded {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
+                # begin nasty hardcoded bootstrap sequence ##############################################################
+                # todo: remove this code chunk when all yaml configs have been updated with bootstrap.executions sections
+                $successfulBootstrapDetected = $false;
+
+                $bootstrapOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
+                $bootstrapRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
+                $bootstrapRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+                $bootstrapScript = @($target.tag | ? { $_.name -eq 'sourceScript' })[0].value;
+                $bootstrapUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}' -f $bootstrapOrg, $bootstrapRepo, $bootstrapRef, $bootstrapScript);
+                $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
+                $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
+                $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
+                if (($accessToken) -and ($accessToken.Length -eq 44)) {
+                  Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 } else {
-                  Write-Output -InputObject ('failed to download {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
+                  Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
                   try {
                     Remove-AzVm `
                       -ResourceGroupName $target.group `
@@ -678,206 +672,232 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   } catch {
                     Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
                   }
-                  exit 1;
-                }      
-
-                Set-Content -Path ('{0}\sethostname.ps1' -f $env:Temp) -Value ('[Environment]::SetEnvironmentVariable("COMPUTERNAME", "{0}", "Machine"); $env:COMPUTERNAME = "{0}"; (Get-WmiObject Win32_ComputerSystem).Rename("{0}");' -f $instanceName);
-                $setHostnameCommandResult = (Invoke-AzVMRunCommand `
-                  -ResourceGroupName $target.group `
-                  -VMName $instanceName `
-                  -CommandId 'RunPowerShellScript' `
-                  -ScriptPath ('{0}\sethostname.ps1' -f $env:Temp));
-                Write-Output -InputObject ('set hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setHostnameCommandResult -and $setHostnameCommandResult.Status) { $setHostnameCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                Write-Output -InputObject ('set hostname std out: {0}' -f $setHostnameCommandResult.Value[0].Message);
-                Write-Output -InputObject ('set hostname std err: {0}' -f $setHostnameCommandResult.Value[1].Message);
-                Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-
-                # set secrets in the instance registry
-                #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
-                #$setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                #  -ResourceGroupName $target.group `
-                #  -VMName $instanceName `
-                #  -CommandId 'RunPowerShellScript' `
-                #  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                #Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                #Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                #Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-                #Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
-                Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "tooltool" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\tooltool" -Name "token" -Value "{0}" -Type "String"' -f $tooltoolToken);
-                $setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                  -ResourceGroupName $target.group `
-                  -VMName $instanceName `
-                  -CommandId 'RunPowerShellScript' `
-                  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-
-                $bootstrapTriggerCommandResult = (Invoke-AzVMRunCommand `
-                  -ResourceGroupName $target.group `
-                  -VMName $instanceName `
-                  -CommandId 'RunPowerShellScript' `
-                  -ScriptPath $bootstrapPath); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-                Write-Output -InputObject ('bootstrap trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($bootstrapTriggerCommandResult -and $bootstrapTriggerCommandResult.Status) { $bootstrapTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                Write-Output -InputObject ('bootstrap trigger std out: {0}' -f $bootstrapTriggerCommandResult.Value[0].Message);
-                Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
-
-                if ($bootstrapTriggerCommandResult.Status -eq 'Succeeded') {
-                  Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "bootstrap_stage").bootstrap_stage -like "complete") { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
-                  $verifyBootstrapCompletionCommandOutput = '';
-                  $verifyBootstrapCompletionIteration = 0;
-                  do {
-                    $verifyBootstrapCompletionResult = (Invoke-AzVMRunCommand `
-                      -ResourceGroupName $target.group `
-                      -VMName $instanceName `
-                      -CommandId 'RunPowerShellScript' `
-                      -ScriptPath ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) `
-                      -ErrorAction SilentlyContinue);
-                    Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $verifyBootstrapCompletionIteration, $(if ($verifyBootstrapCompletionResult -and $verifyBootstrapCompletionResult.Status) { $verifyBootstrapCompletionResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                    if ($verifyBootstrapCompletionResult.Value) {
-                      $verifyBootstrapCompletionCommandOutput = $verifyBootstrapCompletionResult.Value[0].Message;
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std out: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[0].Message);
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std err: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[1].Message);
-                    } else {
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command did not return a value' -f $verifyBootstrapCompletionIteration);
-                    }
-                    if ($verifyBootstrapCompletionCommandOutput -match 'completed') {
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) detected bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                      $successfulBootstrapDetected = $true;
-                    } else {
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) awaiting bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                      Start-Sleep -Seconds 30;
-                    }
-                    $verifyBootstrapCompletionIteration += 1;
-                  } until ($verifyBootstrapCompletionCommandOutput -match 'completed')
-                  Remove-Item -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp);
+                  exit 123;
                 }
-              } else {
-                # bootstrap over winrm for architectures that do not have an azure vm agent
+                $tooltoolToken = ($secret.tooltoolToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
+                if (($tooltoolToken) -and ($tooltoolToken.Length -eq 44)) {
+                  Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
+                }
 
-                # determine public ip of remote azure instance
-                try {
-                  $azPublicIpAddress = (Get-AzPublicIpAddress `
-                    -ResourceGroupName $target.group `
-                    -Name ('ip-{0}' -f $resourceId) `
-                    -ErrorAction SilentlyContinue);
-                  if ($azPublicIpAddress -and $azPublicIpAddress.IpAddress) {
-                    Write-Output -InputObject ('public ip address : "{0}", determined for: ip-{1}' -f $azPublicIpAddress.IpAddress, $resourceId);
+                if ($config.image.architecture -eq 'x86-64') {
+                  $bootstrapPath = ('{0}\bootstrap.ps1' -f $env:Temp)
+                  (New-Object Net.WebClient).DownloadFile($bootstrapUrl, $bootstrapPath);
+                  if (Test-Path -Path $bootstrapPath -ErrorAction SilentlyContinue) {
+                    Write-Output -InputObject ('downloaded {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
                   } else {
-                    Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}' -f $resourceId);
+                    Write-Output -InputObject ('failed to download {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
+                    try {
+                      Remove-AzVm `
+                        -ResourceGroupName $target.group `
+                        -Name $instanceName `
+                        -Force;
+                      Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
+                    } catch {
+                      Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
+                    }
+                    exit 1;
+                  }      
+
+                  Set-Content -Path ('{0}\sethostname.ps1' -f $env:Temp) -Value ('[Environment]::SetEnvironmentVariable("COMPUTERNAME", "{0}", "Machine"); $env:COMPUTERNAME = "{0}"; (Get-WmiObject Win32_ComputerSystem).Rename("{0}");' -f $instanceName);
+                  $setHostnameCommandResult = (Invoke-AzVMRunCommand `
+                    -ResourceGroupName $target.group `
+                    -VMName $instanceName `
+                    -CommandId 'RunPowerShellScript' `
+                    -ScriptPath ('{0}\sethostname.ps1' -f $env:Temp));
+                  Write-Output -InputObject ('set hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setHostnameCommandResult -and $setHostnameCommandResult.Status) { $setHostnameCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                  Write-Output -InputObject ('set hostname std out: {0}' -f $setHostnameCommandResult.Value[0].Message);
+                  Write-Output -InputObject ('set hostname std err: {0}' -f $setHostnameCommandResult.Value[1].Message);
+                  Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
+
+                  # set secrets in the instance registry
+                  #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
+                  #$setSecretsCommandResult = (Invoke-AzVMRunCommand `
+                  #  -ResourceGroupName $target.group `
+                  #  -VMName $instanceName `
+                  #  -CommandId 'RunPowerShellScript' `
+                  #  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
+                  #Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                  #Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
+                  #Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
+                  #Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
+                  Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "tooltool" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\tooltool" -Name "token" -Value "{0}" -Type "String"' -f $tooltoolToken);
+                  $setSecretsCommandResult = (Invoke-AzVMRunCommand `
+                    -ResourceGroupName $target.group `
+                    -VMName $instanceName `
+                    -CommandId 'RunPowerShellScript' `
+                    -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
+                  Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                  Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
+                  Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
+
+                  $bootstrapTriggerCommandResult = (Invoke-AzVMRunCommand `
+                    -ResourceGroupName $target.group `
+                    -VMName $instanceName `
+                    -CommandId 'RunPowerShellScript' `
+                    -ScriptPath $bootstrapPath); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
+                  Write-Output -InputObject ('bootstrap trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($bootstrapTriggerCommandResult -and $bootstrapTriggerCommandResult.Status) { $bootstrapTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                  Write-Output -InputObject ('bootstrap trigger std out: {0}' -f $bootstrapTriggerCommandResult.Value[0].Message);
+                  Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
+
+                  if ($bootstrapTriggerCommandResult.Status -eq 'Succeeded') {
+                    Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "bootstrap_stage").bootstrap_stage -like "complete") { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
+                    $verifyBootstrapCompletionCommandOutput = '';
+                    $verifyBootstrapCompletionIteration = 0;
+                    do {
+                      $verifyBootstrapCompletionResult = (Invoke-AzVMRunCommand `
+                        -ResourceGroupName $target.group `
+                        -VMName $instanceName `
+                        -CommandId 'RunPowerShellScript' `
+                        -ScriptPath ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) `
+                        -ErrorAction SilentlyContinue);
+                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $verifyBootstrapCompletionIteration, $(if ($verifyBootstrapCompletionResult -and $verifyBootstrapCompletionResult.Status) { $verifyBootstrapCompletionResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
+                      if ($verifyBootstrapCompletionResult.Value) {
+                        $verifyBootstrapCompletionCommandOutput = $verifyBootstrapCompletionResult.Value[0].Message;
+                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std out: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[0].Message);
+                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std err: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[1].Message);
+                      } else {
+                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command did not return a value' -f $verifyBootstrapCompletionIteration);
+                      }
+                      if ($verifyBootstrapCompletionCommandOutput -match 'completed') {
+                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) detected bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
+                        $successfulBootstrapDetected = $true;
+                      } else {
+                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) awaiting bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
+                        Start-Sleep -Seconds 30;
+                      }
+                      $verifyBootstrapCompletionIteration += 1;
+                    } until ($verifyBootstrapCompletionCommandOutput -match 'completed')
+                    Remove-Item -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp);
+                  }
+                } else {
+                  # bootstrap over winrm for architectures that do not have an azure vm agent
+
+                  # determine public ip of remote azure instance
+                  try {
+                    $azPublicIpAddress = (Get-AzPublicIpAddress `
+                      -ResourceGroupName $target.group `
+                      -Name ('ip-{0}' -f $resourceId) `
+                      -ErrorAction SilentlyContinue);
+                    if ($azPublicIpAddress -and $azPublicIpAddress.IpAddress) {
+                      Write-Output -InputObject ('public ip address : "{0}", determined for: ip-{1}' -f $azPublicIpAddress.IpAddress, $resourceId);
+                    } else {
+                      Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}' -f $resourceId);
+                      exit 1;
+                    }
+                  } catch {
+                    Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}. {1}' -f $resourceId, $_.Exception.Message);
                     exit 1;
                   }
-                } catch {
-                  Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}. {1}' -f $resourceId, $_.Exception.Message);
-                  exit 1;
-                }
 
-                # determine administrator password of remote azure instance
-                $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
-                try {
-                  $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageUnattendFileUri)));
-                  $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
-                  [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
-                  Write-Output -InputObject ('fetched disk image unattend file for: {0}, from: {1}' -f $imageKey, $imageUnattendFileUri);
-                } catch {
-                  Write-Output -InputObject ('error: failed to decompress or parse xml from: {0}. {1}' -f $imageUnattendFileUri, $_.Exception.Message);
-                  exit 1;
-                }
-                $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
-                if ($imagePassword) {
-                  Write-Output -InputObject ('image password with length: {0}, extracted from: {1}' -f $imagePassword.Length, $imageUnattendFileUri);
-                } else {
-                  Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
-                  exit 1;
-                }
-                $credential = (New-Object `
-                  -TypeName 'System.Management.Automation.PSCredential' `
-                  -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
-
-                # modify security group of remote azure instance to allow winrm from public ip of local task instance
-                try {
-                  $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
-                  $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
-                  $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
-                  if ($winrmAzNetworkSecurityRuleConfig) {
-                    $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-                      -Name 'allow-winrm' `
-                      -NetworkSecurityGroup $azNetworkSecurityGroup `
-                      -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
-                  } else {
-                    $winrmRuleFromConfig = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
-                    $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
-                      -Name $winrmRuleFromConfig.name `
-                      -Description $winrmRuleFromConfig.Description `
-                      -Access $winrmRuleFromConfig.Access `
-                      -Protocol $winrmRuleFromConfig.Protocol `
-                      -Direction $winrmRuleFromConfig.Direction `
-                      -Priority $winrmRuleFromConfig.Priority `
-                      -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
-                      -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
-                      -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
-                      -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
+                  # determine administrator password of remote azure instance
+                  $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
+                  try {
+                    $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageUnattendFileUri)));
+                    $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
+                    [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
+                    Write-Output -InputObject ('fetched disk image unattend file for: {0}, from: {1}' -f $imageKey, $imageUnattendFileUri);
+                  } catch {
+                    Write-Output -InputObject ('error: failed to decompress or parse xml from: {0}. {1}' -f $imageUnattendFileUri, $_.Exception.Message);
+                    exit 1;
                   }
+                  $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
+                  if ($imagePassword) {
+                    Write-Output -InputObject ('image password with length: {0}, extracted from: {1}' -f $imagePassword.Length, $imageUnattendFileUri);
+                  } else {
+                    Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
+                    exit 1;
+                  }
+                  $credential = (New-Object `
+                    -TypeName 'System.Management.Automation.PSCredential' `
+                    -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
+
+                  # modify security group of remote azure instance to allow winrm from public ip of local task instance
+                  try {
+                    $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
+                    $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
+                    $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
+                    if ($winrmAzNetworkSecurityRuleConfig) {
+                      $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+                        -Name 'allow-winrm' `
+                        -NetworkSecurityGroup $azNetworkSecurityGroup `
+                        -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
+                    } else {
+                      $winrmRuleFromConfig = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
+                      $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
+                        -Name $winrmRuleFromConfig.name `
+                        -Description $winrmRuleFromConfig.Description `
+                        -Access $winrmRuleFromConfig.Access `
+                        -Protocol $winrmRuleFromConfig.Protocol `
+                        -Direction $winrmRuleFromConfig.Direction `
+                        -Priority $winrmRuleFromConfig.Priority `
+                        -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
+                        -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
+                        -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
+                        -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
+                    }
+                    if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+                      $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+                      Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+                    } else {
+                      Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+                      exit 1;
+                    }
+                  } catch {
+                    Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+                    exit 1;
+                  }
+
+                  # enable remoting and add remote azure instance to trusted host list
+                  try {
+                    #Enable-PSRemoting -SkipNetworkProfileCheck -Force
+                    #Write-Output -InputObject 'powershell remoting enabled for session';
+                    $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
+                    Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
+                    $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
+                    #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
+                    & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
+                    Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+                  } catch {
+                    Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+                    exit 1;
+                  }
+
+                  # run remote bootstrap scripts over winrm
+                  try {
+                    Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
+
+                      # todo:
+                      # - set secrets in the instance registry
+                      # - rename host
+                      # - run bootstrap
+                      # - halt system
+
+                      Get-UICulture
+                    }
+                  } catch {
+                    Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
+                    exit 1;
+                  }
+
+                  # modify azure security group to remove public ip of task instance from winrm exceptions
+                  $allowedIps = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
+                  $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+                    -Name 'allow-winrm' `
+                    -NetworkSecurityGroup $azNetworkSecurityGroup `
+                    -SourceAddressPrefix $allowedIps);
                   if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
                     $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-                    Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+                    Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
                   } else {
-                    Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
-                    exit 1;
+                    Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
                   }
-                } catch {
-                  Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-                  exit 1;
+
+                  #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
+                  & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap))
+                  Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
                 }
+                # end nasty hardcoded bootstrap sequence ################################################################
 
-                # enable remoting and add remote azure instance to trusted host list
-                try {
-                  #Enable-PSRemoting -SkipNetworkProfileCheck -Force
-                  #Write-Output -InputObject 'powershell remoting enabled for session';
-                  $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-                  Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
-                  $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
-                  #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
-                  & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
-                  Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-                } catch {
-                  Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-                  exit 1;
-                }
-
-                # run remote bootstrap scripts over winrm
-                try {
-                  Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
-
-                    # todo:
-                    # - set secrets in the instance registry
-                    # - rename host
-                    # - run bootstrap
-                    # - halt system
-
-                    Get-UICulture
-                  }
-                } catch {
-                  Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
-                  exit 1;
-                }
-
-                # modify azure security group to remove public ip of task instance from winrm exceptions
-                $allowedIps = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
-                $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-                  -Name 'allow-winrm' `
-                  -NetworkSecurityGroup $azNetworkSecurityGroup `
-                  -SourceAddressPrefix $allowedIps);
-                if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
-                  $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-                  Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
-                } else {
-                  Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
-                }
-
-                #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
-                & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap))
-                Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
               }
 
               # check (again) that another task hasn't already created the image
