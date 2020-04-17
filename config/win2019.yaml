@@ -122,11 +122,12 @@ target:
             like: $instanceName
       on:
         success: reboot
-    - name: create-registry-key-mozilla-generic-worker
+    - name: create-mozilla-registry-keys
       shell: azure-powershell
       commands:
       - New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force
       - New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' -Force
+      - New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' -Force
     - name: create-registry-value-mozilla-generic-worker-client-id
       shell: azure-powershell
       commands:
@@ -137,6 +138,12 @@ target:
       - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value '{0}' -Type 'String';
         tokens:
         - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.accessToken.production.azure.relops.'win2019-azure'
+    - name: create-registry-value-mozilla-tooltool-access-token
+      shell: azure-powershell
+      commands:
+      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
+        tokens:
+        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.production.azure.relops.'win2019-azure'
 - platform: azure
   group: rg-east-us-relops
   region: East US

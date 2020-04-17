@@ -120,6 +120,7 @@ def machineImageManifestHasChanged(platform, key, currentRevision, group):
   except:
     return True
 
+  targetBootstrapUnchanged = True
   targetTagsUnchanged = True
   currentTargetGroupConfig = next((t for t in currentConfig['target'] if t['group'] == group), None)
   previousTargetGroupConfig = next((t for t in previousConfig['target'] if t['group'] == group), None)
@@ -127,6 +128,18 @@ def machineImageManifestHasChanged(platform, key, currentRevision, group):
   if previousTargetGroupConfig is None and currentTargetGroupConfig is not None:
     print('info: new target group {} detected, in {}.yaml since last image build in revision: {} and current revision: {}'.format(group, key, lastRevision[0:7], currentRevision[0:7]))
     return True
+
+  if 'bootstrap' in currentTargetGroupConfig and 'bootstrap' not in previousTargetGroupConfig:
+    targetBootstrapUnchanged = False
+    print('info: change detected in target group {}. new bootstrap execution commands definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(group, key, lastRevision[0:7], currentRevision[0:7]))
+  elif 'bootstrap' not in currentTargetGroupConfig and 'bootstrap' in previousTargetGroupConfig:
+    targetBootstrapUnchanged = False
+    print('info: change detected in target group {}. removed bootstrap execution commands definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(group, key, lastRevision[0:7], currentRevision[0:7]))
+  elif 'bootstrap' in currentTargetGroupConfig and 'bootstrap' in previousTargetGroupConfig and currentTargetGroupConfig['bootstrap'] != previousTargetGroupConfig['bootstrap']:
+    targetBootstrapUnchanged = False
+    print('info: change detected in target group {}, for bootstrap execution commands definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(group, key, lastRevision[0:7], currentRevision[0:7]))
+  else:
+    print('info: no change detected in target group {}, for bootstrap execution commands definition in {}.yaml between last image build in revision: {} and current revision: {}'.format(group, key, lastRevision[0:7], currentRevision[0:7]))
 
   for tagKey in ['workerType', 'sourceOrganisation', 'sourceRepository', 'sourceRevision', 'sourceScript', 'deploymentId']:
     currentTagValue = next((tag for tag in currentTargetGroupConfig['tag'] if tag['name'] == tagKey), { 'value': '' })['value']
@@ -136,7 +149,8 @@ def machineImageManifestHasChanged(platform, key, currentRevision, group):
     else:
       targetTagsUnchanged = False
       print('info: change detected for tag {}, with previous value "{}", and new value "{}", in target group {}, in {}.yaml between last image build in revision: {} and current revision: {}'.format(tagKey, previousTagValue, currentTagValue, group, key, lastRevision[0:7], currentRevision[0:7]))
-  return not targetTagsUnchanged
+
+  return not (targetBootstrapUnchanged and targetTagsUnchanged)
 
 
 def machineImageExists(taskclusterIndex, platformClient, platform, group, key):

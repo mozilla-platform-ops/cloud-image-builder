@@ -542,9 +542,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
-              if ($target.executions) {
-                foreach ($execution in $target.executions) {
-                  $scriptContent = [String]::Join('; ', $(
+              if ($target.bootstrap.executions) {
+                foreach ($execution in $target.bootstrap.executions) {
+                  $runCommandScriptContent = [String]::Join('; ', $(
                     $execution.commands | % {
                       # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
                       if ($_.format -and $_.tokens) {
@@ -554,8 +554,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                       }
                     }
                   ));
-                  $scriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
-                  Set-Content -Path $scriptPath -Value $scriptContent;
+                  $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
+                  Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
                   Write-Output -InputObject ('invoking bootstrap execution: {0}, with shell: {1}, on: {2}/{3}' -f $execution.name, $execution.shell, $target.group, $instanceName);
                   switch ($execution.shell) {
                     'azure-powershell' {
@@ -563,7 +563,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                         -ResourceGroupName $target.group `
                         -VMName $instanceName `
                         -CommandId 'RunPowerShellScript' `
-                        -ScriptPath $scriptPath);
+                        -ScriptPath $runCommandScriptPath);
+                      Remove-Item -Path $runCommandScriptPath;
                       Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has status: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Status.ToLower());
                       Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has std out: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[0].Message);
                       Write-Output -InputObject ('bootstrap execution: {0}, with shell: {1}, on: {2}/{3}, has std err: {4}' -f $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
