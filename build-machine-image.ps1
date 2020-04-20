@@ -44,14 +44,14 @@ function Invoke-BootstrapExecution {
           -CommandId 'RunPowerShellScript' `
           -ScriptPath $runCommandScriptPath);
         Remove-Item -Path $runCommandScriptPath;
-        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Status.ToLower());
+        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Status.ToLower());
         if ($runCommandResult.Value[0].Message) {
-          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:\n{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Value[0].Message);
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:`n{8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Value[0].Message);
         } else {
           Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std out stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
         }
         if ($runCommandResult.Value[1].Message) {
-          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:\n{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Value[1].Message);
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:`n{8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Value[1].Message);
         } else {
           Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std err stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
         }
@@ -61,7 +61,7 @@ function Invoke-BootstrapExecution {
               if ($execution.test.std.out.match) {
                 if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
                   if ($execution.on.success) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {7}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
                     switch ($execution.on.success) {
                       'reboot' {
                         Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
@@ -73,7 +73,7 @@ function Invoke-BootstrapExecution {
                   }
                 } else {
                   if ($execution.on.failure) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {7}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
                     switch ($execution.on.failure) {
                       'reboot' {
                         Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
