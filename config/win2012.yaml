@@ -157,7 +157,7 @@ target:
       test:
         std:
           out:
-            match: /host renamed/
+            match: host renamed
       on:
         success: reboot
     # set maintenance secrets in the windows registry
@@ -184,7 +184,7 @@ target:
       test:
         std:
           out:
-            match: /ed25519 private key detected/
+            match: ed25519 private key detected
       on:
         failure: retry
 - platform: azure

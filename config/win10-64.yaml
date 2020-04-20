@@ -136,7 +136,7 @@ target:
       test:
         std:
           out:
-            match: /host renamed/
+            match: host renamed
       on:
         success: reboot
     # set maintenance secrets in the windows registry
@@ -163,7 +163,7 @@ target:
       test:
         std:
           out:
-            match: /puppet bootstrap stage is complete/
+            match: puppet bootstrap stage is complete
       on:
         failure: retry
 - platform: azure
