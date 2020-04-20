@@ -114,7 +114,7 @@ function Invoke-BootstrapExecution {
               }
             }
             if ($execution.test.std.err) {
-              Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name));
+              Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
             }
           }
         }
