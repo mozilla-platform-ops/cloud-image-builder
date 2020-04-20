@@ -152,6 +152,95 @@ function Invoke-BootstrapExecutions {
   }
 }
 
+function Remove-Resource {
+  param (
+    [string] $resourceId,
+    [string] $resourceGroupName,
+    [string[]] $resourceNames = @(
+      ('vm-{0}' -f $resourceId),
+      ('ni-{0}' -f $resourceId),
+      ('ip-{0}' -f $resourceId),
+      ('disk-{0}*' -f $resourceId)
+    )
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    # instance instantiation failures leave behind a disk, public ip and network interface which need to be deleted.
+    # the deletion will fail if the failed instance deletion is not complete.
+    # retry for a while before giving up.
+    do {
+      foreach ($resourceName in $resourceNames) {
+        $resourceType = @(
+          'vm' = 'virtual machine';
+          'ni' = 'network interface';
+          'ip' = 'public ip address';
+          'disk' = 'disk'
+        )[$resourceName.Split('-')[0]];
+        switch ($resourceType) {
+          'virtual machine' {
+            if (Get-AzVM -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzVm -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+            }
+          }
+          'network interface' {
+            if (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
+                Write-Output -InputObject (('{0} ::{1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+            }
+          }
+          'public ip address' {
+            if (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
+                Write-Output -InputObject (('{0} ::{1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+            }
+          }
+          'disk' {
+            if (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -Force;
+                Write-Output -InputObject (('{0} ::{1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $vmName));
+            }
+          }
+        }
+      }
+    } while (
+      (Get-AzVM -ResourceGroupName $resourceGroupName -Name ('vm-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
+      (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
+      (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
+      (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName ('disk-{0}*' -f $resourceId) -ErrorAction SilentlyContinue)
+    )
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
@@ -580,88 +669,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
               } else {
                 # if we reach here, we most likely hit an azure quota exception which we may recover from when some quota becomes available.
-                # retry until within 30 minutes of task expiry time, then exit with a code that will prompt a task retry
-                $deleteNiAttempts = 0;
-                $deleteIpAttempts = 0;
-                $deleteDiskAttempts = 0;
-                # instance instantiation failures leave behind a disk, public ip and network interface which need to be deleted.
-                # the deletion will fail if the failed instance deletion is not complete.
-                # retry for a while before giving up.
-                do {
-                  try {
-                    $azNetworkInterface = (Get-AzNetworkInterface `
-                      -ResourceGroupName $target.group `
-                      -Name ('ni-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azNetworkInterface) {
-                      $deleteNiAttempts += 1;
-                      Write-Output -InputObject ('removing aborted AzNetworkInterface {0} / {1} / {2}. attempt {3}...' -f $azNetworkInterface.Location, $azNetworkInterface.ResourceGroupName, $azNetworkInterface.Name, $deleteNiAttempts);
-                      if (Remove-AzNetworkInterface `
-                        -ResourceGroupName $azNetworkInterface.ResourceGroupName `
-                        -Name $azNetworkInterface.Name `
-                        -Force) {
-                        Write-Output -InputObject ('removed aborted AzNetworkInterface {0} / {1} / {2} on attempt {3}' -f $azNetworkInterface.Location, $azNetworkInterface.ResourceGroupName, $azNetworkInterface.Name, $deleteNiAttempts);
-                      } else {
-                        Write-Output -InputObject ('failed to remove aborted AzNetworkInterface {0} / {1} / {2} on attempt {3}' -f $azNetworkInterface.Location, $azNetworkInterface.ResourceGroupName, $azNetworkInterface.Name, $deleteNiAttempts);
-                        if ($deleteNiAttempts -gt 10) {
-                          Write-Output -InputObject ('deletion of AzNetworkInterface: {0}, failed on attempt: {1}. passing control to task retry logic...' -f ('ni-{0}' -f $resourceId), $deleteNiAttempts);
-                          exit 123;
-                        }
-                      }
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to remove aborted AzNetworkInterface {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('ni-{0}' -f $resourceId), $_.Exception.Message);
-                  }
-                  try {
-                    $azPublicIpAddress = (Get-AzPublicIpAddress `
-                      -ResourceGroupName $target.group `
-                      -Name ('ip-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azPublicIpAddress) {
-                      $deleteIpAttempts += 1;
-                      Write-Output -InputObject ('removing aborted AzPublicIpAddress {0} / {1} / {2}. attempt {3}...' -f $azPublicIpAddress.Location, $azPublicIpAddress.ResourceGroupName, $azPublicIpAddress.Name, $deleteIpAttempts);
-                      if (Remove-AzPublicIpAddress `
-                        -ResourceGroupName $azPublicIpAddress.ResourceGroupName `
-                        -Name $azPublicIpAddress.Name `
-                        -Force) {
-                        Write-Output -InputObject ('removed aborted AzPublicIpAddress {0} / {1} / {2} on attempt {3}' -f $azPublicIpAddress.Location, $azPublicIpAddress.ResourceGroupName, $azPublicIpAddress.Name, $deleteIpAttempts);
-                      } else {
-                        Write-Output -InputObject ('failed to remove aborted AzPublicIpAddress {0} / {1} / {2} on attempt {3}' -f $azPublicIpAddress.Location, $azPublicIpAddress.ResourceGroupName, $azPublicIpAddress.Name, $deleteIpAttempts);
-                        if ($deleteIpAttempts -gt 10) {
-                          Write-Output -InputObject ('deletion of AzPublicIpAddress: {0}, failed on attempt: {1}. passing control to task retry logic...' -f ('ip-{0}' -f $resourceId), $deleteIpAttempts);
-                          exit 123;
-                        }
-                      }
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to remove aborted AzPublicIpAddress {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('ip-{0}' -f $resourceId), $_.Exception.Message);
-                  }
-                  try {
-                    $azDisk = (Get-AzDisk `
-                      -ResourceGroupName $target.group `
-                      -DiskName ('disk-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azDisk) {
-                      $deleteDiskAttempts += 1;
-                      Write-Output -InputObject ('removing aborted AzDisk {0} / {1} / {2}. attempt {3}...' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name, $deleteDiskAttempts);
-                      if (Remove-AzDisk `
-                        -ResourceGroupName $azDisk.ResourceGroupName `
-                        -DiskName $azDisk.Name `
-                        -Force) {
-                        Write-Output -InputObject ('removed aborted AzDisk {0} / {1} / {2} on attempt {3}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name, $deleteDiskAttempts);
-                      } else {
-                        Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2} on attempt {3}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name, $deleteDiskAttempts);
-                        if ($deleteDiskAttempts -gt 10) {
-                          Write-Output -InputObject ('deletion of AzDisk: {0}, failed on attempt: {1}. passing control to task retry logic...' -f ('disk-{0}' -f $resourceId), $deleteDiskAttempts);
-                          exit 123;
-                        }
-                      }
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('disk-{0}' -f $resourceId), $_.Exception.Message);
-                  }
-                  Start-Sleep -Seconds (Get-Random -Minimum 10 -Maximum 60)
-                } while ((Get-AzNetworkInterface -ResourceGroupName $target.group -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or (Get-AzPublicIpAddress -ResourceGroupName $target.group -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or (Get-AzDisk -ResourceGroupName $target.group -DiskName ('disk-{0}' -f $resourceId) -ErrorAction SilentlyContinue))
+                Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                 try {
                   $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_ROOT_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
                   [DateTime] $taskStart = $taskDefinition.created;
@@ -705,15 +713,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 } else {
                   Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
-                  try {
-                    Remove-AzVm `
-                      -ResourceGroupName $target.group `
-                      -Name $instanceName `
-                      -Force;
-                    Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                  } catch {
-                    Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                  }
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                   exit 123;
                 }
                 $tooltoolToken = ($secret.tooltoolToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
@@ -728,15 +728,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     Write-Output -InputObject ('downloaded {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
                   } else {
                     Write-Output -InputObject ('failed to download {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
-                    try {
-                      Remove-AzVm `
-                        -ResourceGroupName $target.group `
-                        -Name $instanceName `
-                        -Force;
-                      Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                    } catch {
-                      Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                    }
+                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                     exit 1;
                   }      
 
@@ -1012,16 +1004,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 } catch {
                   Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
                 } finally {
-                  try {
-                    Remove-AzVm `
-                      -ResourceGroupName $target.group `
-                      -Name $instanceName `
-                      -AsJob `
-                      -Force;
-                    Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                  } catch {
-                    Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                  }
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                 }
               }
               Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
