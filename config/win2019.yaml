@@ -114,10 +114,12 @@ target:
       shell: azure-powershell
       commands:
       - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+      - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
       - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
       - $env:COMPUTERNAME = $instanceName
-      - (Get-WmiObject Win32_ComputerSystem).Rename($instanceName) | Out-Null
-      - if ([System.Net.Dns]::GetHostName() -eq $instanceName) { Write-Output -InputObject ('expected hostname detected'); exit 0; } else { Write-Output -InputObject ('host rename failure'); exit 1; }
+      - (Get-WmiObject Win32_ComputerSystem).Rename($instanceName)
+      - $hostname = [System.Net.Dns]::GetHostName()
+      - if ($hostname -eq $instanceName) { Write-Output -InputObject ('expected hostname detected') } else { Write-Output -InputObject ('host rename failure. expcted {0}, actual {1}' -f $instanceName, $hostname) }
       test:
         std:
           out:
