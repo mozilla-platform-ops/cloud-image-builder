@@ -170,7 +170,7 @@ target:
       commands:
       - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
         tokens:
-        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.production.azure.relops.'win2019-azure'
+        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.production.azure.'gecko-1'.'win2012-azure'
     # trigger bootstrap script and await completion
     - name: invoke-occ
       shell: azure-powershell

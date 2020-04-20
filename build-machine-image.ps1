@@ -172,12 +172,12 @@ function Remove-Resource {
     # retry for a while before giving up.
     do {
       foreach ($resourceName in $resourceNames) {
-        $resourceType = @(
+        $resourceType = @{
           'vm' = 'virtual machine';
           'ni' = 'network interface';
           'ip' = 'public ip address';
           'disk' = 'disk'
-        )[$resourceName.Split('-')[0]];
+        }[$resourceName.Split('-')[0]];
         switch ($resourceType) {
           'virtual machine' {
             if (Get-AzVM -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
@@ -742,18 +742,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('set hostname std out: {0}' -f $setHostnameCommandResult.Value[0].Message);
                   Write-Output -InputObject ('set hostname std err: {0}' -f $setHostnameCommandResult.Value[1].Message);
                   Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-
-                  # set secrets in the instance registry
-                  #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
-                  #$setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                  #  -ResourceGroupName $target.group `
-                  #  -VMName $instanceName `
-                  #  -CommandId 'RunPowerShellScript' `
-                  #  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                  #Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  #Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                  #Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-                  #Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
+                  
                   Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "tooltool" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\tooltool" -Name "token" -Value "{0}" -Type "String"' -f $tooltoolToken);
                   $setSecretsCommandResult = (Invoke-AzVMRunCommand `
                     -ResourceGroupName $target.group `
