@@ -61,7 +61,7 @@ function Invoke-BootstrapExecution {
               if ($execution.test.std.out.match) {
                 if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
                   if ($execution.on.success) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
                     switch ($execution.on.success) {
                       'reboot' {
                         Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
@@ -73,7 +73,7 @@ function Invoke-BootstrapExecution {
                   }
                 } else {
                   if ($execution.on.failure) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
                     switch ($execution.on.failure) {
                       'reboot' {
                         Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
@@ -721,78 +721,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 }
 
-                if ($config.image.architecture -eq 'x86-64') {
-                  $bootstrapPath = ('{0}\bootstrap.ps1' -f $env:Temp)
-                  (New-Object Net.WebClient).DownloadFile($bootstrapUrl, $bootstrapPath);
-                  if (Test-Path -Path $bootstrapPath -ErrorAction SilentlyContinue) {
-                    Write-Output -InputObject ('downloaded {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
-                  } else {
-                    Write-Output -InputObject ('failed to download {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
-                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
-                    exit 1;
-                  }      
-
-                  Set-Content -Path ('{0}\sethostname.ps1' -f $env:Temp) -Value ('[Environment]::SetEnvironmentVariable("COMPUTERNAME", "{0}", "Machine"); $env:COMPUTERNAME = "{0}"; (Get-WmiObject Win32_ComputerSystem).Rename("{0}");' -f $instanceName);
-                  $setHostnameCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath ('{0}\sethostname.ps1' -f $env:Temp));
-                  Write-Output -InputObject ('set hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setHostnameCommandResult -and $setHostnameCommandResult.Status) { $setHostnameCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('set hostname std out: {0}' -f $setHostnameCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('set hostname std err: {0}' -f $setHostnameCommandResult.Value[1].Message);
-                  Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-                  
-                  Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "tooltool" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\tooltool" -Name "token" -Value "{0}" -Type "String"' -f $tooltoolToken);
-                  $setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                  Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-
-                  $bootstrapTriggerCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath $bootstrapPath); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-                  Write-Output -InputObject ('bootstrap trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($bootstrapTriggerCommandResult -and $bootstrapTriggerCommandResult.Status) { $bootstrapTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('bootstrap trigger std out: {0}' -f $bootstrapTriggerCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
-
-                  if ($bootstrapTriggerCommandResult.Status -eq 'Succeeded') {
-                    Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "bootstrap_stage").bootstrap_stage -like "complete") { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
-                    $verifyBootstrapCompletionCommandOutput = '';
-                    $verifyBootstrapCompletionIteration = 0;
-                    do {
-                      $verifyBootstrapCompletionResult = (Invoke-AzVMRunCommand `
-                        -ResourceGroupName $target.group `
-                        -VMName $instanceName `
-                        -CommandId 'RunPowerShellScript' `
-                        -ScriptPath ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) `
-                        -ErrorAction SilentlyContinue);
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $verifyBootstrapCompletionIteration, $(if ($verifyBootstrapCompletionResult -and $verifyBootstrapCompletionResult.Status) { $verifyBootstrapCompletionResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                      if ($verifyBootstrapCompletionResult.Value) {
-                        $verifyBootstrapCompletionCommandOutput = $verifyBootstrapCompletionResult.Value[0].Message;
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std out: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[0].Message);
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std err: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[1].Message);
-                      } else {
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command did not return a value' -f $verifyBootstrapCompletionIteration);
-                      }
-                      if ($verifyBootstrapCompletionCommandOutput -match 'completed') {
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) detected bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                        $successfulBootstrapDetected = $true;
-                      } else {
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) awaiting bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                        Start-Sleep -Seconds 30;
-                      }
-                      $verifyBootstrapCompletionIteration += 1;
-                    } until ($verifyBootstrapCompletionCommandOutput -match 'completed')
-                    Remove-Item -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp);
-                  }
-                } else {
+                if ($config.image.architecture -ne 'x86-64') {
                   # bootstrap over winrm for architectures that do not have an azure vm agent
 
                   # determine public ip of remote azure instance
