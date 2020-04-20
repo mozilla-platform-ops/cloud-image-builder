@@ -171,11 +171,21 @@ target:
       - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
         tokens:
         - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.production.azure.relops.'win2019-azure'
-    # trigger bootstrap scripts
+    # trigger bootstrap script and await completion
     - name: invoke-occ
       shell: azure-powershell
       commands:
       - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
+    - name: verify-occ
+      shell: azure-powershell
+      commands:
+      - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') }
+      test:
+        std:
+          out:
+            match: /ed25519 private key detected/
+      on:
+        failure: retry
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US

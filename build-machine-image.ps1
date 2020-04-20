@@ -10,6 +10,148 @@ param (
   [switch] $enableSnapshotCopy = $false
 )
 
+function Invoke-BootstrapExecution {
+  param (
+    [int] $executionNumber,
+    [int] $executionCount,
+    [string] $instanceName,
+    [string] $groupName,
+    [object] $execution,
+    [int] $attemptNumber = 1
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been invoked' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+    $runCommandScriptContent = [String]::Join('; ', @(
+      $execution.commands | % {
+        # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
+        if ($_.format -and $_.tokens) {
+          ($_.format -f @($_.tokens | % $($_)))
+        } else {
+          $_
+        }
+      }
+    ));
+    $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
+    Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
+    switch ($execution.shell) {
+      'azure-powershell' {
+        $runCommandResult = (Invoke-AzVMRunCommand `
+          -ResourceGroupName $groupName `
+          -VMName $instanceName `
+          -CommandId 'RunPowerShellScript' `
+          -ScriptPath $runCommandScriptPath);
+        Remove-Item -Path $runCommandScriptPath;
+        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Status.ToLower());
+        if ($runCommandResult.Value[0].Message) {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:\n{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Value[0].Message);
+        } else {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std out stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+        }
+        if ($runCommandResult.Value[1].Message) {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:\n{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Value[1].Message);
+        } else {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std err stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+        }
+        if ($execution.test) {
+          if ($execution.test.std) {
+            if ($execution.test.std.out) {
+              if ($execution.test.std.out.match) {
+                if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
+                  if ($execution.on.success) {
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {7}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
+                    switch ($execution.on.success) {
+                      'reboot' {
+                        Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
+                      }
+                      default {
+                        Write-Output -InputObject ('{0} :: no implementation found for std out regex match success action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.success);
+                      }
+                    }
+                  }
+                } else {
+                  if ($execution.on.failure) {
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {7}' -f $($MyInvocation.MyCommand.Name), $beI, $beC, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                    switch ($execution.on.failure) {
+                      'reboot' {
+                        Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
+                      }
+                      'retry' {
+                        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1)
+                      }
+                      'retry-task' {
+                        try {
+                          Remove-AzVm `
+                            -ResourceGroupName $groupName `
+                            -Name $instanceName `
+                            -Force;
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion appears successful' -f $($MyInvocation.MyCommand.Name), $instanceName));
+                        } catch {
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion threw exception. {2}' -f $($MyInvocation.MyCommand.Name), $instanceName, $_.Exception.Message));
+                        }
+                        exit 123;
+                      }
+                      'fail' {
+                        try {
+                          Remove-AzVm `
+                            -ResourceGroupName $groupName `
+                            -Name $instanceName `
+                            -Force;
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion appears successful' -f $($MyInvocation.MyCommand.Name), $instanceName));
+                        } catch {
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion threw exception. {2}' -f $($MyInvocation.MyCommand.Name), $instanceName, $_.Exception.Message));
+                        }
+                        exit 1;
+                      }
+                      default {
+                        Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            if ($execution.test.std.err) {
+              Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name));
+            }
+          }
+        }
+      }
+    }
+    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+
+function Invoke-BootstrapExecutions {
+  param (
+    [string] $instanceName,
+    [string] $groupName,
+    [object[]] $executions
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    if ($executions -and $executions.Length) {
+      $executionNumber = 1;
+      Write-Output -InputObject ('{0} :: detected {1} bootstrap command execution configurations for: {2}/{3}' -f $($MyInvocation.MyCommand.Name), $executions.Length, $groupName, $instanceName);
+      foreach ($execution in $executions) {
+        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution
+        $executionNumber += 1;
+      }
+      $successfulBootstrapDetected = $true;
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
@@ -541,108 +683,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
-                $beI = 0;
-                $beC = $target.bootstrap.executions.Length;
-                Write-Output -InputObject ('detected {0} bootstrap command execution configurations for: {1}/{2}' -f $beC, $target.group, $instanceName);
-                foreach ($execution in $target.bootstrap.executions) {
-                  $beI += 1;
-                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5} has been invoked' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                  $runCommandScriptContent = [String]::Join('; ', @(
-                    $execution.commands | % {
-                      # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
-                      if ($_.format -and $_.tokens) {
-                        ($_.format -f @($_.tokens | % $($_)))
-                      } else {
-                        $_
-                      }
-                    }
-                  ));
-                  $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
-                  Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
-                  switch ($execution.shell) {
-                    'azure-powershell' {
-                      $runCommandResult = (Invoke-AzVMRunCommand `
-                        -ResourceGroupName $target.group `
-                        -VMName $instanceName `
-                        -CommandId 'RunPowerShellScript' `
-                        -ScriptPath $runCommandScriptPath);
-                      Remove-Item -Path $runCommandScriptPath;
-                      Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has status: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Status.ToLower());
-                      if ($runCommandResult.Value[0].Message) {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std out:\n{6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[0].Message);
-                      } else {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std out stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                      }
-                      if ($runCommandResult.Value[1].Message) {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std err:\n{6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
-                      } else {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std err stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                      }
-                      if ($execution.test) {
-                        if ($execution.test.std) {
-                          if ($execution.test.std.out) {
-                            if ($execution.test.std.out.match) {
-                              if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
-                                if ($execution.on.success) {
-                                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered success action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.success);
-                                  switch ($execution.on.success) {
-                                    'reboot' {
-                                      Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-                                    }
-                                    default {
-                                      Write-Output -InputObject ('no implementation found for std out regex match success action: {4}' -f $execution.on.success);
-                                    }
-                                  }
-                                }
-                              } else {
-                                if ($execution.on.failure) {
-                                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered failure action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.failure);
-                                  switch ($execution.on.failure) {
-                                    'reboot' {
-                                      Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-                                    }
-                                    'retry' {
-                                      try {
-                                        Remove-AzVm `
-                                          -ResourceGroupName $target.group `
-                                          -Name $instanceName `
-                                          -Force;
-                                        Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                                      } catch {
-                                        Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                                      }
-                                      exit 123;
-                                    }
-                                    'fail' {
-                                      try {
-                                        Remove-AzVm `
-                                          -ResourceGroupName $target.group `
-                                          -Name $instanceName `
-                                          -Force;
-                                        Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                                      } catch {
-                                        Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                                      }
-                                      exit 1;
-                                    }
-                                    default {
-                                      Write-Output -InputObject ('no implementation found for std out regex match failure action: {4}' -f $execution.on.failure);
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                          if ($execution.test.std.err) {
-                            Write-Output -InputObject ('no implementation found for std err test action');
-                          }
-                        }
-                      }
-                    }
-                  }
-                  Write-Output -InputObject ('completed bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                }
-                # todo: implement successful bootstrap detection for yaml bootstrap sequences
+                Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions
+                # todo implement success check
                 $successfulBootstrapDetected = $true;
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
