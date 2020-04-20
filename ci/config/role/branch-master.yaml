@@ -18,4 +18,3 @@ scopes:
 - worker-manager:provider:aws
 - worker-manager:provider:azure
 - secrets:get:project/relops/image-builder/dev
-- queue:create-task:medium:relops/decision

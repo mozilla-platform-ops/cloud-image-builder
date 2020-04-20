@@ -10,6 +10,243 @@ param (
   [switch] $enableSnapshotCopy = $false
 )
 
+function Invoke-BootstrapExecution {
+  param (
+    [int] $executionNumber,
+    [int] $executionCount,
+    [string] $instanceName,
+    [string] $groupName,
+    [object] $execution,
+    [int] $attemptNumber = 1
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been invoked' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+    $runCommandScriptContent = [String]::Join('; ', @(
+      $execution.commands | % {
+        # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
+        if ($_.format -and $_.tokens) {
+          ($_.format -f @($_.tokens | % $($_)))
+        } else {
+          $_
+        }
+      }
+    ));
+    $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
+    Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
+    switch ($execution.shell) {
+      'azure-powershell' {
+        $runCommandResult = (Invoke-AzVMRunCommand `
+          -ResourceGroupName $groupName `
+          -VMName $instanceName `
+          -CommandId 'RunPowerShellScript' `
+          -ScriptPath $runCommandScriptPath);
+        Remove-Item -Path $runCommandScriptPath;
+        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $runCommandResult.Status.ToLower());
+        if ($runCommandResult.Value[0].Message) {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+          Write-Output -InputObject $runCommandResult.Value[0].Message;
+        } else {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std out stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+        }
+        if ($runCommandResult.Value[1].Message) {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+          Write-Output -InputObject $runCommandResult.Value[1].Message;
+        } else {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std err stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+        }
+        if ($execution.test) {
+          if ($execution.test.std) {
+            if ($execution.test.std.out) {
+              if ($execution.test.std.out.match) {
+                if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
+                  Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                  if ($execution.on.success) {
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
+                    switch ($execution.on.success) {
+                      'reboot' {
+                        Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
+                      }
+                      default {
+                        Write-Output -InputObject ('{0} :: no implementation found for std out regex match success action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.success);
+                      }
+                    }
+                  }
+                } else {
+                  Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                  if ($execution.on.failure) {
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                    switch ($execution.on.failure) {
+                      'reboot' {
+                        Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
+                      }
+                      'retry' {
+                        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1)
+                      }
+                      'retry-task' {
+                        try {
+                          Remove-AzVm `
+                            -ResourceGroupName $groupName `
+                            -Name $instanceName `
+                            -Force;
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion appears successful' -f $($MyInvocation.MyCommand.Name), $instanceName));
+                        } catch {
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion threw exception. {2}' -f $($MyInvocation.MyCommand.Name), $instanceName, $_.Exception.Message));
+                        }
+                        exit 123;
+                      }
+                      'fail' {
+                        try {
+                          Remove-AzVm `
+                            -ResourceGroupName $groupName `
+                            -Name $instanceName `
+                            -Force;
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion appears successful' -f $($MyInvocation.MyCommand.Name), $instanceName));
+                        } catch {
+                          Write-Output -InputObject (('{0} :: instance: {1}, deletion threw exception. {2}' -f $($MyInvocation.MyCommand.Name), $instanceName, $_.Exception.Message));
+                        }
+                        exit 1;
+                      }
+                      default {
+                        Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            if ($execution.test.std.err) {
+              Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
+            }
+          }
+        }
+      }
+    }
+    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+
+function Invoke-BootstrapExecutions {
+  param (
+    [string] $instanceName,
+    [string] $groupName,
+    [object[]] $executions
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    if ($executions -and $executions.Length) {
+      $executionNumber = 1;
+      Write-Output -InputObject ('{0} :: detected {1} bootstrap command execution configurations for: {2}/{3}' -f $($MyInvocation.MyCommand.Name), $executions.Length, $groupName, $instanceName);
+      foreach ($execution in $executions) {
+        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution
+        $executionNumber += 1;
+      }
+      $successfulBootstrapDetected = $true;
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+
+function Remove-Resource {
+  param (
+    [string] $resourceId,
+    [string] $resourceGroupName,
+    [string[]] $resourceNames = @(
+      ('vm-{0}' -f $resourceId),
+      ('ni-{0}' -f $resourceId),
+      ('ip-{0}' -f $resourceId),
+      ('disk-{0}*' -f $resourceId)
+    )
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    # instance instantiation failures leave behind a disk, public ip and network interface which need to be deleted.
+    # the deletion will fail if the failed instance deletion is not complete.
+    # retry for a while before giving up.
+    do {
+      foreach ($resourceName in $resourceNames) {
+        $resourceType = @{
+          'vm' = 'virtual machine';
+          'ni' = 'network interface';
+          'ip' = 'public ip address';
+          'disk' = 'disk'
+        }[$resourceName.Split('-')[0]];
+        switch ($resourceType) {
+          'virtual machine' {
+            if (Get-AzVM -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzVm -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+            }
+          }
+          'network interface' {
+            if (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+            }
+          }
+          'public ip address' {
+            if (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+              try {
+                Remove-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+              } catch {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $_.Exception.Message));
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+            }
+          }
+          'disk' {
+            if (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue) {
+              foreach ($azDisk in @(Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue)) {
+                try {
+                  Remove-AzDisk -ResourceGroupName $resourceGroupName -DiskName $azDisk.Name -Force;
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name));
+                } catch {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name, $_.Exception.Message));
+                }
+              }
+            } else {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3} not found. removal skipped' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+            }
+          }
+        }
+      }
+    } while (
+      (Get-AzVM -ResourceGroupName $resourceGroupName -Name ('vm-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
+      (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
+      (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
+      (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName ('disk-{0}*' -f $resourceId) -ErrorAction SilentlyContinue)
+    )
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
@@ -438,88 +675,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
               } else {
                 # if we reach here, we most likely hit an azure quota exception which we may recover from when some quota becomes available.
-                # retry until within 30 minutes of task expiry time, then exit with a code that will prompt a task retry
-                $deleteNiAttempts = 0;
-                $deleteIpAttempts = 0;
-                $deleteDiskAttempts = 0;
-                # instance instantiation failures leave behind a disk, public ip and network interface which need to be deleted.
-                # the deletion will fail if the failed instance deletion is not complete.
-                # retry for a while before giving up.
-                do {
-                  try {
-                    $azNetworkInterface = (Get-AzNetworkInterface `
-                      -ResourceGroupName $target.group `
-                      -Name ('ni-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azNetworkInterface) {
-                      $deleteNiAttempts += 1;
-                      Write-Output -InputObject ('removing aborted AzNetworkInterface {0} / {1} / {2}. attempt {3}...' -f $azNetworkInterface.Location, $azNetworkInterface.ResourceGroupName, $azNetworkInterface.Name, $deleteNiAttempts);
-                      if (Remove-AzNetworkInterface `
-                        -ResourceGroupName $azNetworkInterface.ResourceGroupName `
-                        -Name $azNetworkInterface.Name `
-                        -Force) {
-                        Write-Output -InputObject ('removed aborted AzNetworkInterface {0} / {1} / {2} on attempt {3}' -f $azNetworkInterface.Location, $azNetworkInterface.ResourceGroupName, $azNetworkInterface.Name, $deleteNiAttempts);
-                      } else {
-                        Write-Output -InputObject ('failed to remove aborted AzNetworkInterface {0} / {1} / {2} on attempt {3}' -f $azNetworkInterface.Location, $azNetworkInterface.ResourceGroupName, $azNetworkInterface.Name, $deleteNiAttempts);
-                        if ($deleteNiAttempts -gt 10) {
-                          Write-Output -InputObject ('deletion of AzNetworkInterface: {0}, failed on attempt: {1}. passing control to task retry logic...' -f ('ni-{0}' -f $resourceId), $deleteNiAttempts);
-                          exit 123;
-                        }
-                      }
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to remove aborted AzNetworkInterface {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('ni-{0}' -f $resourceId), $_.Exception.Message);
-                  }
-                  try {
-                    $azPublicIpAddress = (Get-AzPublicIpAddress `
-                      -ResourceGroupName $target.group `
-                      -Name ('ip-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azPublicIpAddress) {
-                      $deleteIpAttempts += 1;
-                      Write-Output -InputObject ('removing aborted AzPublicIpAddress {0} / {1} / {2}. attempt {3}...' -f $azPublicIpAddress.Location, $azPublicIpAddress.ResourceGroupName, $azPublicIpAddress.Name, $deleteIpAttempts);
-                      if (Remove-AzPublicIpAddress `
-                        -ResourceGroupName $azPublicIpAddress.ResourceGroupName `
-                        -Name $azPublicIpAddress.Name `
-                        -Force) {
-                        Write-Output -InputObject ('removed aborted AzPublicIpAddress {0} / {1} / {2} on attempt {3}' -f $azPublicIpAddress.Location, $azPublicIpAddress.ResourceGroupName, $azPublicIpAddress.Name, $deleteIpAttempts);
-                      } else {
-                        Write-Output -InputObject ('failed to remove aborted AzPublicIpAddress {0} / {1} / {2} on attempt {3}' -f $azPublicIpAddress.Location, $azPublicIpAddress.ResourceGroupName, $azPublicIpAddress.Name, $deleteIpAttempts);
-                        if ($deleteIpAttempts -gt 10) {
-                          Write-Output -InputObject ('deletion of AzPublicIpAddress: {0}, failed on attempt: {1}. passing control to task retry logic...' -f ('ip-{0}' -f $resourceId), $deleteIpAttempts);
-                          exit 123;
-                        }
-                      }
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to remove aborted AzPublicIpAddress {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('ip-{0}' -f $resourceId), $_.Exception.Message);
-                  }
-                  try {
-                    $azDisk = (Get-AzDisk `
-                      -ResourceGroupName $target.group `
-                      -DiskName ('disk-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azDisk) {
-                      $deleteDiskAttempts += 1;
-                      Write-Output -InputObject ('removing aborted AzDisk {0} / {1} / {2}. attempt {3}...' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name, $deleteDiskAttempts);
-                      if (Remove-AzDisk `
-                        -ResourceGroupName $azDisk.ResourceGroupName `
-                        -DiskName $azDisk.Name `
-                        -Force) {
-                        Write-Output -InputObject ('removed aborted AzDisk {0} / {1} / {2} on attempt {3}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name, $deleteDiskAttempts);
-                      } else {
-                        Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2} on attempt {3}' -f $azDisk.Location, $azDisk.ResourceGroupName, $azDisk.Name, $deleteDiskAttempts);
-                        if ($deleteDiskAttempts -gt 10) {
-                          Write-Output -InputObject ('deletion of AzDisk: {0}, failed on attempt: {1}. passing control to task retry logic...' -f ('disk-{0}' -f $resourceId), $deleteDiskAttempts);
-                          exit 123;
-                        }
-                      }
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to remove aborted AzDisk {0} / {1} / {2}. {3}' -f $target.region, $target.group, ('disk-{0}' -f $resourceId), $_.Exception.Message);
-                  }
-                  Start-Sleep -Seconds (Get-Random -Minimum 10 -Maximum 60)
-                } while ((Get-AzNetworkInterface -ResourceGroupName $target.group -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or (Get-AzPublicIpAddress -ResourceGroupName $target.group -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or (Get-AzDisk -ResourceGroupName $target.group -DiskName ('disk-{0}' -f $resourceId) -ErrorAction SilentlyContinue))
+                Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                 try {
                   $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_ROOT_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
                   [DateTime] $taskStart = $taskDefinition.created;
@@ -541,108 +697,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
-                $beI = 0;
-                $beC = $target.bootstrap.executions.Length;
-                Write-Output -InputObject ('detected {0} bootstrap command execution configurations for: {1}/{2}' -f $beC, $target.group, $instanceName);
-                foreach ($execution in $target.bootstrap.executions) {
-                  $beI += 1;
-                  $runCommandScriptContent = [String]::Join('; ', $(
-                    $execution.commands | % {
-                      # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
-                      if ($_.format -and $_.tokens) {
-                        ($_.format -f @($_.tokens | % $($_)))
-                      } else {
-                        $_
-                      }
-                    }
-                  ));
-                  $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
-                  Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
-                  Write-Output -InputObject ('invoking bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                  switch ($execution.shell) {
-                    'azure-powershell' {
-                      $runCommandResult = (Invoke-AzVMRunCommand `
-                        -ResourceGroupName $target.group `
-                        -VMName $instanceName `
-                        -CommandId 'RunPowerShellScript' `
-                        -ScriptPath $runCommandScriptPath);
-                      Remove-Item -Path $runCommandScriptPath;
-                      Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has status: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Status.ToLower());
-                      if ($runCommandResult.Value[0].Message) {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std out:\n{6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[0].Message);
-                      } else {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std out stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                      }
-                      if ($runCommandResult.Value[1].Message) {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std err: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
-                      } else {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std err stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                      }
-                      if ($execution.test) {
-                        if ($execution.test.std) {
-                          if ($execution.test.std.out) {
-                            if ($execution.test.std.out.like) {
-                              if ($runCommandResult.Value[0].Message -like $execution.test.std.out.like) {
-                                if ($execution.on.success) {
-                                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered success action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.success);
-                                  switch ($execution.on.success) {
-                                    'reboot' {
-                                      Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-                                    }
-                                    default {
-                                      Write-Output -InputObject ('no implementation found for std out likeness success action: {4}' -f $execution.on.success);
-                                    }
-                                  }
-                                }
-                              } else {
-                                if ($execution.on.failure) {
-                                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered failure action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.failure);
-                                  switch ($execution.on.failure) {
-                                    'reboot' {
-                                      Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-                                    }
-                                    'retry' {
-                                      try {
-                                        Remove-AzVm `
-                                          -ResourceGroupName $target.group `
-                                          -Name $instanceName `
-                                          -Force;
-                                        Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                                      } catch {
-                                        Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                                      }
-                                      exit 123;
-                                    }
-                                    'fail' {
-                                      try {
-                                        Remove-AzVm `
-                                          -ResourceGroupName $target.group `
-                                          -Name $instanceName `
-                                          -Force;
-                                        Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                                      } catch {
-                                        Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                                      }
-                                      exit 1;
-                                    }
-                                    default {
-                                      Write-Output -InputObject ('no implementation found for std out likeness failure action: {4}' -f $execution.on.failure);
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                          if ($execution.test.std.err) {
-                            Write-Output -InputObject ('no implementation found for std err test action');
-                          }
-                        }
-                      }
-                    }
-                  }
-                  Write-Output -InputObject ('completed bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
-                }
-                # todo: implement successful bootstrap detection for yaml bootstrap sequences
+                Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions
+                # todo implement success check
                 $successfulBootstrapDetected = $true;
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
@@ -663,15 +719,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 } else {
                   Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
-                  try {
-                    Remove-AzVm `
-                      -ResourceGroupName $target.group `
-                      -Name $instanceName `
-                      -Force;
-                    Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                  } catch {
-                    Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                  }
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                   exit 123;
                 }
                 $tooltoolToken = ($secret.tooltoolToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
@@ -679,97 +727,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 }
 
-                if ($config.image.architecture -eq 'x86-64') {
-                  $bootstrapPath = ('{0}\bootstrap.ps1' -f $env:Temp)
-                  (New-Object Net.WebClient).DownloadFile($bootstrapUrl, $bootstrapPath);
-                  if (Test-Path -Path $bootstrapPath -ErrorAction SilentlyContinue) {
-                    Write-Output -InputObject ('downloaded {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
-                  } else {
-                    Write-Output -InputObject ('failed to download {0} from {1}' -f $bootstrapPath, $bootstrapUrl);
-                    try {
-                      Remove-AzVm `
-                        -ResourceGroupName $target.group `
-                        -Name $instanceName `
-                        -Force;
-                      Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                    } catch {
-                      Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                    }
-                    exit 1;
-                  }      
-
-                  Set-Content -Path ('{0}\sethostname.ps1' -f $env:Temp) -Value ('[Environment]::SetEnvironmentVariable("COMPUTERNAME", "{0}", "Machine"); $env:COMPUTERNAME = "{0}"; (Get-WmiObject Win32_ComputerSystem).Rename("{0}");' -f $instanceName);
-                  $setHostnameCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath ('{0}\sethostname.ps1' -f $env:Temp));
-                  Write-Output -InputObject ('set hostname {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setHostnameCommandResult -and $setHostnameCommandResult.Status) { $setHostnameCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('set hostname std out: {0}' -f $setHostnameCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('set hostname std err: {0}' -f $setHostnameCommandResult.Value[1].Message);
-                  Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
-
-                  # set secrets in the instance registry
-                  #Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "GenericWorker" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "clientId" -Value "{0}/{1}/{2}" -Type "String"; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\GenericWorker" -Name "accessToken" -Value "{3}" -Type "String"' -f $target.platform, $workerDomain, $workerVariant, $accessToken);
-                  #$setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                  #  -ResourceGroupName $target.group `
-                  #  -VMName $instanceName `
-                  #  -CommandId 'RunPowerShellScript' `
-                  #  -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                  #Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  #Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                  #Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-                  #Remove-Item -Path ('{0}\setsecrets.ps1' -f $env:Temp);
-                  Set-Content -Path ('{0}\setsecrets.ps1' -f $env:Temp) -Value ('New-Item -Path "HKLM:\SOFTWARE" -Name "Mozilla" -Force; New-Item -Path "HKLM:\SOFTWARE\Mozilla" -Name "tooltool" -Force; Set-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\tooltool" -Name "token" -Value "{0}" -Type "String"' -f $tooltoolToken);
-                  $setSecretsCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath ('{0}\setsecrets.ps1' -f $env:Temp));
-                  Write-Output -InputObject ('set secrets {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($setSecretsCommandResult -and $setSecretsCommandResult.Status) { $setSecretsCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('set secrets std out: {0}' -f $setSecretsCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('set secrets std err: {0}' -f $setSecretsCommandResult.Value[1].Message);
-
-                  $bootstrapTriggerCommandResult = (Invoke-AzVMRunCommand `
-                    -ResourceGroupName $target.group `
-                    -VMName $instanceName `
-                    -CommandId 'RunPowerShellScript' `
-                    -ScriptPath $bootstrapPath); #-Parameter @{"arg1" = "var1";"arg2" = "var2"}
-                  Write-Output -InputObject ('bootstrap trigger {0} on instance: {1} in region: {2}, cloud platform: {3}' -f $(if ($bootstrapTriggerCommandResult -and $bootstrapTriggerCommandResult.Status) { $bootstrapTriggerCommandResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                  Write-Output -InputObject ('bootstrap trigger std out: {0}' -f $bootstrapTriggerCommandResult.Value[0].Message);
-                  Write-Output -InputObject ('bootstrap trigger std err: {0}' -f $bootstrapTriggerCommandResult.Value[1].Message);
-
-                  if ($bootstrapTriggerCommandResult.Status -eq 'Succeeded') {
-                    Set-Content -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) -Value 'if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Mozilla\ronin_puppet" -Name "bootstrap_stage").bootstrap_stage -like "complete") { Write-Output -InputObject "completed" } else { Write-Output -InputObject "incomplete" }';
-                    $verifyBootstrapCompletionCommandOutput = '';
-                    $verifyBootstrapCompletionIteration = 0;
-                    do {
-                      $verifyBootstrapCompletionResult = (Invoke-AzVMRunCommand `
-                        -ResourceGroupName $target.group `
-                        -VMName $instanceName `
-                        -CommandId 'RunPowerShellScript' `
-                        -ScriptPath ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp) `
-                        -ErrorAction SilentlyContinue);
-                      Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command {1} on instance: {2} in region: {3}, cloud platform: {4}' -f $verifyBootstrapCompletionIteration, $(if ($verifyBootstrapCompletionResult -and $verifyBootstrapCompletionResult.Status) { $verifyBootstrapCompletionResult.Status.ToLower() } else { 'status unknown' }), $instanceName, $target.region, $target.platform);
-                      if ($verifyBootstrapCompletionResult.Value) {
-                        $verifyBootstrapCompletionCommandOutput = $verifyBootstrapCompletionResult.Value[0].Message;
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std out: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[0].Message);
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) std err: {1}' -f $verifyBootstrapCompletionIteration, $verifyBootstrapCompletionResult.Value[1].Message);
-                      } else {
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) command did not return a value' -f $verifyBootstrapCompletionIteration);
-                      }
-                      if ($verifyBootstrapCompletionCommandOutput -match 'completed') {
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) detected bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                        $successfulBootstrapDetected = $true;
-                      } else {
-                        Write-Output -InputObject ('verify bootstrap completion(iteration {0}) awaiting bootstrap completion on: {1}' -f $verifyBootstrapCompletionIteration, $instanceName);
-                        Start-Sleep -Seconds 30;
-                      }
-                      $verifyBootstrapCompletionIteration += 1;
-                    } until ($verifyBootstrapCompletionCommandOutput -match 'completed')
-                    Remove-Item -Path ('{0}\verifyBootstrapCompletion.ps1' -f $env:Temp);
-                  }
-                } else {
+                if ($config.image.architecture -ne 'x86-64') {
                   # bootstrap over winrm for architectures that do not have an azure vm agent
 
                   # determine public ip of remote azure instance
@@ -970,16 +928,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 } catch {
                   Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
                 } finally {
-                  try {
-                    Remove-AzVm `
-                      -ResourceGroupName $target.group `
-                      -Name $instanceName `
-                      -AsJob `
-                      -Force;
-                    Write-Output -InputObject ('instance: {0}, deletion appears successful' -f $instanceName);
-                  } catch {
-                    Write-Output -InputObject ('instance: {0}, deletion threw exception. {1}' -f $instanceName, $_.Exception.Message);
-                  }
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                 }
               }
               Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);

@@ -109,19 +109,23 @@ target:
     value: ca3c0aa
   bootstrap: &bootstrap
     executions:
+    # set hostname to match the azure machine name so that debug logs can be found in papertrail
     - name: set-computer-name
       shell: azure-powershell
       commands:
       - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+      - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
       - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
       - $env:COMPUTERNAME = $instanceName
-      - (Get-WmiObject Win32_ComputerSystem).Rename($instanceName)
+      - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
+      - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
       test:
         std:
           out:
-            like: $instanceName
+            match: host renamed
       on:
         success: reboot
+    # set maintenance secrets in the windows registry
     - name: create-mozilla-registry-keys
       shell: azure-powershell
       commands:
@@ -144,6 +148,21 @@ target:
       - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
         tokens:
         - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.production.azure.relops.'win2019-azure'
+    # trigger bootstrap script and await completion
+    - name: invoke-occ
+      shell: azure-powershell
+      commands:
+      - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
+    - name: verify-occ
+      shell: azure-powershell
+      commands:
+      - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
+      test:
+        std:
+          out:
+            match: ed25519 private key detected
+      on:
+        failure: retry
 - platform: azure
   group: rg-east-us-relops
   region: East US
@@ -233,3 +252,4 @@ target:
       name: nsg-west-us-relops
       rules: *rules
   tag: *tag
+  bootstrap: *bootstrap
