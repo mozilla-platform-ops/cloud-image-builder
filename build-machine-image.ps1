@@ -546,7 +546,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 Write-Output -InputObject ('detected {0} bootstrap command execution configurations for: {1}/{2}' -f $beC, $target.group, $instanceName);
                 foreach ($execution in $target.bootstrap.executions) {
                   $beI += 1;
-                  $runCommandScriptContent = [String]::Join('; ', $(
+                  Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5} has been invoked' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
+                  $runCommandScriptContent = [String]::Join('; ', @(
                     $execution.commands | % {
                       # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
                       if ($_.format -and $_.tokens) {
@@ -558,7 +559,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   ));
                   $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
                   Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
-                  Write-Output -InputObject ('invoking bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
                   switch ($execution.shell) {
                     'azure-powershell' {
                       $runCommandResult = (Invoke-AzVMRunCommand `
@@ -574,15 +574,15 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                         Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std out stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
                       }
                       if ($runCommandResult.Value[1].Message) {
-                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std err: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
+                        Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has std err:\n{6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $runCommandResult.Value[1].Message);
                       } else {
                         Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, did not produce output on std err stream' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName);
                       }
                       if ($execution.test) {
                         if ($execution.test.std) {
                           if ($execution.test.std.out) {
-                            if ($execution.test.std.out.like) {
-                              if ($runCommandResult.Value[0].Message -like $execution.test.std.out.like) {
+                            if ($execution.test.std.out.match) {
+                              if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
                                 if ($execution.on.success) {
                                   Write-Output -InputObject ('bootstrap execution {0}/{1}: {2}, using shell: {3}, on: {4}/{5}, has triggered success action: {6}' -f $beI, $beC, $execution.name, $execution.shell, $target.group, $instanceName, $execution.on.success);
                                   switch ($execution.on.success) {
@@ -590,7 +590,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                                       Restart-AzVM -ResourceGroupName $target.group -Name $instanceName;
                                     }
                                     default {
-                                      Write-Output -InputObject ('no implementation found for std out likeness success action: {4}' -f $execution.on.success);
+                                      Write-Output -InputObject ('no implementation found for std out regex match success action: {4}' -f $execution.on.success);
                                     }
                                   }
                                 }
@@ -626,7 +626,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                                       exit 1;
                                     }
                                     default {
-                                      Write-Output -InputObject ('no implementation found for std out likeness failure action: {4}' -f $execution.on.failure);
+                                      Write-Output -InputObject ('no implementation found for std out regex match failure action: {4}' -f $execution.on.failure);
                                     }
                                   }
                                 }

@@ -142,6 +142,40 @@ target:
     value: userdata/rundsc.ps1
   - name: deploymentId
     value: ca3c0aa
+  bootstrap: &bootstrap
+    executions:
+    # set hostname to match the azure machine name so that debug logs can be found in papertrail
+    - name: set-computer-name
+      shell: azure-powershell
+      commands:
+      - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+      - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
+      - $env:COMPUTERNAME = $instanceName
+      - (Get-WmiObject Win32_ComputerSystem).Rename($instanceName) | Out-Null
+      - if ([System.Net.Dns]::GetHostName() -eq $instanceName) { Write-Output -InputObject ('expected hostname detected'); exit 0; } else { Write-Output -InputObject ('host rename failure'); exit 1; }
+      test:
+        std:
+          out:
+            match: /expected hostname detected/
+      on:
+        success: reboot
+    # set maintenance secrets in the windows registry
+    - name: create-mozilla-registry-keys
+      shell: azure-powershell
+      commands:
+      - New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' -Force
+      - New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' -Force
+    - name: create-registry-value-mozilla-tooltool-access-token
+      shell: azure-powershell
+      commands:
+      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
+        tokens:
+        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.production.azure.relops.'win2019-azure'
+    # trigger bootstrap scripts
+    - name: invoke-occ
+      shell: azure-powershell
+      commands:
+      - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US
@@ -159,6 +193,7 @@ target:
       name: nsg-east-us-gecko-1
       rules: *rules
   tag: *tag-gecko-1
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-east-us-2-gecko-1
   region: East US 2
@@ -176,6 +211,7 @@ target:
       name: nsg-east-us-2-gecko-1
       rules: *rules
   tag: *tag-gecko-1
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-north-central-us-gecko-1
   region: North Central US
@@ -193,6 +229,7 @@ target:
       name: nsg-north-central-us-gecko-1
       rules: *rules
   tag: *tag-gecko-1
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-south-central-us-gecko-1
   region: South Central US
@@ -210,6 +247,7 @@ target:
       name: nsg-south-central-us-gecko-1
       rules: *rules
   tag: *tag-gecko-1
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-west-us-gecko-1
   region: West US
@@ -227,6 +265,7 @@ target:
       name: nsg-west-us-gecko-1
       rules: *rules
   tag: *tag-gecko-1
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-central-us-gecko-3
   region: Central US
@@ -256,6 +295,7 @@ target:
     value: userdata/rundsc.ps1
   - name: deploymentId
     value: ca3c0aa
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-east-us-gecko-3
   region: East US
@@ -273,6 +313,7 @@ target:
       name: nsg-east-us-gecko-3
       rules: *rules
   tag: *tag-gecko-3
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-east-us-2-gecko-3
   region: East US 2
@@ -290,6 +331,7 @@ target:
       name: nsg-east-us-2-gecko-3
       rules: *rules
   tag: *tag-gecko-3
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-north-central-us-gecko-3
   region: North Central US
@@ -307,6 +349,7 @@ target:
       name: nsg-north-central-us-gecko-3
       rules: *rules
   tag: *tag-gecko-3
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-south-central-us-gecko-3
   region: South Central US
@@ -324,6 +367,7 @@ target:
       name: nsg-south-central-us-gecko-3
       rules: *rules
   tag: *tag-gecko-3
+  bootstrap: *bootstrap
 - platform: azure
   group: rg-west-us-gecko-3
   region: West US
@@ -341,6 +385,7 @@ target:
       name: nsg-west-us-gecko-3
       rules: *rules
   tag: *tag-gecko-3
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-central-us-mpd001-1
   region: Central US
@@ -368,6 +413,7 @@ target:
     value: cloud_windows
   - name: sourceScript
     value: provisioners/windows/azure/azure-bootstrap.ps1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-east-us-mpd001-1
   region: East US
@@ -385,6 +431,7 @@ target:
       name: nsg-east-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-east-us-2-mpd001-1
   region: East US 2
@@ -402,6 +449,7 @@ target:
       name: nsg-east-us-2-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-north-central-us-mpd001-1
   region: North Central US
@@ -419,6 +467,7 @@ target:
       name: nsg-north-central-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-south-central-us-mpd001-1
   region: South Central US
@@ -436,6 +485,7 @@ target:
       name: nsg-south-central-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-west-us-mpd001-1
   region: West US
@@ -453,6 +503,7 @@ target:
       name: nsg-west-us-mpd001-1
       rules: *rules
   tag: *tag-mpd001-1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-central-us-mpd001-3
   region: Central US
@@ -480,6 +531,7 @@ target:
     value: cloud_windows
   - name: sourceScript
     value: provisioners/windows/azure/azure-bootstrap.ps1
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-east-us-mpd001-3
   region: East US
@@ -497,6 +549,7 @@ target:
       name: nsg-east-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-east-us-2-mpd001-3
   region: East US 2
@@ -514,6 +567,7 @@ target:
       name: nsg-east-us-2-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-north-central-us-mpd001-3
   region: North Central US
@@ -531,6 +585,7 @@ target:
       name: nsg-north-central-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-south-central-us-mpd001-3
   region: South Central US
@@ -548,6 +603,7 @@ target:
       name: nsg-south-central-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
+  bootstrap: *bootstrap
 - platform: amazon
   group: rg-west-us-mpd001-3
   region: West US
@@ -565,3 +621,4 @@ target:
       name: nsg-west-us-mpd001-3
       rules: *rules
   tag: *tag-mpd001-3
+  bootstrap: *bootstrap
