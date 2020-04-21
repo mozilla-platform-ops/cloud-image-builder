@@ -1,6 +1,8 @@
+import json
 import os
 import slugid
 import taskcluster
+import urllib.request
 import yaml
 from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
 from azure.common.credentials import ServicePrincipalCredentials
@@ -26,6 +28,14 @@ platformClient = {
 }
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')
+try:
+  commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT')), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
+  poolDeploy = commit['message'].startswith('pool-deploy')
+  if poolDeploy:
+    print('info: pool deploy commit syntax detected. disk/machine image builds will be skipped')
+except:
+  poolDeploy = False
+  print('warn: error reading commit message for sha: {}'.format(commitSha))
 taskGroupId = os.getenv('TASK_ID')
 print('debug: auth.currentScopes')
 print(auth.currentScopes())
@@ -87,7 +97,7 @@ for platform in ['amazon', 'azure']:
     configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
-      queueDiskImageBuild = diskImageManifestHasChanged(platform, key, commitSha)
+      queueDiskImageBuild = (not poolDeploy) and diskImageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
         createTask(
@@ -144,7 +154,7 @@ for platform in ['amazon', 'azure']:
       for pool in [p for p in config['manager']['pool'] if p['platform'] == platform] :
         taggingTaskIdsForPool = []
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
-          queueMachineImageBuild = platform in platformClient and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
+          queueMachineImageBuild = (not poolDeploy) and (platform in platformClient) and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
             taskclusterIndex = index,
             platformClient = platformClient[platform],
             platform = platform,
