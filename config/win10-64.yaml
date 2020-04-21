@@ -31,7 +31,7 @@ manager:
     locations:
     - centralus
     lifecycle: normal
-    owner: grenade@mozilla.com
+    owner: mcornmesser@mozilla.com
     provider: azure
     platform: azure
 target:
