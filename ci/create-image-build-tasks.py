@@ -1,10 +1,19 @@
+import glob
+import json
 import os
+import pathlib
 import slugid
 import taskcluster
+import urllib.request
 import yaml
 from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
+
+
+def extract_pools(config_path):
+  return map(lambda p: '{}/{}'.format(p['domain'], p['variant']), yaml.safe_load(open(config_path, 'r'))['manager']['pool'])
+
 
 
 taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
@@ -26,6 +35,51 @@ platformClient = {
 }
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')
+allKeyConfigPaths = glob.glob('{}/../config/win*.yaml'.format(os.path.dirname(__file__)))
+includeKeys = list(map(lambda x: pathlib.Path(x).stem, allKeyConfigPaths))
+includePools = [poolName for poolNames in map(lambda configPath: map(lambda pool: '{}/{}'.format(pool['domain'], pool['variant']), yaml.safe_load(open(configPath, 'r'))['manager']['pool']), allKeyConfigPaths) for poolName in poolNames]
+includeRegions = sorted(list(set([region for regions in map(lambda configPath: map(lambda target: target['region'].replace(' ', '').lower(), yaml.safe_load(open(configPath, 'r'))['target']), allKeyConfigPaths) for region in regions])))
+
+try:
+  commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
+  lines = commit['message'].splitlines()
+  noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
+  if noCI:
+    print('info: **no ci** commit syntax detected.  skipping ci task creation')
+  poolDeploy = any(line.lower().strip() == 'pool-deploy' for line in lines)
+  if poolDeploy:
+    print('info: **pool deploy** commit syntax detected. disk/machine image builds will be skipped')
+
+  if any(line.lower().startswith('include keys:') for line in lines):
+    includeKeys = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include keys:')).replace('include keys:', '').split(',')))
+    print('info: **include keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
+  elif any(line.lower().startswith('exclude keys:') for line in lines):
+    includeKeys = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude keys:')).replace('exclude keys:', '').split(',')), includeKeys))
+    print('info: **exclude keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
+
+  elif any(line.lower().startswith('include pools:') for line in lines):
+    includePools = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include pools:')).replace('include pools:', '').split(',')))
+    print('info: **include pools** commit syntax detected. ci will process pools: {}'.format(', '.join(includePools)))
+  elif any(line.lower().startswith('exclude pools:') for line in lines):
+    includePools = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude pools:')).replace('exclude pools:', '').split(',')), includePools))
+    print('info: **exclude pools** commit syntax detected. ci will process pools: {}'.format(', '.join(includePools)))
+
+  if any(line.lower().startswith('include regions:') for line in lines):
+    includeRegions = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include regions:')).replace('include regions:', '').split(',')))
+    print('info: **include regions** commit syntax detected. ci will process regions: {}'.format(', '.join(includeRegions)))
+  elif any(line.lower().startswith('exclude regions:') for line in lines):
+    includeRegions = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude regions:')).replace('exclude regions:', '').split(',')), includeRegions))
+    print('info: **exclude regions** commit syntax detected. ci will process regions: {}'.format(', '.join(includeRegions)))
+
+  print('info: commit message reads:')
+  print(commit['message'])
+except:
+  noCI == True
+  poolDeploy = False
+  print('warn: error reading commit message for sha: {}, ci disabled'.format(commitSha))
+if noCI:
+  quit()
+
 taskGroupId = os.getenv('TASK_ID')
 print('debug: auth.currentScopes')
 print(auth.currentScopes())
@@ -40,7 +94,7 @@ createTask(
   retriggerOnExitCodes = [ 123 ],
   provisioner = 'relops',
   workerType = 'win2019',
-  priority = 'high',
+  priority = 'low',
   features = {
     'taskclusterProxy': True
   },
@@ -83,11 +137,11 @@ createTask(
 )
 
 for platform in ['amazon', 'azure']:
-  for key in ['win10-64-occ', 'win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2019']:
+  for key in includeKeys:
     configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
-      queueDiskImageBuild = diskImageManifestHasChanged(platform, key, commitSha)
+      queueDiskImageBuild = (not poolDeploy) and diskImageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
         createTask(
@@ -141,10 +195,10 @@ for platform in ['amazon', 'azure']:
         buildTaskId = None
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
-      for pool in [p for p in config['manager']['pool'] if p['platform'] == platform] :
+      for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools] :
         taggingTaskIdsForPool = []
-        for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain']))]:
-          queueMachineImageBuild = platform in platformClient and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
+        for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain'])) and t['region'].lower().replace(' ', '') in includeRegions]:
+          queueMachineImageBuild = (not poolDeploy) and (platform in platformClient) and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
             taskclusterIndex = index,
             platformClient = platformClient[platform],
             platform = platform,
