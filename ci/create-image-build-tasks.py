@@ -43,11 +43,14 @@ includeRegions = sorted(list(set([region for regions in map(lambda configPath: m
 try:
   commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
   lines = commit['message'].splitlines()
-  poolDeploy = any(line.startswith('pool-deploy') for line in lines)
+  noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
+  if noCI:
+    print('info: **no ci** commit syntax detected.  skipping ci task creation')
+  poolDeploy = any(line.lower().strip() == 'pool-deploy' for line in lines)
   if poolDeploy:
     print('info: **pool deploy** commit syntax detected. disk/machine image builds will be skipped')
 
-  elif any(line.lower().startswith('include keys:') for line in lines):
+  if any(line.lower().startswith('include keys:') for line in lines):
     includeKeys = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include keys:')).replace('include keys:', '').split(',')))
     print('info: **include keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
   elif any(line.lower().startswith('exclude keys:') for line in lines):
@@ -71,8 +74,12 @@ try:
   print('info: commit message reads:')
   print(commit['message'])
 except:
+  noCI == True
   poolDeploy = False
-  print('warn: error reading commit message for sha: {}'.format(commitSha))
+  print('warn: error reading commit message for sha: {}, ci disabled'.format(commitSha))
+if noCI:
+  quit()
+
 taskGroupId = os.getenv('TASK_ID')
 print('debug: auth.currentScopes')
 print(auth.currentScopes())

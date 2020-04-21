@@ -31,3 +31,57 @@ commits to the master branch result in the following actions:
     - triggers the configured bootstrap sequence from the yml config and waits for a successful completion of the same
     - shuts down the instance and captures a machine image from it
   - [tag-machine-images](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/ci/tag-machine-images.ps1) appends tags to new machine images with metadata specific to the image
+
+### commit message syntax for ci instructions
+
+#### the list of images to build and/or deploy can be controlled with commit message syntax.
+
+instructions are processed when they are included on their own new line within the commit message. supported instructions include:
+- `no-ci`: skips all ci tasks
+- `pool-deploy`: skips both disk-image and machine-image builds and only updates worker-manager with whatever images were most recently built
+- key filter-types (cloud-image-builder os configurations):
+  - `include keys: win2012, win10-64-gpu`: build and deploy only images whose configuration is included in [config/win2012.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2012.yaml) or [config/win10-64-gpu.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win10-64-gpu.yaml)
+  - `exclude keys: win7-32, win2019`: build and deploy **all** images **except** those whose configuration is included in [config/win7-32.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win7-32.yaml) or [config/win2019.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2019.yaml)
+- pool filter-types (worker-manager pools):
+  - `include pools: gecko-1/win2012-azure, gecko-t/win7-32-gpu-azure`: build and deploy only images whose configured worker-pool target is either gecko-1/win2012-azure or gecko-t/win7-32-gpu-azure
+  - `exclude pools: gecko-3/win2012-azure, gecko-t/win10-64-gpu-azure` build and deploy **all** images **except** those whose configured worker-pool target is either gecko-3/win2012-azure or gecko-t/win10-64-gpu-azure
+- region filter-types (cloud regions):
+  - `include pools: northcentralus, westus` build and deploy **all** images whose configured regional target is either northcentralus or westus
+  - `exclude pools: eastus, southcentralus` build and deploy **all** images **except** those whose configured regional target is either eastus or southcentralus
+
+#### combining instructions
+
+- the no-ci instruction causes all other instructions to be ignored
+- the pool-deploy instruction and the pool and region filter-types can be combined 
+- key and pool filter-types **cannot** be combined
+- include and exclude filters of the same filter-type **cannot** be combined
+- key and region filter-types **can** be combined
+- pool and region filter-types **can** be combined
+
+#### some examples using commit syntax include:
+
+```bash
+git commit \
+  -m "bug 123456 - patch a windows 10 security vulnerability" \
+  -m "update network drivers and rebuild disk/machine images" \
+  -m "include keys: win10-64, win10-64-gpu"
+git push origin master
+```
+
+```bash
+git commit \
+  -m "bug 654321 - redeploy gpu tester pools to cheaper regions" \
+  -m "use existing images in northcentralus, westus2 and centralus" \
+  -m "pool-deploy" \
+  -m "include pools: gecko-t/win7-32-gpu-azure, gecko-t/win10-64-gpu-azure" \
+  -m "include regions: northcentralus, westus2, centralus"
+git push origin master
+```
+
+```bash
+sed -i -e 's/StackdriverLogging-v1-8.exe/StackdriverLogging-v1-9.exe/g' \
+  config/packages.yaml
+git add config/packages.yaml
+git commit -m "bug 987654 - update stackdriver everywhere"
+git push origin master
+```

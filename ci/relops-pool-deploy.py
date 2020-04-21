@@ -1,5 +1,16 @@
+import os
 import taskcluster
 from cib import updateRole, updateWorkerPool
+
+
+try:
+  if any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-travis-ci' for line in os.getenv('TRAVIS_COMMIT_MESSAGE').splitlines()):
+    print('info: **no ci** commit syntax detected.  skipping ci task creation')
+    quit()
+except:
+  print('warn: error reading commit message, ci disabled')
+  quit()
+
 
 taskclusterAuth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
 taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
