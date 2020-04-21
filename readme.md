@@ -38,6 +38,8 @@ commits to the master branch result in the following actions:
 
 instructions are processed when they are included on their own new line within the commit message. supported instructions include:
 - `no-ci`: skips all ci tasks
+- `no-travis-ci`: skips all travis ci tasks
+- `no-taskcluster-ci`: skips all taskcluster ci tasks
 - `pool-deploy`: skips both disk-image and machine-image builds and only updates worker-manager with whatever images were most recently built
 - key filter-types (cloud-image-builder os configurations):
   - `include keys: win2012, win10-64-gpu`: build and deploy only images whose configuration is included in [config/win2012.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2012.yaml) or [config/win10-64-gpu.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win10-64-gpu.yaml)
