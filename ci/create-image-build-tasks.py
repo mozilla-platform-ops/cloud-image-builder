@@ -29,7 +29,7 @@ platformClient = {
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')
 try:
-  commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT')), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
+  commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
   poolDeploy = commit['message'].startswith('pool-deploy')
   if poolDeploy:
     print('info: pool deploy commit syntax detected. disk/machine image builds will be skipped')
