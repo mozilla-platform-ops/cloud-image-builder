@@ -55,10 +55,23 @@ poolConfig = next(p for p in config['manager']['pool'] if '{}/{}'.format(p['doma
 
 passwordCharPool = string.ascii_letters + string.digits + string.punctuation
 
+includeRegions = map(lambda target: target['region'].replace(' ', '').lower(), config['target'])
+try:
+  commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
+  lines = commit['message'].splitlines()
+  if any(line.lower().startswith('include regions:') for line in lines):
+    includeRegions = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include regions:')).replace('include regions:', '').split(',')))
+    print('info: **include regions** commit syntax detected. worker pool generator will exclude regions that are not in: {}'.format(', '.join(includeRegions)))
+  elif any(line.lower().startswith('exclude regions:') for line in lines):
+    includeRegions = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude regions:')).replace('exclude regions:', '').split(',')), includeRegions))
+    print('info: **exclude regions** commit syntax detected. worker pool generator will exclude regions that are not in: {}'.format(', '.join(includeRegions)))
+except:
+  print('warn: error reading commit message for sha: {}'.format(commitSha))
+
 workerPool = {
   'minCapacity': poolConfig['capacity']['minimum'],
   'maxCapacity': poolConfig['capacity']['maximum'],
-  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in poolConfig['locations'], map(lambda x: {
+  'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in poolConfig['locations'] and x['location'] in includeRegions, map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,
     'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
