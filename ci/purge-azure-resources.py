@@ -51,12 +51,12 @@ resourceClient = ResourceManagementClient(azureCredentials, secret['subscription
 allGroups = list(resourceClient.resource_groups.list())
 targetGroups = sys.argv[1:] if len(sys.argv) > 1 else list(map(lambda x: x.name, filter(purge_filter, allGroups)))
 resource_descriptors = {
-  'virtual machine': {
-    'filter-descriptor': 'deallocated',
-    'list': computeClient.virtual_machines.list,
-    'purge': computeClient.virtual_machines.delete,
-    'filter': lambda virtual_machine, resource_group_name: virtual_machine.provisioning_state == 'Succeeded' and any(status for status in get_instance(resource_group_name, virtual_machine.name).statuses if status.code == 'PowerState/deallocated')
-  },
+  #'virtual machine': {
+  #  'filter-descriptor': 'deallocated',
+  #  'list': computeClient.virtual_machines.list,
+  #  'purge': computeClient.virtual_machines.delete,
+  #  'filter': lambda virtual_machine, resource_group_name: virtual_machine.provisioning_state == 'Succeeded' and any(status for status in get_instance(resource_group_name, virtual_machine.name).statuses if status.code == 'PowerState/deallocated')
+  #},
   'network interface': {
     'filter-descriptor': 'orphaned',
     'list': networkClient.network_interfaces.list,

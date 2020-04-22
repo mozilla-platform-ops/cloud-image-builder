@@ -6,8 +6,8 @@ param (
     'ni',
     'nsg',
     'pia',
-    'snap',
-    'vm'
+    'snap'#,
+    #'vm'
   )
 )
 
