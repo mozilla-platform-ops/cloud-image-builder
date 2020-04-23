@@ -714,7 +714,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 $bootstrapUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}' -f $bootstrapOrg, $bootstrapRepo, $bootstrapRef, $bootstrapScript);
                 $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
                 $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
-                $accessToken = ($secret.accessToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
+                $accessToken = ($secret.accessToken."$($target.platform)"."$workerDomain"."$workerVariant");
                 if (($accessToken) -and ($accessToken.Length -eq 44)) {
                   Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 } else {
@@ -722,7 +722,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                   exit 123;
                 }
-                $tooltoolToken = ($secret.tooltoolToken.production."$($target.platform)"."$workerDomain"."$workerVariant");
+                $tooltoolToken = ($secret.tooltoolToken."$($target.platform)"."$workerDomain"."$workerVariant");
                 if (($tooltoolToken) -and ($tooltoolToken.Length -eq 44)) {
                   Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
                 }
