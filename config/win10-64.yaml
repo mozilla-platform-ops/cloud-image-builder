@@ -120,7 +120,7 @@ target:
   - name: sourceScript
     value: provisioners/windows/azure/azure-bootstrap.ps1
   - name: deploymentId
-    value: 5a8c491
+    value: cf0cab5
   bootstrap: &bootstrap
     executions:
     # set hostname to match the azure machine name so that debug logs can be found in papertrail
