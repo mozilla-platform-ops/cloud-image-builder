@@ -158,7 +158,8 @@ for platform in ['amazon', 'azure']:
     configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
     with open(configPath, 'r') as stream:
       config = yaml.safe_load(stream)
-      queueDiskImageBuild = (not poolDeploy) and diskImageManifestHasChanged(platform, key, commitSha)
+      isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
+      queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and diskImageManifestHasChanged(platform, key, commitSha)
       if queueDiskImageBuild:
         buildTaskId = slugid.nice()
         createTask(
