@@ -140,7 +140,6 @@ with open('../{}.json'.format(poolName.replace('/', '-')), 'w') as file:
 firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in poolConfig['locations'])
 occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
 
-# https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.azure.win10-64.latest/artifacts/public/unattend.xml
 machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target'])))
 
 # todo: get provenance of each machine build & disk build including task id and git sha
@@ -161,13 +160,13 @@ description = [
   '- language: **{}**'.format(config['image']['language']),
   '- system timezone: **{}**'.format(config['image']['timezone']),
   '#### integration',
-  '- disk image build: {} [{}]({})'.format('0000-00-00 00:00', '<task-id>', 'https://firefox-ci-tc.services.mozilla.com/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/').format(platform, key),
+  '- disk image build: {} [{}]({})'.format('0000-00-00 00:00', '<task-id>', '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/').format(os.getenv('TASKCLUSTER_PROXY_URL'), platform, key),
   '- machine image builds:',
   '\n'.join(machineImageBuildsDescription),
   '- applied occ revision: [{}]({})'.format(occRevision[0:7], 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
   '#### deployment',
   '- platform: **{} ({})**'.format(platform, ', '.join(poolConfig['locations'])),
-  '- last worker pool update: {} [{}]({})'.format('{}'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' ')), os.getenv('TASK_ID'), 'https://firefox-ci-tc.services.mozilla.com/tasks/{}#artifacts'.format(os.getenv('TASK_ID')))
+  '- last worker pool update: {} [{}]({})'.format('{}'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' ')), os.getenv('TASK_ID'), '{}/tasks/{}#artifacts'.format(os.getenv('TASKCLUSTER_PROXY_URL'), os.getenv('TASK_ID')))
 ]
 
 providerConfig = {

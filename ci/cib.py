@@ -1,5 +1,6 @@
 import gzip
 import json
+import os
 import urllib.request
 import yaml
 from datetime import datetime, timedelta
@@ -77,7 +78,7 @@ def createTask(queue, taskId, taskName, taskDescription, provisioner, workerType
 
 def diskImageManifestHasChanged(platform, key, currentRevision):
   try:
-    lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
+    lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('{}/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(os.environ['TASKCLUSTER_PROXY_URL'], platform, key)).read()).decode('utf-8-sig'))['build']['revision']
     currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, key)).read().decode())
     previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, key)).read().decode())
   except:
@@ -114,7 +115,7 @@ def diskImageManifestHasChanged(platform, key, currentRevision):
 
 def machineImageManifestHasChanged(platform, key, currentRevision, group):
   try:
-    lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(platform, key)).read()).decode('utf-8-sig'))['build']['revision']
+    lastRevision = json.loads(gzip.decompress(urllib.request.urlopen('{}/api/index/v1/task/project.relops.cloud-image-builder.{}.{}.latest/artifacts/public/image-bucket-resource.json'.format(os.environ['TASKCLUSTER_PROXY_URL'], platform, key)).read()).decode('utf-8-sig'))['build']['revision']
     currentConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(currentRevision, key)).read().decode())
     previousConfig = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(lastRevision, key)).read().decode())
   except:
