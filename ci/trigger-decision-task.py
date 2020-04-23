@@ -3,32 +3,13 @@ import os
 import slugid
 import taskcluster
 import urllib.request
-from cib import createTask, updateRole, updateWorkerPool
-
-
-taskclusterAuth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
-taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
-queue = taskcluster.Queue(taskcluster.optionsFromEnvironment())
-commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(os.getenv('TRAVIS_COMMIT')), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
-
-updateRole(
-  auth = taskclusterAuth,
-  configPath = 'ci/config/role/branch-master.yaml',
-  roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
-updateWorkerPool(
-  workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/relops/decision.yaml',
-  workerPoolId = 'relops/decision')
-updateWorkerPool(
-  workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/relops/win2019.yaml',
-  workerPoolId = 'relops/win2019')
+from cib import createTask
 
 createTask(
-  queue = queue,
+  queue = taskcluster.Queue(taskcluster.optionsFromEnvironment()),
   image = 'python',
   taskId = slugid.nice(),
-  taskName = '00 :: decision task',
+  taskName = '00 :: create maintenance and image build tasks',
   taskDescription = 'determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same',
   provisioner = 'relops',
   workerType = 'decision',
@@ -42,7 +23,7 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/{}.py'.format(os.getenv('TRAVIS_COMMIT'), 'pool-deploy' if commit['message'].startswith('pool-deploy') else 'create-image-build-tasks')
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install azure boto3 pyyaml slugid taskcluster urllib3 && python ci/create-image-build-tasks.py'.format(os.getenv('TRAVIS_COMMIT'))
   ],
   scopes = [
     'generic-worker:os-group:relops/win2019/Administrators',
