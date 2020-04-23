@@ -75,6 +75,9 @@ switch ($platform) {
         } catch {
           Write-Output -InputObject ('failed to extract azcopy from: {0}. {1}' -f $azcopyZipPath, , $_.Exception.Message);
         }
+      } else {
+        Write-Output -InputObject ('failed to download: {0} from: {1}' -f $azcopyZipPath, $azcopyZipUrl);
+        exit 123;
       }
     }
   }
