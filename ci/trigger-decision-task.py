@@ -35,6 +35,7 @@ createTask(
     'queue:create-task:low:relops/*',
     'queue:route:index.project.relops.cloud-image-builder.*',
     'queue:scheduler-id:-',
+    'queue:scheduler-id:taskcluster-github',
     'worker-manager:manage-worker-pool:gecko-1/win*',
     'worker-manager:manage-worker-pool:gecko-3/win*',
     'worker-manager:manage-worker-pool:gecko-t/win*',

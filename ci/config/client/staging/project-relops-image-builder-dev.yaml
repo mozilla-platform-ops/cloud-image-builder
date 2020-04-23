@@ -9,6 +9,7 @@ queue:create-task:medium:relops/*
 queue:create-task:very-high:relops/*
 queue:route:index.project.relops.cloud-image-builder.*
 queue:scheduler-id:-
+queue:scheduler-id:taskcluster-github
 secrets:get:project/relops/image-builder/dev
 worker-manager:manage-worker-pool:gecko-1/win*
 worker-manager:manage-worker-pool:gecko-3/win*
