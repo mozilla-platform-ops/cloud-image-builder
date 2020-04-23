@@ -10,19 +10,11 @@ from azure.mgmt.compute import ComputeManagementClient
 from cib import updateWorkerPool
 from datetime import datetime
 
-taskclusterProductionOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
-taskclusterProductionSecretsClient = taskcluster.Secrets(taskclusterProductionOptions)
-secret = taskclusterProductionSecretsClient.get('project/relops/image-builder/dev')['secret']
+taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
+taskclusterSecretsClient = taskcluster.Secrets(taskclusterOptions)
+secret = taskclusterSecretsClient.get('project/relops/image-builder/dev')['secret']
 
-taskclusterStagingOptions = {
-  'rootUrl': 'https://stage.taskcluster.nonprod.cloudops.mozgcp.net',
-  'credentials': {
-    'clientId': 'project/relops/image-builder/dev',
-    'accessToken': secret['accessToken']['staging']['relops']['image-builder']['dev']
-  }
-}
-taskclusterStagingWorkerManagerClient = taskcluster.WorkerManager(taskclusterStagingOptions)
-taskclusterProductionWorkerManagerClient = taskcluster.WorkerManager(taskclusterProductionOptions)
+taskclusterWorkerManagerClient = taskcluster.WorkerManager(taskclusterOptions)
 
 azureComputeManagementClient = ComputeManagementClient(
   ServicePrincipalCredentials(
@@ -136,7 +128,7 @@ if 'lifecycle' in poolConfig and poolConfig['lifecycle'] == 'spot':
 with open('../{}.json'.format(poolName.replace('/', '-')), 'w') as file:
   json.dump(workerPool, file, indent = 2, sort_keys = True)
 
-# update the staging worker manager with a complete worker pool config
+# update the worker manager with a complete worker pool config
 firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in poolConfig['locations'])
 occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
 
@@ -180,11 +172,7 @@ configPath = '../{}.yaml'.format(poolName.replace('/', '-'))
 with open(configPath, 'w') as file:
   print('saving: {}'.format(configPath))
   yaml.dump(providerConfig, file, default_flow_style=False)
-  #updateWorkerPool(
-  #  workerManager = taskclusterStagingWorkerManagerClient,
-  #  configPath = configPath,
-  #  workerPoolId = '{}'.format(poolName))
   updateWorkerPool(
-    workerManager = taskclusterProductionWorkerManagerClient,
+    workerManager = taskclusterWorkerManagerClient,
     configPath = configPath,
     workerPoolId = '{}'.format(poolName))

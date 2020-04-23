@@ -39,37 +39,54 @@ allKeyConfigPaths = glob.glob('{}/../config/win*.yaml'.format(os.path.dirname(__
 includeKeys = list(map(lambda x: pathlib.Path(x).stem, allKeyConfigPaths))
 includePools = [poolName for poolNames in map(lambda configPath: map(lambda pool: '{}/{}'.format(pool['domain'], pool['variant']), yaml.safe_load(open(configPath, 'r'))['manager']['pool']), allKeyConfigPaths) for poolName in poolNames]
 includeRegions = sorted(list(set([region for regions in map(lambda configPath: map(lambda target: target['region'].replace(' ', '').lower(), yaml.safe_load(open(configPath, 'r'))['target']), allKeyConfigPaths) for region in regions])))
+includeEnvironments = [
+  'production',
+  'staging'
+]
+currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
 
 try:
   commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
   lines = commit['message'].splitlines()
   noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
   if noCI:
-    print('info: **no ci** commit syntax detected.  skipping ci task creation')
-  poolDeploy = any(line.lower().strip() == 'pool-deploy' for line in lines)
+    print('info: **no ci** commit syntax detected. skipping ci task creation')
+  elif any(line.lower().startswith('include environments:') for line in lines):
+    includeEnvironments = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include environments:')).replace('include environments:', '').split(',')))
+    print('info: **include environments** commit syntax detected. ci will process environments: {}'.format(', '.join(includeEnvironments)))
+  elif any(line.lower().startswith('exclude environments:') for line in lines):
+    includeEnvironments = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude environments:')).replace('exclude environments:', '').split(',')), includeEnvironments))
+    print('info: **exclude environments** commit syntax detected. ci will process environments: {}'.format(', '.join(includeEnvironments)))
+  if currentEnvironment not in includeEnvironments:
+    noCI = True
+    print('info: current environment ({}) is excluded. skipping ci task creation'.format(currentEnvironment))
+
+  poolDeploy = (not noCI) and any(line.lower().strip() == 'pool-deploy' for line in lines)
   if poolDeploy:
     print('info: **pool deploy** commit syntax detected. disk/machine image builds will be skipped')
 
-  if any(line.lower().startswith('include keys:') for line in lines):
-    includeKeys = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include keys:')).replace('include keys:', '').split(',')))
-    print('info: **include keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
-  elif any(line.lower().startswith('exclude keys:') for line in lines):
-    includeKeys = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude keys:')).replace('exclude keys:', '').split(',')), includeKeys))
-    print('info: **exclude keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
+  if not noCI:
 
-  elif any(line.lower().startswith('include pools:') for line in lines):
-    includePools = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include pools:')).replace('include pools:', '').split(',')))
-    print('info: **include pools** commit syntax detected. ci will process pools: {}'.format(', '.join(includePools)))
-  elif any(line.lower().startswith('exclude pools:') for line in lines):
-    includePools = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude pools:')).replace('exclude pools:', '').split(',')), includePools))
-    print('info: **exclude pools** commit syntax detected. ci will process pools: {}'.format(', '.join(includePools)))
+    if any(line.lower().startswith('include keys:') for line in lines):
+      includeKeys = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include keys:')).replace('include keys:', '').split(',')))
+      print('info: **include keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
+    elif any(line.lower().startswith('exclude keys:') for line in lines):
+      includeKeys = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude keys:')).replace('exclude keys:', '').split(',')), includeKeys))
+      print('info: **exclude keys** commit syntax detected. ci will process keys: {}'.format(', '.join(includeKeys)))
 
-  if any(line.lower().startswith('include regions:') for line in lines):
-    includeRegions = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include regions:')).replace('include regions:', '').split(',')))
-    print('info: **include regions** commit syntax detected. ci will process regions: {}'.format(', '.join(includeRegions)))
-  elif any(line.lower().startswith('exclude regions:') for line in lines):
-    includeRegions = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude regions:')).replace('exclude regions:', '').split(',')), includeRegions))
-    print('info: **exclude regions** commit syntax detected. ci will process regions: {}'.format(', '.join(includeRegions)))
+    elif any(line.lower().startswith('include pools:') for line in lines):
+      includePools = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include pools:')).replace('include pools:', '').split(',')))
+      print('info: **include pools** commit syntax detected. ci will process pools: {}'.format(', '.join(includePools)))
+    elif any(line.lower().startswith('exclude pools:') for line in lines):
+      includePools = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude pools:')).replace('exclude pools:', '').split(',')), includePools))
+      print('info: **exclude pools** commit syntax detected. ci will process pools: {}'.format(', '.join(includePools)))
+
+    if any(line.lower().startswith('include regions:') for line in lines):
+      includeRegions = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include regions:')).replace('include regions:', '').split(',')))
+      print('info: **include regions** commit syntax detected. ci will process regions: {}'.format(', '.join(includeRegions)))
+    elif any(line.lower().startswith('exclude regions:') for line in lines):
+      includeRegions = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude regions:')).replace('exclude regions:', '').split(',')), includeRegions))
+      print('info: **exclude regions** commit syntax detected. ci will process regions: {}'.format(', '.join(includeRegions)))
 
   print('info: commit message reads:')
   print(commit['message'])
