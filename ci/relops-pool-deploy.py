@@ -12,6 +12,7 @@ except:
   quit()
 
 
+taskclusterEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_PROXY_URL'] else 'production'
 taskclusterAuth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
 taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 
@@ -21,9 +22,9 @@ updateRole(
   roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
 updateWorkerPool(
   workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/relops/decision.yaml',
+  configPath = 'ci/config/worker-pool/{}/relops-decision.yaml'.format(taskclusterEnvironment),
   workerPoolId = 'relops/decision')
 updateWorkerPool(
   workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/relops/win2019.yaml',
+  configPath = 'ci/config/worker-pool/{}/relops-win2019.yaml'.format(taskclusterEnvironment),
   workerPoolId = 'relops/win2019')

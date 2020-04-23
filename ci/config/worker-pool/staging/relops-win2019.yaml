@@ -1,0 +1,228 @@
+---
+description: build windows cloud images for taskcluster windows workloads
+owner: grenade@mozilla.com
+emailOnError: true
+providerId: aws
+config:
+  minCapacity: 0
+  maxCapacity: 12
+  launchConfigs:
+  - region: eu-central-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-07db1c26bda143e33
+      Placement:
+        AvailabilityZone: eu-central-1a
+      SubnetId: subnet-04d80721f2a2ef77d
+      SecurityGroupIds:
+      - sg-04a0ee6ff719528e9
+      - sg-095ad8255839a053c
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: &BlockDeviceMappings
+      - DeviceName: /dev/sda1
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 40
+          VolumeType: gp2
+      - DeviceName: /dev/sdb
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 120
+          VolumeType: gp2
+      - DeviceName: /dev/sdc
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 120
+          VolumeType: gp2
+      InstanceMarketOptions: &InstanceMarketOptions
+        MarketType: spot
+    workerConfig: &workerConfig
+      genericWorker:
+        config:
+          idleTimeoutSecs: 900
+          cachesDir: Z:\caches
+          cleanUpTaskDirs: true
+          deploymentId: f37dd7ee1cae
+          disableReboots: true
+          downloadsDir: Z:\downloads
+          ed25519SigningKeyLocation: C:\generic-worker\ed25519-private.key
+          livelogExecutable: C:\generic-worker\livelog.exe
+          livelogPUTPort: 60022
+          numberOfTasksToRun: 0
+          runAfterUserCreation: C:\generic-worker\task-user-init.cmd
+          runTasksAsCurrentUser: false
+          sentryProject: generic-worker
+          shutdownMachineOnIdle: false
+          shutdownMachineOnInternalError: true
+          taskclusterProxyExecutable: C:\generic-worker\taskcluster-proxy.exe
+          taskclusterProxyPort: 80
+          tasksDir: Z:\
+          wstAudience: firefoxcitc
+          wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
+    additionalUserData: &additionalUserData
+      workerType: relops-image-builder
+  - region: eu-central-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-07db1c26bda143e33
+      Placement:
+        AvailabilityZone: eu-central-1b
+      SubnetId: subnet-0aff5b04441588586
+      SecurityGroupIds:
+      - sg-04a0ee6ff719528e9
+      - sg-095ad8255839a053c
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: eu-central-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-07db1c26bda143e33
+      Placement:
+        AvailabilityZone: eu-central-1c
+      SubnetId: subnet-051cbe370d97542ed
+      SecurityGroupIds:
+      - sg-04a0ee6ff719528e9
+      - sg-095ad8255839a053c
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-026ed942b8c9d7503
+      Placement:
+        AvailabilityZone: us-east-1a
+      SubnetId: subnet-0c938056fff37f311
+      SecurityGroupIds:
+      - sg-06f0ef799985524a4
+      - sg-041e142d0ba63c7aa
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-026ed942b8c9d7503
+      Placement:
+        AvailabilityZone: us-east-1b
+      SubnetId: subnet-00d682e89c23d7a86
+      SecurityGroupIds:
+      - sg-06f0ef799985524a4
+      - sg-041e142d0ba63c7aa
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-026ed942b8c9d7503
+      Placement:
+        AvailabilityZone: us-east-1c
+      SubnetId: subnet-006eff582598db077
+      SecurityGroupIds:
+      - sg-06f0ef799985524a4
+      - sg-041e142d0ba63c7aa
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-026ed942b8c9d7503
+      Placement:
+        AvailabilityZone: us-east-1d
+      SubnetId: subnet-01454cff97aa89f34
+      SecurityGroupIds:
+      - sg-06f0ef799985524a4
+      - sg-041e142d0ba63c7aa
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-east-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-026ed942b8c9d7503
+      Placement:
+        AvailabilityZone: us-east-1f
+      SubnetId: subnet-0d8c0e26a6194119c
+      SecurityGroupIds:
+      - sg-06f0ef799985524a4
+      - sg-041e142d0ba63c7aa
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-1
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-00f2cff76f39b3333
+      Placement:
+        AvailabilityZone: us-west-1b
+      SubnetId: subnet-01aac9d0ea7efdbc4
+      SecurityGroupIds:
+      - sg-07ffff7a1ad3c4958
+      - sg-0c7efe44870028d78
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-08dcc6990d39afe94
+      Placement:
+        AvailabilityZone: us-west-2a
+      SubnetId: subnet-06b091438ea962936
+      SecurityGroupIds:
+      - sg-0588dee891c7069e7
+      - sg-073d8cda785e8f939
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-08dcc6990d39afe94
+      Placement:
+        AvailabilityZone: us-west-2b
+      SubnetId: subnet-00927443142f01ddf
+      SecurityGroupIds:
+      - sg-0588dee891c7069e7
+      - sg-073d8cda785e8f939
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
+  - region: us-west-2
+    capacityPerInstance: 1
+    launchConfig:
+      ImageId: ami-08dcc6990d39afe94
+      Placement:
+        AvailabilityZone: us-west-2c
+      SubnetId: subnet-0ab2f88a3fa4ab7a0
+      SecurityGroupIds:
+      - sg-0588dee891c7069e7
+      - sg-073d8cda785e8f939
+      InstanceType: c5.4xlarge
+      BlockDeviceMappings: *BlockDeviceMappings
+      InstanceMarketOptions: *InstanceMarketOptions
+    workerConfig: *workerConfig
+    additionalUserData: *additionalUserData
