@@ -12,7 +12,7 @@ except:
   quit()
 
 
-taskclusterEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_PROXY_URL'] else 'production'
+taskclusterEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
 taskclusterAuth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
 taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 
