@@ -3,16 +3,33 @@ import taskcluster
 from cib import updateRole, updateWorkerPool
 
 
+currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+includeEnvironments = [
+  'production',
+  'staging'
+]
 try:
-  if any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-travis-ci' for line in os.getenv('TRAVIS_COMMIT_MESSAGE').splitlines()):
-    print('info: **no ci** commit syntax detected.  skipping ci task creation')
+  lines = os.getenv('TRAVIS_COMMIT_MESSAGE').splitlines()
+
+  if any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-travis-ci' for line in lines):
+    print('info: **no ci** commit syntax detected. skipping pool and role checks')
+    quit()
+
+  if any(line.lower().startswith('include environments:') for line in lines):
+    includeEnvironments = list(map(lambda x: x.lower().strip(), next(line for line in lines if line.startswith('include environments:')).replace('include environments:', '').split(',')))
+    print('info: **include environments** commit syntax detected. ci will process environments: {}'.format(', '.join(includeEnvironments)))
+  elif any(line.lower().startswith('exclude environments:') for line in lines):
+    includeEnvironments = list(filter(lambda x: x not in map(lambda x: x.lower().strip(), next(line for line in lines if line.lower().startswith('exclude environments:')).replace('exclude environments:', '').split(',')), includeEnvironments))
+    print('info: **exclude environments** commit syntax detected. ci will process environments: {}'.format(', '.join(includeEnvironments)))
+  if currentEnvironment not in includeEnvironments:
+    print('info: current environment ({}) is excluded. skipping pool and role checks'.format(currentEnvironment))
     quit()
 except:
-  print('warn: error reading commit message, ci disabled')
+  print('warn: error reading or parsing commit message, ci disabled')
   quit()
 
 
-taskclusterEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+
 taskclusterAuth = taskcluster.Auth(taskcluster.optionsFromEnvironment())
 taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvironment())
 
@@ -22,9 +39,9 @@ updateRole(
   roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
 updateWorkerPool(
   workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/{}/relops-decision.yaml'.format(taskclusterEnvironment),
+  configPath = 'ci/config/worker-pool/{}/relops-decision.yaml'.format(currentEnvironment),
   workerPoolId = 'relops/decision')
 updateWorkerPool(
   workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/{}/relops-win2019.yaml'.format(taskclusterEnvironment),
+  configPath = 'ci/config/worker-pool/{}/relops-win2019.yaml'.format(currentEnvironment),
   workerPoolId = 'relops/win2019')
