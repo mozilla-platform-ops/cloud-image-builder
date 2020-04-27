@@ -45,6 +45,11 @@ instructions are processed when they are included on their own new line within t
 - key filter-types (cloud-image-builder os configurations):
   - `include keys: win2012, win10-64-gpu`: build and deploy only images whose configuration is included in [config/win2012.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2012.yaml) or [config/win10-64-gpu.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win10-64-gpu.yaml)
   - `exclude keys: win7-32, win2019`: build and deploy **all** images **except** those whose configuration is included in [config/win7-32.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win7-32.yaml) or [config/win2019.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2019.yaml)
+- environment filter-types (taskcluster deployment environments):
+  - `include environments: production` or `exclude environments: staging`: build and deploy images within the firefox-ci taskcluster deployment only
+  - `include environments: staging` or `exclude environments: production`: build and deploy images within the staging taskcluster deployment only
+  - `include environments: production, staging`: build and deploy images within both the production and staging taskcluster deployments
+  - `exclude environments: production, staging`: will build nothing
 - pool filter-types (worker-manager pools):
   - `include pools: gecko-1/win2012-azure, gecko-t/win7-32-gpu-azure`: build and deploy only images whose configured worker-pool target is either gecko-1/win2012-azure or gecko-t/win7-32-gpu-azure
   - `exclude pools: gecko-3/win2012-azure, gecko-t/win10-64-gpu-azure` build and deploy **all** images **except** those whose configured worker-pool target is either gecko-3/win2012-azure or gecko-t/win10-64-gpu-azure
@@ -55,19 +60,20 @@ instructions are processed when they are included on their own new line within t
 #### combining instructions
 
 - the no-ci instruction causes all other instructions to be ignored
-- the pool-deploy instruction and the pool and region filter-types can be combined 
+- the pool-deploy instruction and the pool, region and environment filter-types can be combined 
 - key and pool filter-types **cannot** be combined
 - include and exclude filters of the same filter-type **cannot** be combined
-- key and region filter-types **can** be combined
-- pool and region filter-types **can** be combined
+- key, region and environment filter-types **can** be combined
+- pool, region and environment region filter-types **can** be combined
 
 #### some examples using commit syntax include:
 
 ```bash
 git commit \
-  -m "bug 123456 - patch a windows 10 security vulnerability" \
+  -m "bug 123456 - patch a windows 10 security vulnerability on staging" \
   -m "update network drivers and rebuild disk/machine images" \
-  -m "include keys: win10-64, win10-64-gpu"
+  -m "include keys: win10-64, win10-64-gpu" \
+  -m "include environments: staging"
 git push origin master
 ```
 
@@ -85,6 +91,7 @@ git push origin master
 sed -i -e 's/StackdriverLogging-v1-8.exe/StackdriverLogging-v1-9.exe/g' \
   config/packages.yaml
 git add config/packages.yaml
-git commit -m "bug 987654 - update stackdriver everywhere"
+git commit -m "bug 987654 - update stackdriver on production" \
+  -m "include environments: production"
 git push origin master
 ```
