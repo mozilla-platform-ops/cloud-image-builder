@@ -14,6 +14,8 @@ taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
 taskclusterSecretsClient = taskcluster.Secrets(taskclusterOptions)
 secret = taskclusterSecretsClient.get('project/relops/image-builder/dev')['secret']
 
+currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+
 taskclusterWorkerManagerClient = taskcluster.WorkerManager(taskclusterOptions)
 
 azureComputeManagementClient = ComputeManagementClient(
@@ -109,8 +111,8 @@ workerPool = {
           'workerGroup': x['group'],
           'workerLocation': '{{"cloud":"azure","region":"{}","availabilityZone":"{}"}}'.format(x['region'].lower().replace(' ', ''), x['region'].lower().replace(' ', '')),
           'workerType': poolConfig['variant'],
-          'wstAudience': 'firefoxcitc',
-          'wstServerURL': 'https://firefoxci-websocktunnel.services.mozilla.com'
+          'wstAudience': 'cloudopsstage' if currentEnvironment == 'staging' else 'firefoxcitc',
+          'wstServerURL': 'https://websocktunnel-stage.taskcluster.nonprod.cloudops.mozgcp.net' if currentEnvironment == 'staging' else 'https://firefoxci-websocktunnel.services.mozilla.com'
         }
       }
     }
