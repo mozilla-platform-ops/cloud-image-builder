@@ -148,7 +148,7 @@ target:
       - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool created') }
       - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
         tokens:
-        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltoolToken.azure.'gecko-1'.'win2019-azure'
+        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltool.token
       - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken repudiated') }
       test:
         std:
