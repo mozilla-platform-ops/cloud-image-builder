@@ -24,6 +24,7 @@ function Invoke-BootstrapExecution {
   }
   process {
     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been invoked' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+    $tokenisedCommandEvaluationErrors = @();
     $runCommandScriptContent = [String]::Join('; ', @(
       $execution.commands | % {
         # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
@@ -32,14 +33,25 @@ function Invoke-BootstrapExecution {
           try {
             ($tokenisedCommand.format -f @($tokenisedCommand.tokens | % $($tokenisedCommand)))
           } catch {
-            Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, threw exception evaluating tokenised command (format: "{8}", tokens: "{9}")' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $tokenisedCommand.format, [String]::Join(', ', $tokenisedCommand.tokens));
-            Write-Output -InputObject ($_.Exception.Message)
+            $tokenisedCommandEvaluationErrors += @{
+              'format' = $tokenisedCommand.format;
+              'tokens' = $tokenisedCommand.tokens;
+              'exception' = $_.Exception
+            };
           }
         } else {
           $_
         }
       }
     ));
+    if ($tokenisedCommandEvaluationErrors.Length) {
+      foreach ($tokenisedCommandEvaluationError in $tokenisedCommandEvaluationErrors) {
+        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, threw exception evaluating tokenised command (format: "{8}", tokens: "{9}")' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $tokenisedCommandEvaluationError.format, [String]::Join(', ', $tokenisedCommandEvaluationError.tokens));
+        Write-Output -InputObject ($tokenisedCommandEvaluationError.exception.Message);
+      }
+      Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+      exit 1;
+    }
     $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
     Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
     switch ($execution.shell) {
@@ -92,27 +104,11 @@ function Invoke-BootstrapExecution {
                         Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1)
                       }
                       'retry-task' {
-                        try {
-                          Remove-AzVm `
-                            -ResourceGroupName $groupName `
-                            -Name $instanceName `
-                            -Force;
-                          Write-Output -InputObject (('{0} :: instance: {1}, deletion appears successful' -f $($MyInvocation.MyCommand.Name), $instanceName));
-                        } catch {
-                          Write-Output -InputObject (('{0} :: instance: {1}, deletion threw exception. {2}' -f $($MyInvocation.MyCommand.Name), $instanceName, $_.Exception.Message));
-                        }
+                        Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
                         exit 123;
                       }
                       'fail' {
-                        try {
-                          Remove-AzVm `
-                            -ResourceGroupName $groupName `
-                            -Name $instanceName `
-                            -Force;
-                          Write-Output -InputObject (('{0} :: instance: {1}, deletion appears successful' -f $($MyInvocation.MyCommand.Name), $instanceName));
-                        } catch {
-                          Write-Output -InputObject (('{0} :: instance: {1}, deletion threw exception. {2}' -f $($MyInvocation.MyCommand.Name), $instanceName, $_.Exception.Message));
-                        }
+                        Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
                         exit 1;
                       }
                       default {
