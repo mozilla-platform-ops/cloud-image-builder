@@ -114,7 +114,7 @@ for platform in ['amazon', 'azure']:
               '/bin/bash',
               '--login',
               '-c',
-              'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
+              'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure boto3 pyyaml slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
             ],
             scopes = [
               'secrets:get:project/relops/image-builder/dev',

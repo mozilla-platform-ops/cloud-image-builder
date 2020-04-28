@@ -23,7 +23,7 @@ createTask(
     '/bin/bash',
     '--login',
     '-c',
-    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install azure-mgmt-compute boto3 pyyaml slugid taskcluster urllib3 && python ci/create-image-build-tasks.py'.format(os.getenv('TRAVIS_COMMIT'))
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install azure-mgmt-compute boto3 pyyaml slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && python ci/create-image-build-tasks.py'.format(os.getenv('TRAVIS_COMMIT'))
   ],
   scopes = [
     'generic-worker:os-group:relops/win2019/Administrators',

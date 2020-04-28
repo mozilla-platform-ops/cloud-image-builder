@@ -1,9 +1,9 @@
 ---
 language: python
 install:
-  - pip install pyyaml
-  - pip install taskcluster
-  - pip install urllib3
+  - pip install pyyaml | grep -v "^[[:space:]]*$"
+  - pip install taskcluster | grep -v "^[[:space:]]*$"
+  - pip install urllib3 | grep -v "^[[:space:]]*$"
 jobs:
 - name: 'taskcluster/production: create or update pools'
   script:
