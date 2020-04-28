@@ -31,7 +31,7 @@ function Invoke-BootstrapExecution {
         if ($_.format -and $_.tokens) {
           $tokenisedCommand = $_;
           try {
-            ($tokenisedCommand.format -f @($tokenisedCommand.tokens | % { $($_) } ))
+            ($tokenisedCommand.format -f @($tokenisedCommand.tokens | % { (Invoke-Expression -Command $_) } ))
           } catch {
             $tokenisedCommandEvaluationErrors += @{
               'format' = $tokenisedCommand.format;
