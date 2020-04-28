@@ -98,8 +98,11 @@ if noCI:
   quit()
 
 taskGroupId = os.getenv('TASK_ID')
-print('debug: auth.currentScopes')
-print(auth.currentScopes())
+
+print('[debug] auth.currentScopes:')
+for scope in auth.currentScopes().scopes:
+  print(' - {}'.format(scope))
+
 azurePurgeTaskId = slugid.nice()
 createTask(
   queue = queue,
