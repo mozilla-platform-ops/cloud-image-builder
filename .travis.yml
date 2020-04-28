@@ -1,6 +1,7 @@
 ---
 language: python
 install:
+  - pip install cachetools | grep -v "^[[:space:]]*$"
   - pip install pyyaml | grep -v "^[[:space:]]*$"
   - pip install taskcluster | grep -v "^[[:space:]]*$"
   - pip install urllib3 | grep -v "^[[:space:]]*$"
