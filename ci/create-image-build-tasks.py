@@ -100,7 +100,7 @@ if noCI:
 taskGroupId = os.getenv('TASK_ID')
 
 print('[debug] auth.currentScopes:')
-for scope in auth.currentScopes().scopes:
+for scope in auth.currentScopes()['scopes']:
   print(' - {}'.format(scope))
 
 azurePurgeTaskId = slugid.nice()
