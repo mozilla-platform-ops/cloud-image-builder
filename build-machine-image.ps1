@@ -28,7 +28,13 @@ function Invoke-BootstrapExecution {
       $execution.commands | % {
         # tokenised commands (eg: commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
         if ($_.format -and $_.tokens) {
-          ($_.format -f @($_.tokens | % $($_)))
+          $tokenisedCommand = $_;
+          try {
+            ($tokenisedCommand.format -f @($tokenisedCommand.tokens | % $($tokenisedCommand)))
+          } catch {
+            Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, threw exception evaluating tokenised command (format: "{8}", tokens: "{9}")' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $tokenisedCommand.format, [String]::Join(', ', $tokenisedCommand.tokens));
+            Write-Output -InputObject ($_.Exception.Message)
+          }
         } else {
           $_
         }
