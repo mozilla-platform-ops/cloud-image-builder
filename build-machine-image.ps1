@@ -188,15 +188,15 @@ function Invoke-BootstrapExecution {
       'winrm-powershell' {
         $publicIpAddress = (Get-PublicIpAddress -platform $platform -group $target.group -resourceId $resourceId);
         if (-not ($publicIpAddress)) {
-          Write-Debug -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $target.group, $platform);
+          Write-Debug -Message ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $target.group, $platform);
           exit 1;
         }
         $adminPassword = (Get-AdminPassword -platform $platform -imageKey $imageKey);
         if (-not ($adminPassword)) {
-          Write-Debug -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
+          Write-Debug -Message ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
           exit 1;
         } else {
-          Write-Debug -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found with length: {3}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $adminPassword.Length);
+          Write-Debug -Message ('{0} :: admin password for image: {1}, on platform: {2}, found with length: {3}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $adminPassword.Length);
         }
         $credential = (New-Object `
           -TypeName 'System.Management.Automation.PSCredential' `
@@ -554,7 +554,7 @@ function Get-ImageArtifactDescriptor {
     [string] $uri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey)
   )
   begin {
-    Write-Debug -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     $imageArtifactDescriptor = $null;
@@ -562,15 +562,15 @@ function Get-ImageArtifactDescriptor {
       $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($uri)));
       $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
       $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
-      Write-Debug -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
+      Write-Debug -Message ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
     } catch {
-      Write-Debug -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      Write-Debug -Message ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
       exit 1
     }
     return $imageArtifactDescriptor;
   }
   end {
-    Write-Debug -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
@@ -823,7 +823,7 @@ function Get-PublicIpAddress {
     [string] $resourceId
   )
   begin {
-    Write-Debug -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     $publicIpAddress = $null;
@@ -831,19 +831,19 @@ function Get-PublicIpAddress {
       switch ($platform) {
         'azure' {
           $publicIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $group -Name ('ip-{0}' -f $resourceId)).IpAddress;
-          Write-Debug -InputObject ('{0} :: public ip address for resource: {1}, in group: {2}, on platform: {3}, determined as: {4}' -f $($MyInvocation.MyCommand.Name), $resourceId, $group, $platform, $publicIpAddress);
+          Write-Debug -Message ('{0} :: public ip address for resource: {1}, in group: {2}, on platform: {3}, determined as: {4}' -f $($MyInvocation.MyCommand.Name), $resourceId, $group, $platform, $publicIpAddress);
         }
         default {
-          Write-Debug -InputObject ('{0} :: not implementated for platform: {1}' -f $($MyInvocation.MyCommand.Name), $platform);
+          Write-Debug -Message ('{0} :: not implementated for platform: {1}' -f $($MyInvocation.MyCommand.Name), $platform);
         }
       }
     } catch {
-      Write-Debug -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $resourceId, $group, $platform, $_.Exception.Message);
+      Write-Debug -Message ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $resourceId, $group, $platform, $_.Exception.Message);
     }
     return $publicIpAddress;
   }
   end {
-    Write-Debug -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
@@ -854,21 +854,21 @@ function Get-AdminPassword {
     [string] $uri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey)
   )
   begin {
-    Write-Debug -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     try {
       $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($uri)));
       $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
       [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
-      Write-Debug -InputObject ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
+      Write-Debug -Message ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
     } catch {
-      Write-Debug -InputObject ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      Write-Debug -Message ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
     }
     return $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
   }
   end {
-    Write-Debug -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
