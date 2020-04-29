@@ -369,6 +369,350 @@ function Update-RequiredModules {
   }
 }
 
+function Initialize-Platform {
+  param (
+    [string] $platform,
+    [object] $secret
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    switch ($platform) {
+      'azure' {
+        try {
+          Connect-AzAccount `
+            -ServicePrincipal `
+            -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
+              -String $secret.azure.key `
+              -AsPlainText `
+              -Force))) `
+            -Tenant $secret.azure.account | Out-Null;
+          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
+        } catch {
+          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
+        }
+        try {
+          $azcopyExePath = ('{0}\azcopy.exe' -f $workFolder);
+          $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
+          $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';
+          if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
+            (New-Object Net.WebClient).DownloadFile($azcopyZipUrl, $azcopyZipPath);
+            if (Test-Path -Path $azcopyZipPath -ErrorAction SilentlyContinue) {
+              Write-Output -InputObject ('{0} :: downloaded: {1} from: {2}' -f $($MyInvocation.MyCommand.Name), $azcopyZipPath, $azcopyZipUrl);
+              Expand-Archive -Path $azcopyZipPath -DestinationPath $workFolder;
+              try {
+                $extractedAzcopyExePath = (@(Get-ChildItem -Path ('{0}\azcopy.exe' -f $workFolder) -Recurse -ErrorAction SilentlyContinue -Force)[0].FullName);
+                Write-Output -InputObject ('{0} :: extracted: {1} from: {2}' -f $($MyInvocation.MyCommand.Name), $extractedAzcopyExePath, $azcopyZipPath);
+                Copy-Item -Path $extractedAzcopyExePath -Destination $azcopyExePath;
+                if (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue) {
+                  Write-Output -InputObject ('{0} :: copied: {1} to: {2}' -f $($MyInvocation.MyCommand.Name), $extractedAzcopyExePath, $azcopyExePath);
+                  $env:PATH = ('{0};{1}' -f $env:PATH, $workFolder);
+                  [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User');
+                  Write-Output -InputObject ('{0} :: user env PATH set to: {1}' -f $($MyInvocation.MyCommand.Name), $env:PATH);
+                }
+              } catch {
+                Write-Output -InputObject ('{0} :: failed to extract azcopy from: {1}' -f $($MyInvocation.MyCommand.Name), $azcopyZipPath);
+              }
+            } else {
+              Write-Output -InputObject ('{0} :: failed to download: {1} from: {2}' -f $($MyInvocation.MyCommand.Name), $azcopyZipPath, $azcopyZipUrl);
+              exit 123;
+            }
+          }
+          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
+        } catch {
+          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
+        }
+
+      }
+      'amazon' {
+        try {
+          Set-AWSCredential `
+            -AccessKey $secret.amazon.id `
+            -SecretKey $secret.amazon.key `
+            -StoreAs 'default' | Out-Null;
+          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
+        } catch {
+          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
+
+        }
+      }
+    }
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Get-ImageArtifactDescriptor {
+  param (
+    [string] $platform,
+    [string] $imageKey,
+    [string] $uri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey)
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    $imageArtifactDescriptor = $null;
+    try {
+      $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($uri)));
+      $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
+      $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
+      Write-Output -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
+    } catch {
+      Write-Output -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      exit 1
+    }
+    return $imageArtifactDescriptor;
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Invoke-SnapshotCopy {
+  param (
+    [string] $platform,
+    [string] $imageKey,
+    [object] $target,
+    [string] $targetImageName,
+    [object] $imageArtifactDescriptor,
+    [string] $targetSnapshotName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey, $imageArtifactDescriptor.build.revision.Substring(0, 7))
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    # check if the image snapshot exists in another regional resource-group
+    foreach ($source in @($config.target | ? { (($_.platform -eq $platform) -and $_.group -ne $group) })) {
+      $sourceSnapshotName = ('{0}-{1}-{2}' -f $source.group.Replace('rg-', ''), $imageKey, $imageArtifactDescriptor.build.revision.Substring(0, 7));
+      $sourceSnapshot = (Get-AzSnapshot `
+        -ResourceGroupName $source.group `
+        -SnapshotName $sourceSnapshotName `
+        -ErrorAction SilentlyContinue);
+      if ($sourceSnapshot) {
+        Write-Output -InputObject ('{0} :: found snapshot: {1}, in group: {2}, in cloud platform: {3}. triggering machine copy from {2} to {4}...' -f $($MyInvocation.MyCommand.Name), $sourceSnapshotName, $source.group, $source.platform, $target.group);
+
+        # get/create storage account in target region
+        $storageAccountName = ('{0}cib' -f $target.group.Replace('rg-', '').Replace('-', ''));
+        $targetAzStorageAccount = (Get-AzStorageAccount `
+          -ResourceGroupName $target.group `
+          -Name $storageAccountName);
+        if ($targetAzStorageAccount) {
+          Write-Output -InputObject ('{0} :: detected storage account: {1}, for resource group: {2}' -f $($MyInvocation.MyCommand.Name), $storageAccountName, $target.group);
+        } else {
+          $targetAzStorageAccount = (New-AzStorageAccount `
+            -ResourceGroupName $target.group `
+            -AccountName $storageAccountName `
+            -Location $target.region.Replace(' ', '').ToLower() `
+            -SkuName 'Standard_LRS');
+          Write-Output -InputObject ('{0} :: created storage account: {1}, for resource group: {2}' -f $($MyInvocation.MyCommand.Name), $storageAccountName, $target.group);
+        }
+        if (-not ($targetAzStorageAccount)) {
+          Write-Output -InputObject ('{0} :: failed to get or create az storage account: {1}' -f $($MyInvocation.MyCommand.Name), $storageAccountName);
+          exit 1;
+        }
+
+        # get/create storage container (bucket) in target region
+        $storageContainerName = ('{0}cib' -f $target.group.Replace('rg-', '').Replace('-', ''));
+        $targetAzStorageContainer = (Get-AzStorageContainer `
+          -Name $storageContainerName `
+          -Context $targetAzStorageAccount.Context);
+        if ($targetAzStorageContainer) {
+          Write-Output -InputObject ('{0} :: detected storage container: {1}' -f $($MyInvocation.MyCommand.Name), $storageContainerName);
+        } else {
+          $targetAzStorageContainer = (New-AzStorageContainer `
+            -Name $storageContainerName `
+            -Context $targetAzStorageAccount.Context `
+            -Permission 'Container');
+          Write-Output -InputObject ('{0} :: created storage container: {1}' -f $($MyInvocation.MyCommand.Name), $storageContainerName);
+        }
+        if (-not ($targetAzStorageContainer)) {
+          Write-Output -InputObject ('{0} :: failed to get or create az storage container: {1}' -f $($MyInvocation.MyCommand.Name), $storageContainerName);
+          exit 1;
+        }
+         
+        # copy snapshot to target container (bucket)
+        $sourceAzSnapshotAccess = (Grant-AzSnapshotAccess `
+          -ResourceGroupName $source.group `
+          -SnapshotName $sourceSnapshotName `
+          -DurationInSecond 3600 `
+          -Access 'Read');
+        Start-AzStorageBlobCopy `
+          -AbsoluteUri $sourceAzSnapshotAccess.AccessSAS `
+          -DestContainer $storageContainerName `
+          -DestContext $targetAzStorageAccount.Context `
+          -DestBlob $targetSnapshotName;
+        # todo: wrap above cmdlet in try/catch and handle exceptions
+        $targetAzStorageBlobCopyState = (Get-AzStorageBlobCopyState `
+          -Container $storageContainerName `
+          -Blob $targetSnapshotName `
+          -Context $targetAzStorageAccount.Context `
+          -WaitForComplete);
+        $targetAzSnapshotConfig = (New-AzSnapshotConfig `
+          -AccountType 'Standard_LRS' `
+          -OsType 'Windows' `
+          -Location $target.region.Replace(' ', '').ToLower() `
+          -CreateOption 'Import' `
+          -SourceUri ('{0}{1}/{2}' -f $targetAzStorageAccount.Context.BlobEndPoint, $storageContainerName, $targetSnapshotName) `
+          -StorageAccountId $targetAzStorageAccount.Id);
+        $targetAzSnapshot = (New-AzSnapshot `
+          -ResourceGroupName $target.group `
+          -SnapshotName $targetSnapshotName `
+          -Snapshot $targetAzSnapshotConfig);
+        Write-Output -InputObject ('{0} :: provisioning of snapshot: {1}, has state: {2}' -f $($MyInvocation.MyCommand.Name), $targetSnapshotName, $targetAzSnapshot.ProvisioningState.ToLower());
+        $targetAzImageConfig = (New-AzImageConfig `
+          -Location $target.region.Replace(' ', '').ToLower());
+        $targetAzImageConfig = (Set-AzImageOsDisk `
+          -Image $targetAzImageConfig `
+          -OsType 'Windows' `
+          -OsState 'Generalized' `
+          -SnapshotId $targetAzSnapshot.Id);
+        $targetAzImage = (New-AzImage `
+          -ResourceGroupName $target.group `
+          -ImageName $targetImageName `
+          -Image $targetAzImageConfig);
+        if (-not $targetAzImage) {
+          Write-Output -InputObject ('{0} :: provisioning of image: {1}, failed' -f $($MyInvocation.MyCommand.Name), $targetImageName);
+          exit 1;
+        }
+        Write-Output -InputObject ('{0} :: provisioning of image: {1}, has state: {2}' -f $($MyInvocation.MyCommand.Name), $targetImageName, $targetAzImage.ProvisioningState.ToLower());
+        exit;
+      }
+    }
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Get-AzureSkuFamily {
+  param (
+    [string] $sku
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    switch -regex ($sku) {
+      '^Basic_A[0-9]+$' {
+        $skuFamily = 'Basic A Family vCPUs';
+        break;
+      }
+      '^Standard_A[0-7]$' {
+        $skuFamily = 'Standard A0-A7 Family vCPUs';
+        break;
+      }
+      '^Standard_A(8|9|10|11)$' {
+        $skuFamily = 'Standard A8-A11 Family vCPUs';
+        break;
+      }
+      '^(Basic|Standard)_(B|D|E|F|H|L|M)[0-9]+m?r?$' {
+        $skuFamily = '{0} {1} Family vCPUs' -f $matches[1], $matches[2];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+m?r?_Promo$' {
+        $skuFamily = '{0} {1} Promo Family vCPUs' -f $matches[1], $matches[2];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+[lmt]?s$' {
+        $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M|P)([BC])[0-9]+r?s$' {
+        $skuFamily = '{0} {1}{2}S Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?m?s$' {
+        $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+$' {
+        $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+m?_v([2-4])$' {
+        $skuFamily = '{0} {1}v{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)?[0-9]+_v([2-4])_Promo$' {
+        $skuFamily = '{0} {1}v{2} Promo Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+_v([2-4])$' {
+        $skuFamily = '{0} {1}v{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+m?s_v([2-4])$' {
+        $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?s_v([2-4])$' {
+        $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+(-(1|2|4|8|16|32|64))?_v([2-4])$' {
+        $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?i_v([2-4])$' {
+        $skuFamily = '{0} {1}Iv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?is_v([2-4])$' {
+        $skuFamily = '{0} {1}ISv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+_v([2-4])_Promo$' {
+        $skuFamily = '{0} {1}Sv{2} Promo Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+a_v([2-4])$' {
+        $skuFamily = '{0} {1}Av{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+as_v([2-4])$' {
+        $skuFamily = '{0} {1}ASv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
+        break;
+      }
+      '^Standard_N([CV])[0-9]+r?$' {
+        $skuFamily = 'Standard N{0} Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([CV])[0-9]+r?_Promo$' {
+        $skuFamily = 'Standard N{0} Promo Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([DP])S[0-9]+$' {
+        $skuFamily = 'Standard N{0}S Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([DP])[0-9]+r?s$' {
+        $skuFamily = 'Standard N{0}S Family vCPUs' -f $matches[1];
+        break;
+      }
+      '^Standard_N([CDV])[0-9]+r?s_v([2-4])$' {
+        $skuFamily = 'Standard N{0}Sv{1} Family vCPUs' -f $matches[1], $matches[2];
+        break;
+      }
+      default {
+        $skuFamily = $null;
+        break;
+      }
+    }
+    if ($skuFamily) {
+      Write-Output -InputObject ('{0} :: azure sku family determined as {1} from sku {2}' -f $($MyInvocation.MyCommand.Name), $skuFamily, $sku);
+    } else {
+      Write-Output -InputObject ('{0} :: failed to determine azure sku family from sku {1}' -f $($MyInvocation.MyCommand.Name), $sku);
+    }
+    return $skuFamily;
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
@@ -380,49 +724,9 @@ Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, image
 Update-RequiredModules
 
 $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
-Set-AWSCredential `
-  -AccessKey $secret.amazon.id `
-  -SecretKey $secret.amazon.key `
-  -StoreAs 'default' | Out-Null;
 
-switch ($platform) {
-  'azure' {
-    Connect-AzAccount `
-      -ServicePrincipal `
-      -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
-        -String $secret.azure.key `
-        -AsPlainText `
-        -Force))) `
-      -Tenant $secret.azure.account | Out-Null;
-
-    $azcopyExePath = ('{0}\azcopy.exe' -f $workFolder);
-    $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
-    $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';
-    if (-not (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue)) {
-      (New-Object Net.WebClient).DownloadFile($azcopyZipUrl, $azcopyZipPath);
-      if (Test-Path -Path $azcopyZipPath -ErrorAction SilentlyContinue) {
-        Write-Output -InputObject ('downloaded: {0} from: {1}' -f $azcopyZipPath, $azcopyZipUrl);
-        Expand-Archive -Path $azcopyZipPath -DestinationPath $workFolder;
-        try {
-          $extractedAzcopyExePath = (@(Get-ChildItem -Path ('{0}\azcopy.exe' -f $workFolder) -Recurse -ErrorAction SilentlyContinue -Force)[0].FullName);
-          Write-Output -InputObject ('extracted: {0} from: {1}' -f $extractedAzcopyExePath, $azcopyZipPath);
-          Copy-Item -Path $extractedAzcopyExePath -Destination $azcopyExePath;
-          if (Test-Path -Path $azcopyExePath -ErrorAction SilentlyContinue) {
-            Write-Output -InputObject ('copied: {0} to: {1}' -f $extractedAzcopyExePath, $azcopyExePath);
-            $env:PATH = ('{0};{1}' -f $env:PATH, $workFolder);
-            [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'User');
-            Write-Output -InputObject ('user env PATH set to: {0}' -f $env:PATH);
-          }
-        } catch {
-          Write-Output -InputObject ('failed to extract azcopy from: {0}' -f $azcopyZipPath);
-        }
-      } else {
-        Write-Output -InputObject ('failed to download: {0} from: {1}' -f $azcopyZipPath, $azcopyZipUrl);
-        exit 123;
-      }
-    }
-  }
-}
+Initialize-Platform -platform 'amazon' -secret $secret
+Initialize-Platform -platform $platform -secret $secret
 
 # computed target specific settings. these are probably ok as they are.
 $config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
@@ -430,16 +734,7 @@ if (-not ($config)) {
   Write-Output -InputObject ('error: failed to find image config for {0}' -f $imageKey);
   exit 1
 }
-$imageArtifactDescriptorUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
-try {
-  $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageArtifactDescriptorUri)));
-  $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
-  $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
-  Write-Output -InputObject ('fetched disk image config for: {0}, from: {1}' -f $imageKey, $imageArtifactDescriptorUri);
-} catch {
-  Write-Output -InputObject ('error: failed to decompress or parse json from: {0}. {1}' -f $imageArtifactDescriptorUri, $_.Exception.Message);
-  exit 1
-}
+$imageArtifactDescriptor = (Get-ImageArtifactDescriptor -platform $platform -imageKey $imageKey);
 $exportImageName = [System.IO.Path]::GetFileName($imageArtifactDescriptor.image.key);
 $vhdLocalPath = ('{0}{1}{2}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $exportImageName);
 
@@ -460,104 +755,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
         Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
         exit;
       } elseif ($enableSnapshotCopy) {
-        # check if the image snapshot exists in another regional resource-group
-        $targetSnapshotName = ('{0}-{1}-{2}' -f $target.group.Replace('rg-', ''), $imageKey, $imageArtifactDescriptor.build.revision.Substring(0, 7));
-        foreach ($source in @($config.target | ? { (($_.platform -eq $platform) -and $_.group -ne $group) })) {
-          $sourceSnapshotName = ('{0}-{1}-{2}' -f $source.group.Replace('rg-', ''), $imageKey, $imageArtifactDescriptor.build.revision.Substring(0, 7));
-          $sourceSnapshot = (Get-AzSnapshot `
-            -ResourceGroupName $alternateTarget.group `
-            -SnapshotName $sourceSnapshotName `
-            -ErrorAction SilentlyContinue);
-          if ($sourceSnapshot) {
-            Write-Output -InputObject ('found snapshot: {0}, in group: {1}, in cloud platform: {2}. triggering machine copy from {1} to {3}...' -f $sourceSnapshotName, $source.group, $source.platform, $target.group);
-
-            # get/create storage account in target region
-            $storageAccountName = ('{0}cib' -f $target.group.Replace('rg-', '').Replace('-', ''));
-            $targetAzStorageAccount = (Get-AzStorageAccount `
-              -ResourceGroupName $target.group `
-              -Name $storageAccountName);
-            if ($targetAzStorageAccount) {
-              Write-Output -InputObject ('detected storage account: {0}, for resource group: {1}' -f $storageAccountName, $target.group);
-            } else {
-              $targetAzStorageAccount = (New-AzStorageAccount `
-                -ResourceGroupName $target.group `
-                -AccountName $storageAccountName `
-                -Location $target.region.Replace(' ', '').ToLower() `
-                -SkuName 'Standard_LRS');
-              Write-Output -InputObject ('created storage account: {0}, for resource group: {1}' -f $storageAccountName, $target.group);
-            }
-            if (-not ($targetAzStorageAccount)) {
-              Write-Output -InputObject ('failed to get or create az storage account: {0}' -f $storageAccountName);
-              exit 1;
-            }
-
-            # get/create storage container (bucket) in target region
-            $storageContainerName = ('{0}cib' -f $target.group.Replace('rg-', '').Replace('-', ''));
-            $targetAzStorageContainer = (Get-AzStorageContainer `
-              -Name $storageContainerName `
-              -Context $targetAzStorageAccount.Context);
-            if ($targetAzStorageContainer) {
-              Write-Output -InputObject ('detected storage container: {0}' -f $storageContainerName);
-            } else {
-              $targetAzStorageContainer = (New-AzStorageContainer `
-                -Name $storageContainerName `
-                -Context $targetAzStorageAccount.Context `
-                -Permission 'Container');
-              Write-Output -InputObject ('created storage container: {0}' -f $storageContainerName);
-            }
-            if (-not ($targetAzStorageContainer)) {
-              Write-Output -InputObject ('failed to get or create az storage container: {0}' -f $storageContainerName);
-              exit 1;
-            }
-             
-            # copy snapshot to target container (bucket)
-            $sourceAzSnapshotAccess = (Grant-AzSnapshotAccess `
-              -ResourceGroupName $source.group `
-              -SnapshotName $sourceSnapshotName `
-              -DurationInSecond 3600 `
-              -Access 'Read');
-            Start-AzStorageBlobCopy `
-              -AbsoluteUri $sourceAzSnapshotAccess.AccessSAS `
-              -DestContainer $storageContainerName `
-              -DestContext $targetAzStorageAccount.Context `
-              -DestBlob $targetSnapshotName;
-            # todo: wrap above cmdlet in try/catch and handle exceptions
-            $targetAzStorageBlobCopyState = (Get-AzStorageBlobCopyState `
-              -Container $storageContainerName `
-              -Blob $targetSnapshotName `
-              -Context $targetAzStorageAccount.Context `
-              -WaitForComplete);
-            $targetAzSnapshotConfig = (New-AzSnapshotConfig `
-              -AccountType 'Standard_LRS' `
-              -OsType 'Windows' `
-              -Location $target.region.Replace(' ', '').ToLower() `
-              -CreateOption 'Import' `
-              -SourceUri ('{0}{1}/{2}' -f $targetAzStorageAccount.Context.BlobEndPoint, $storageContainerName, $targetSnapshotName) `
-              -StorageAccountId $targetAzStorageAccount.Id);
-            $targetAzSnapshot = (New-AzSnapshot `
-              -ResourceGroupName $target.group `
-              -SnapshotName $targetSnapshotName `
-              -Snapshot $targetAzSnapshotConfig);
-            Write-Output -InputObject ('provisioning of snapshot: {0}, has state: {1}' -f $targetSnapshotName, $targetAzSnapshot.ProvisioningState.ToLower());
-            $targetAzImageConfig = (New-AzImageConfig `
-              -Location $target.region.Replace(' ', '').ToLower());
-            $targetAzImageConfig = (Set-AzImageOsDisk `
-              -Image $targetAzImageConfig `
-              -OsType 'Windows' `
-              -OsState 'Generalized' `
-              -SnapshotId $targetAzSnapshot.Id);
-            $targetAzImage = (New-AzImage `
-              -ResourceGroupName $target.group `
-              -ImageName $targetImageName `
-              -Image $targetAzImageConfig);
-            if (-not $targetAzImage) {
-              Write-Output -InputObject ('provisioning of image: {0}, failed' -f $targetImageName);
-              exit 1;
-            }
-            Write-Output -InputObject ('provisioning of image: {0}, has state: {1}' -f $targetImageName, $targetAzImage.ProvisioningState.ToLower());
-            exit;
-          }
-        }
+        Invoke-SnapshotCopy -platform $platform -imageKey $imageKey -target $target -targetImageName $targetImageName -imageArtifactDescriptor $imageArtifactDescriptor
       }
     }
   }
@@ -583,112 +781,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
         Write-Output -InputObject ('skipped image export: {0}, to region: {1}, in cloud platform: {2}. {3} is not available' -f $exportImageName, $target.region, $target.platform, $sku);
         exit 1;
       } else {
-        switch -regex ($sku) {
-          '^Basic_A[0-9]+$' {
-            $skuFamily = 'Basic A Family vCPUs';
-            break;
-          }
-          '^Standard_A[0-7]$' {
-            $skuFamily = 'Standard A0-A7 Family vCPUs';
-            break;
-          }
-          '^Standard_A(8|9|10|11)$' {
-            $skuFamily = 'Standard A8-A11 Family vCPUs';
-            break;
-          }
-          '^(Basic|Standard)_(B|D|E|F|H|L|M)[0-9]+m?r?$' {
-            $skuFamily = '{0} {1} Family vCPUs' -f $matches[1], $matches[2];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+m?r?_Promo$' {
-            $skuFamily = '{0} {1} Promo Family vCPUs' -f $matches[1], $matches[2];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+[lmt]?s$' {
-            $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M|P)([BC])[0-9]+r?s$' {
-            $skuFamily = '{0} {1}{2}S Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?m?s$' {
-            $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+$' {
-            $skuFamily = '{0} {1}S Family vCPUs' -f $matches[1], $matches[2];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+m?_v([2-4])$' {
-            $skuFamily = '{0} {1}v{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)?[0-9]+_v([2-4])_Promo$' {
-            $skuFamily = '{0} {1}v{2} Promo Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+_v([2-4])$' {
-            $skuFamily = '{0} {1}v{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+m?s_v([2-4])$' {
-            $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?s_v([2-4])$' {
-            $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+(-(1|2|4|8|16|32|64))?_v([2-4])$' {
-            $skuFamily = '{0} {1}Sv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?i_v([2-4])$' {
-            $skuFamily = '{0} {1}Iv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)[0-9]+(-(1|2|4|8|16|32|64))?is_v([2-4])$' {
-            $skuFamily = '{0} {1}ISv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[5];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)S[0-9]+_v([2-4])_Promo$' {
-            $skuFamily = '{0} {1}Sv{2} Promo Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+a_v([2-4])$' {
-            $skuFamily = '{0} {1}Av{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^(Basic|Standard)_(A|B|D|E|F|H|L|M)1?[0-9]+as_v([2-4])$' {
-            $skuFamily = '{0} {1}ASv{2} Family vCPUs' -f $matches[1], $matches[2], $matches[3];
-            break;
-          }
-          '^Standard_N([CV])[0-9]+r?$' {
-            $skuFamily = 'Standard N{0} Family vCPUs' -f $matches[1];
-            break;
-          }
-          '^Standard_N([CV])[0-9]+r?_Promo$' {
-            $skuFamily = 'Standard N{0} Promo Family vCPUs' -f $matches[1];
-            break;
-          }
-          '^Standard_N([DP])S[0-9]+$' {
-            $skuFamily = 'Standard N{0}S Family vCPUs' -f $matches[1];
-            break;
-          }
-          '^Standard_N([DP])[0-9]+r?s$' {
-            $skuFamily = 'Standard N{0}S Family vCPUs' -f $matches[1];
-            break;
-          }
-          '^Standard_N([CDV])[0-9]+r?s_v([2-4])$' {
-            $skuFamily = 'Standard N{0}Sv{1} Family vCPUs' -f $matches[1], $matches[2];
-            break;
-          }
-          default {
-            $skuFamily = $false;
-            break;
-          }
-        }
+        $skuFamily = (Get-AzureSkuFamily -sku $sku);
         if ($skuFamily) {
           Write-Output -InputObject ('mapped machine sku: {0}, to machine family: {1}' -f $sku, $skuFamily);
           $azVMUsage = @(Get-AzVMUsage -Location $target.region | ? { $_.Name.LocalizedValue -eq $skuFamily })[0];
