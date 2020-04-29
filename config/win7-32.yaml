@@ -125,7 +125,7 @@ target:
     executions:
     # set hostname to match the azure machine name so that debug logs can be found in papertrail
     - name: set-computer-name
-      shell: azure-powershell
+      shell: winrm-powershell
       commands:
       - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
       - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
@@ -141,7 +141,7 @@ target:
         success: reboot
     # set maintenance secrets in the windows registry
     - name: create-registry-value-mozilla-tooltool-access-token
-      shell: azure-powershell
+      shell: winrm-powershell
       commands:
       - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
       - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool created') }
@@ -157,11 +157,11 @@ target:
         failure: retry after 60 seconds
     # trigger bootstrap script and await completion
     - name: invoke-occ
-      shell: azure-powershell
+      shell: winrm-powershell
       commands:
       - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
     - name: verify-occ
-      shell: azure-powershell
+      shell: winrm-powershell
       commands:
       - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
       test:
