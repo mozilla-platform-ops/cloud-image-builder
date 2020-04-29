@@ -184,6 +184,109 @@ function Invoke-BootstrapExecution {
           }
         }
       }
+      # bootstrap over winrm for architectures that do not have an azure vm agent
+      'winrm-powershell' {
+        $publicIpAddress = (Get-PublicIpAddress -platform $platform -group $target.group -resourceId $resourceId);
+        if (-not ($publicIpAddress)) {
+          Write-Debug -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $target.group, $platform);
+          exit 1;
+        }
+        $adminPassword = (Get-AdminPassword -platform $platform -imageKey $imageKey);
+        if (-not ($adminPassword)) {
+          Write-Debug -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
+          exit 1;
+        } else {
+          Write-Debug -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found with length: {3}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $adminPassword.Length);
+        }
+        $credential = (New-Object `
+          -TypeName 'System.Management.Automation.PSCredential' `
+          -ArgumentList @('.\Administrator', (ConvertTo-SecureString $adminPassword -AsPlainText -Force)));
+
+        # modify security group of remote azure instance to allow winrm from public ip of local task instance
+        try {
+          $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
+          $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
+          $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
+          if ($winrmAzNetworkSecurityRuleConfig) {
+            $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+              -Name 'allow-winrm' `
+              -NetworkSecurityGroup $azNetworkSecurityGroup `
+              -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
+          } else {
+            $winrmRuleFromConfig = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
+            $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
+              -Name $winrmRuleFromConfig.name `
+              -Description $winrmRuleFromConfig.Description `
+              -Access $winrmRuleFromConfig.Access `
+              -Protocol $winrmRuleFromConfig.Protocol `
+              -Direction $winrmRuleFromConfig.Direction `
+              -Priority $winrmRuleFromConfig.Priority `
+              -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
+              -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
+              -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
+              -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
+          }
+          if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+            $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+            Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+          } else {
+            Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+            exit 1;
+          }
+        } catch {
+          Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+          exit 1;
+        }
+
+        # enable remoting and add remote azure instance to trusted host list
+        try {
+          #Enable-PSRemoting -SkipNetworkProfileCheck -Force
+          #Write-Output -InputObject 'powershell remoting enabled for session';
+          $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
+          Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
+          $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $publicIpAddress) } else { $publicIpAddress });
+          #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
+          & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
+          Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+        } catch {
+          Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+          exit 1;
+        }
+
+        # run remote bootstrap scripts over winrm
+        try {
+          Invoke-Command -ComputerName $publicIpAddress -Credential $credential -ScriptBlock {
+
+            # todo:
+            # - set secrets in the instance registry
+            # - rename host
+            # - run bootstrap
+            # - halt system
+
+            $runCommandScriptContent            
+          }
+        } catch {
+          Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
+          exit 1;
+        }
+
+        # modify azure security group to remove public ip of task instance from winrm exceptions
+        $allowedIps = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
+        $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+          -Name 'allow-winrm' `
+          -NetworkSecurityGroup $azNetworkSecurityGroup `
+          -SourceAddressPrefix $allowedIps);
+        if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+          $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+          Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+        } else {
+          Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+        }
+
+        #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
+        & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap))
+        Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+      }
     }
     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
   }
@@ -451,7 +554,7 @@ function Get-ImageArtifactDescriptor {
     [string] $uri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/image-bucket-resource.json' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey)
   )
   begin {
-    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     $imageArtifactDescriptor = $null;
@@ -459,15 +562,15 @@ function Get-ImageArtifactDescriptor {
       $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($uri)));
       $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
       $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
-      Write-Output -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
+      Write-Debug -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
     } catch {
-      Write-Output -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      Write-Debug -InputObject ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
       exit 1
     }
     return $imageArtifactDescriptor;
   }
   end {
-    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
@@ -713,6 +816,76 @@ function Get-AzureSkuFamily {
   }
 }
 
+function Get-PublicIpAddress {
+  param (
+    [string] $platform,
+    [string] $group,
+    [string] $resourceId
+  )
+  begin {
+    Write-Debug -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    $publicIpAddress = $null;
+    try {
+      switch ($platform) {
+        'azure' {
+          $publicIpAddress = (Get-AzPublicIpAddress -ResourceGroupName $group -Name ('ip-{0}' -f $resourceId)).IpAddress;
+          Write-Debug -InputObject ('{0} :: public ip address for resource: {1}, in group: {2}, on platform: {3}, determined as: {4}' -f $($MyInvocation.MyCommand.Name), $resourceId, $group, $platform, $publicIpAddress);
+        }
+        default {
+          Write-Debug -InputObject ('{0} :: not implementated for platform: {1}' -f $($MyInvocation.MyCommand.Name), $platform);
+        }
+      }
+    } catch {
+      Write-Debug -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $resourceId, $group, $platform, $_.Exception.Message);
+    }
+    return $publicIpAddress;
+  }
+  end {
+    Write-Debug -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Get-AdminPassword {
+  param (
+    [string] $platform,
+    [string] $imageKey,
+    [string] $uri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey)
+  )
+  begin {
+    Write-Debug -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    try {
+      $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($uri)));
+      $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
+      [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
+      Write-Debug -InputObject ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
+    } catch {
+      Write-Debug -InputObject ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+    }
+    return $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
+  }
+  end {
+    Write-Debug -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Do-Stuff {
+  param (
+    [string] $arg1 = ''
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
@@ -898,160 +1071,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 $successfulBootstrapDetected = $true;
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
-
-                # begin nasty hardcoded bootstrap sequence ##############################################################
-                # todo: remove this code chunk when all yaml configs have been updated with bootstrap.executions sections
-                $successfulBootstrapDetected = $false;
-
-                $bootstrapOrg = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
-                $bootstrapRepo = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
-                $bootstrapRef = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
-                $bootstrapScript = @($target.tag | ? { $_.name -eq 'sourceScript' })[0].value;
-                $bootstrapUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}' -f $bootstrapOrg, $bootstrapRepo, $bootstrapRef, $bootstrapScript);
-                $workerDomain = $target.group.Replace(('rg-{0}-' -f $target.region.Replace(' ', '-').ToLower()), '');
-                $workerVariant = ('{0}-{1}' -f $imageKey, $target.platform);
-                $accessToken = ($secret.accessToken."$($target.platform)"."$workerDomain"."$workerVariant");
-                if (($accessToken) -and ($accessToken.Length -eq 44)) {
-                  Write-Output -InputObject ('access-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
-                } else {
-                  Write-Output -InputObject ('failed to determine access-token for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant);
-                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
-                  exit 123;
-                }
-                $tooltoolToken = ($secret.tooltool.token);
-                if (($tooltoolToken) -and ($tooltoolToken.Length -eq 44)) {
-                  Write-Output -InputObject ('tooltool-token determined for client-id {0}/{1}/{2}' -f $target.platform, $workerDomain, $workerVariant)
-                }
-
-                if ($config.image.architecture -ne 'x86-64') {
-                  # bootstrap over winrm for architectures that do not have an azure vm agent
-
-                  # determine public ip of remote azure instance
-                  try {
-                    $azPublicIpAddress = (Get-AzPublicIpAddress `
-                      -ResourceGroupName $target.group `
-                      -Name ('ip-{0}' -f $resourceId) `
-                      -ErrorAction SilentlyContinue);
-                    if ($azPublicIpAddress -and $azPublicIpAddress.IpAddress) {
-                      Write-Output -InputObject ('public ip address : "{0}", determined for: ip-{1}' -f $azPublicIpAddress.IpAddress, $resourceId);
-                    } else {
-                      Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}' -f $resourceId);
-                      exit 1;
-                    }
-                  } catch {
-                    Write-Output -InputObject ('error: failed to determine public ip address for: ip-{0}. {1}' -f $resourceId, $_.Exception.Message);
-                    exit 1;
-                  }
-
-                  # determine administrator password of remote azure instance
-                  $imageUnattendFileUri = ('{0}/api/index/v1/task/project.relops.cloud-image-builder.{1}.{2}.latest/artifacts/public/unattend.xml' -f $env:TASKCLUSTER_ROOT_URL, $platform, $imageKey);
-                  try {
-                    $memoryStream = (New-Object System.IO.MemoryStream(, (New-Object System.Net.WebClient).DownloadData($imageUnattendFileUri)));
-                    $streamReader = (New-Object System.IO.StreamReader(New-Object System.IO.Compression.GZipStream($memoryStream, [System.IO.Compression.CompressionMode] 'Decompress')));
-                    [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
-                    Write-Output -InputObject ('fetched disk image unattend file for: {0}, from: {1}' -f $imageKey, $imageUnattendFileUri);
-                  } catch {
-                    Write-Output -InputObject ('error: failed to decompress or parse xml from: {0}. {1}' -f $imageUnattendFileUri, $_.Exception.Message);
-                    exit 1;
-                  }
-                  $imagePassword = $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
-                  if ($imagePassword) {
-                    Write-Output -InputObject ('image password with length: {0}, extracted from: {1}' -f $imagePassword.Length, $imageUnattendFileUri);
-                  } else {
-                    Write-Output -InputObject ('error: failed to extract image password from: {0}' -f $imageUnattendFileUri);
-                    exit 1;
-                  }
-                  $credential = (New-Object `
-                    -TypeName 'System.Management.Automation.PSCredential' `
-                    -ArgumentList @('.\Administrator', (ConvertTo-SecureString $imagePassword -AsPlainText -Force)));
-
-                  # modify security group of remote azure instance to allow winrm from public ip of local task instance
-                  try {
-                    $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
-                    $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
-                    $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
-                    if ($winrmAzNetworkSecurityRuleConfig) {
-                      $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-                        -Name 'allow-winrm' `
-                        -NetworkSecurityGroup $azNetworkSecurityGroup `
-                        -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
-                    } else {
-                      $winrmRuleFromConfig = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
-                      $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
-                        -Name $winrmRuleFromConfig.name `
-                        -Description $winrmRuleFromConfig.Description `
-                        -Access $winrmRuleFromConfig.Access `
-                        -Protocol $winrmRuleFromConfig.Protocol `
-                        -Direction $winrmRuleFromConfig.Direction `
-                        -Priority $winrmRuleFromConfig.Priority `
-                        -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
-                        -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
-                        -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
-                        -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
-                    }
-                    if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
-                      $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-                      Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
-                    } else {
-                      Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
-                      exit 1;
-                    }
-                  } catch {
-                    Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-                    exit 1;
-                  }
-
-                  # enable remoting and add remote azure instance to trusted host list
-                  try {
-                    #Enable-PSRemoting -SkipNetworkProfileCheck -Force
-                    #Write-Output -InputObject 'powershell remoting enabled for session';
-                    $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-                    Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
-                    $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $azPublicIpAddress.IpAddress) } else { $azPublicIpAddress.IpAddress });
-                    #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
-                    & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
-                    Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-                  } catch {
-                    Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-                    exit 1;
-                  }
-
-                  # run remote bootstrap scripts over winrm
-                  try {
-                    Invoke-Command -ComputerName $azPublicIpAddress.IpAddress -Credential $credential -ScriptBlock {
-
-                      # todo:
-                      # - set secrets in the instance registry
-                      # - rename host
-                      # - run bootstrap
-                      # - halt system
-
-                      Get-UICulture
-                    }
-                  } catch {
-                    Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
-                    exit 1;
-                  }
-
-                  # modify azure security group to remove public ip of task instance from winrm exceptions
-                  $allowedIps = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
-                  $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-                    -Name 'allow-winrm' `
-                    -NetworkSecurityGroup $azNetworkSecurityGroup `
-                    -SourceAddressPrefix $allowedIps);
-                  if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
-                    $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-                    Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
-                  } else {
-                    Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
-                  }
-
-                  #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
-                  & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap))
-                  Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-                }
-                # end nasty hardcoded bootstrap sequence ################################################################
-
               }
 
               # check (again) that another task hasn't already created the image
