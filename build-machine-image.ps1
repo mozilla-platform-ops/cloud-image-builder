@@ -491,9 +491,9 @@ function Initialize-Platform {
               -AsPlainText `
               -Force))) `
             -Tenant $secret.azure.account | Out-Null;
-          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
+          Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
         } catch {
-          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
+          Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
         }
         try {
           $azcopyExePath = ('{0}\azcopy.exe' -f $workFolder);
@@ -522,9 +522,9 @@ function Initialize-Platform {
               exit 123;
             }
           }
-          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
+          Write-Output -InputObject ('{0} :: for platform: {1}, acquire of platform tools, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
         } catch {
-          Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
+          Write-Output -InputObject ('{0} :: for platform: {1}, acquire of platform tools, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
         }
 
       }
