@@ -308,37 +308,76 @@ function Remove-Resource {
   }
 }
 
+function Update-RequiredModules {
+  param (
+    [string] $repository = 'PSGallery',
+    [hashtable[]] $requiredModules = @(
+      @{
+        'module' = 'posh-minions-managed';
+        'version' = '0.0.72'
+      },
+      @{
+        'module' = 'powershell-yaml';
+        'version' = '0.4.1'
+      }
+    )
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    if (@(Get-PSRepository -Name $repository)[0].InstallationPolicy -ne 'Trusted') {
+      try {
+        Set-PSRepository -Name $repository -InstallationPolicy 'Trusted';
+        Write-Output -InputObject ('{0} :: setting of installation policy to trusted for repository: {1}, succeeded' -f $($MyInvocation.MyCommand.Name), $repository);
+      } catch {
+        Write-Output -InputObject ('{0} :: setting of installation policy to trusted for repository: {1}, failed. {2}' -f $($MyInvocation.MyCommand.Name), $repository, $_.Exception.Message);
+      }
+    }
+    foreach ($rm in $requiredModules) {
+      $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
+      if ($module) {
+        if ($module.Version -lt $rm.version) {
+          try {
+            Update-Module -Name $rm.module -RequiredVersion $rm.version;
+            Write-Output -InputObject ('{0} :: update of required module: {1}, version: {2}, succeeded' -f $($MyInvocation.MyCommand.Name), $rm.module, $rm.version);
+          } catch {
+            Write-Output -InputObject ('{0} :: update of required module: {1}, version: {2}, failed. {3}' -f $($MyInvocation.MyCommand.Name), $rm.module, $rm.version, $_.Exception.Message);
+          }
+        }
+      } else {
+        try {
+          Install-Module -Name $rm.module -RequiredVersion $rm.version -AllowClobber;
+          Write-Output -InputObject ('{0} :: install of required module: {1}, version: {2}, succeeded' -f $($MyInvocation.MyCommand.Name), $rm.module, $rm.version);
+        } catch {
+          Write-Output -InputObject ('{0} :: install of required module: {1}, version: {2}, failed. {3}' -f $($MyInvocation.MyCommand.Name), $rm.module, $rm.version, $_.Exception.Message);
+        }
+      }
+      try {
+        Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
+        Write-Output -InputObject ('{0} :: import of required module: {1}, version: {2}, succeeded' -f $($MyInvocation.MyCommand.Name), $rm.module, $rm.version);
+      } catch {
+        Write-Output -InputObject ('{0} :: import of required module: {1}, version: {2}, failed. {3}' -f $($MyInvocation.MyCommand.Name), $rm.module, $rm.version, $_.Exception.Message);
+        # if we get here, the instance is borked and will throw exceptions on all subsequent tasks.
+        & shutdown @('/s', '/t', '3', '/c', 'borked powershell module library detected', '/f', '/d', '1:1');
+        exit 123;
+      }
+    }
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
 # job settings. change these for the tasks at hand.
 #$VerbosePreference = 'continue';
 $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
 
 # constants and script config. these are probably ok as they are.
 $revision = $(& git rev-parse HEAD);
-if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
-  Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
-}
-foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.72' },
-  @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
-)) {
-  $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
-  if ($module) {
-    if ($module.Version -lt $rm.version) {
-      Update-Module -Name $rm.module -RequiredVersion $rm.version;
-    }
-  } else {
-    Install-Module -Name $rm.module -RequiredVersion $rm.version -AllowClobber;
-  }
-  try {
-    Import-Module -Name $rm.module -RequiredVersion $rm.version -ErrorAction SilentlyContinue;
-  } catch {
-    Write-Output -InputObject ('import of required module: {0}, version: {1}, failed. {2}' -f $rm.module, $rm.version, $_.Exception.Message);
-    # if we get here, the instance is borked and will throw exceptions on all subsequent tasks.
-    & shutdown @('/s', '/t', '3', '/c', 'borked powershell module library detected', '/f', '/d', '1:1');
-    exit 123;
-  }
-}
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, imageKey: {3}' -f $workFolder, $revision, $platform, $imageKey);
+
+Update-RequiredModules
 
 $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
 Set-AWSCredential `
