@@ -695,7 +695,7 @@ function Get-AzureSkuFamily {
     [string] $sku
   )
   begin {
-    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     switch -regex ($sku) {
@@ -805,14 +805,14 @@ function Get-AzureSkuFamily {
       }
     }
     if ($skuFamily) {
-      Write-Output -InputObject ('{0} :: azure sku family determined as {1} from sku {2}' -f $($MyInvocation.MyCommand.Name), $skuFamily, $sku);
+      Write-Debug -Message ('{0} :: azure sku family determined as {1} from sku {2}' -f $($MyInvocation.MyCommand.Name), $skuFamily, $sku);
     } else {
-      Write-Output -InputObject ('{0} :: failed to determine azure sku family from sku {1}' -f $($MyInvocation.MyCommand.Name), $sku);
+      Write-Debug -Message ('{0} :: failed to determine azure sku family from sku {1}' -f $($MyInvocation.MyCommand.Name), $sku);
     }
     return $skuFamily;
   }
   end {
-    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Debug -Message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
