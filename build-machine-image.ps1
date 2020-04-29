@@ -10,6 +10,60 @@ param (
   [switch] $enableSnapshotCopy = $false
 )
 
+function Invoke-OptionalSleep {
+  param (
+    [string] $command,
+    [string] $separator = ' ',
+    [string] $action = $(
+      if (($command.Split($separator).Length -gt 1) -and ($command.Split($separator)[1] -in @('in', 'after'))) {
+        $command.Split($separator)[1]
+      } else {
+        $null
+      }
+    ),
+    [int] $duration = $(
+      if (($command.Split($separator).Length -gt 2) -and ($command.Split($separator)[2] -match "^\d+$")) {
+        [int]$command.Split($separator)[2]
+      } else {
+        0
+      }
+    ),
+    [string] $unit = $(
+      if (($command.Split($separator).Length -gt 3) -and ($command.Split($separator)[3] -in @('millisecond', 'milliseconds', 'ms', 'second', 'seconds', 's', 'minute', 'minutes', 'm'))) {
+        $command.Split($separator)[1]
+      } else {
+        'seconds'
+      }
+    )
+  )
+  begin {
+    if ($action -and ($duration -gt 0)) {
+      Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    }
+  }
+  process {
+    if ($action -and ($duration -gt 0)) {
+      Write-Output -InputObject ('{0} :: sleeping for {1} {2}' -f $($MyInvocation.MyCommand.Name), $duration, $unit);
+      switch -regex ($unit) {
+        '^(millisecond|milliseconds|ms)$' {
+          Start-Sleep -Milliseconds $duration;
+        }
+        '^(second|seconds|s)$' {
+          Start-Sleep -Seconds $duration;
+        }
+        '^(minute|minutes|m)$' {
+          Start-Sleep -Seconds ($duration * 60);
+        }
+      }
+    }
+  }
+  end {
+    if ($action -and ($duration -gt 0)) {
+      Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    }
+  }
+}
+
 function Invoke-BootstrapExecution {
   param (
     [int] $executionNumber,
@@ -20,7 +74,7 @@ function Invoke-BootstrapExecution {
     [int] $attemptNumber = 1
   )
   begin {
-    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been invoked' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
@@ -83,8 +137,9 @@ function Invoke-BootstrapExecution {
                   Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
                   if ($execution.on.success) {
                     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
-                    switch ($execution.on.success) {
+                    switch ($execution.on.success.Split(' ')[0]) {
                       'reboot' {
+                        Invoke-OptionalSleep -command $execution.on.success;
                         Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
                       }
                       default {
@@ -96,18 +151,22 @@ function Invoke-BootstrapExecution {
                   Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
                   if ($execution.on.failure) {
                     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
-                    switch ($execution.on.failure) {
+                    switch ($execution.on.failure.Split(' ')[0]) {
                       'reboot' {
+                        Invoke-OptionalSleep -command $execution.on.failure;
                         Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
                       }
                       'retry' {
+                        Invoke-OptionalSleep -command $execution.on.failure;
                         Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1)
                       }
                       'retry-task' {
+                        Invoke-OptionalSleep -command $execution.on.failure;
                         Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
                         exit 123;
                       }
                       'fail' {
+                        Invoke-OptionalSleep -command $execution.on.failure;
                         Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
                         exit 1;
                       }
@@ -129,7 +188,7 @@ function Invoke-BootstrapExecution {
     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
   }
   end {
-    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
@@ -140,7 +199,7 @@ function Invoke-BootstrapExecutions {
     [object[]] $executions
   )
   begin {
-    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     if ($executions -and $executions.Length) {
@@ -154,7 +213,7 @@ function Invoke-BootstrapExecutions {
     }
   }
   end {
-    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 
@@ -170,7 +229,7 @@ function Remove-Resource {
     )
   )
   begin {
-    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
     # instance instantiation failures leave behind a disk, public ip and network interface which need to be deleted.
@@ -245,7 +304,7 @@ function Remove-Resource {
     )
   }
   end {
-    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
 

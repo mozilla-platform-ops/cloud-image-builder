@@ -175,7 +175,7 @@ target:
           out:
             match: validated
       on:
-        failure: retry
+        failure: retry after 60 seconds
     # trigger bootstrap script and await completion
     - name: invoke-occ
       shell: azure-powershell
@@ -190,7 +190,7 @@ target:
           out:
             match: ed25519 private key detected
       on:
-        failure: retry
+        failure: retry after 60 seconds
 - platform: azure
   group: rg-east-us-gecko-1
   region: East US

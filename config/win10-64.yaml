@@ -153,7 +153,7 @@ target:
           out:
             match: puppet bootstrap stage is complete
       on:
-        failure: retry
+        failure: retry after 60 seconds
 - platform: azure
   group: rg-east-us-gecko-t
   region: East US
