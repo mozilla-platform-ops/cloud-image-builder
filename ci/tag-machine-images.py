@@ -80,15 +80,16 @@ if platform == 'azure':
       tenant = secret['azure']['account']),
     secret['azure']['subscription'])
 
-  pattern = re.compile('^{}-{}-([a-z0-9]{{7}})-([a-z0-9]{{7}})$'.format(group.replace('rg-', ''), key))
-  images = [x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)]
+  pattern = re.compile('^{}-{}-([a-f0-9]{{7}})-([a-f0-9]{{7}})$'.format(group.replace('rg-', ''), key))
+  images = list([x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)])
+  print('found: {} images matching pattern: {}-{}-(disk-sha)-(deployment-id)'.format(len(images), group.replace('rg-', ''), key))
   for image in images:
     diskImageRevision = pattern.search(image.name).group(1)
     bootstrapRevision = pattern.search(image.name).group(2)
     print('image: {}, has disk image revision: {} (mozilla-platform-ops/cloud-image-builder)'.format(image.name, diskImageRevision))
     diskImageCommit = get_commit('mozilla-platform-ops', 'cloud-image-builder', diskImageRevision)
     if image.tags:
-      print('image has tags: {}'.format(', '.join(['%s:: %s' % (k, v) for (k, v) in image.tags.items()])))
+      print('image has tags: {}'.format(', '.join(['%s: %s' % (k, v) for (k, v) in image.tags.items()])))
       print('updating tags...')
     else:
       print('image has no tags. creating tags...')
