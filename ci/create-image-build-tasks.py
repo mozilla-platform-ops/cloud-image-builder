@@ -225,8 +225,9 @@ for platform in ['amazon', 'azure']:
             platform = platform,
             group = target['group'],
             key = key))
+
+          machineImageBuildTaskId = slugid.nice()
           if queueMachineImageBuild:
-            machineImageBuildTaskId = slugid.nice()
             bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
             bootstrapRepository = next(x for x in target['tag'] if x['name'] == 'sourceRepository')['value']
             bootstrapOrganisation = next(x for x in target['tag'] if x['name'] == 'sourceOrganisation')['value']
@@ -270,41 +271,42 @@ for platform in ['amazon', 'azure']:
                 'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
               ],
               taskGroupId = taskGroupId)
-            taggingTaskId = slugid.nice()
-            taggingTaskIdsForPool.append(taggingTaskId)
-            createTask(
-              queue = queue,
-              image = 'python',
-              taskId = taggingTaskId,
-              taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
-              taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
-              maxRunMinutes = 180,
-              retries = 4,
-              retriggerOnExitCodes = [ 123 ],
-              dependencies = [ machineImageBuildTaskId ],
-              provisioner = 'relops',
-              workerType = 'decision',
-              priority = 'low',
-              features = {
-                'taskclusterProxy': True
-              },
-              env = {
-                'platform': platform,
-                'group': target['group'],
-                'key': key
-              },
-              commands = [
-                '/bin/bash',
-                '--login',
-                '-c',
-                'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml requests slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
-              ],
-              scopes = [
-                'secrets:get:project/relops/image-builder/dev'
-              ],
-              taskGroupId = taskGroupId)
           else:
             print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
+
+          taggingTaskId = slugid.nice()
+          taggingTaskIdsForPool.append(taggingTaskId)
+          createTask(
+            queue = queue,
+            image = 'python',
+            taskId = taggingTaskId,
+            taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
+            taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
+            maxRunMinutes = 180,
+            retries = 4,
+            retriggerOnExitCodes = [ 123 ],
+            dependencies = [] if poolDeploy else [ machineImageBuildTaskId ],
+            provisioner = 'relops',
+            workerType = 'decision',
+            priority = 'low',
+            features = {
+              'taskclusterProxy': True
+            },
+            env = {
+              'platform': platform,
+              'group': target['group'],
+              'key': key
+            },
+            commands = [
+              '/bin/bash',
+              '--login',
+              '-c',
+              'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml requests slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
+            ],
+            scopes = [
+              'secrets:get:project/relops/image-builder/dev'
+            ],
+            taskGroupId = taskGroupId)
 
         # todo: remove this hack which exists because non-azure builds don't yet work
         queueWorkerPoolConfigurationTask = platform in platformClient

@@ -100,6 +100,7 @@ if platform == 'azure':
       print('image: {}, has bootstrap revision: {} ({}/{})'.format(image.name, bootstrapRevision, org, repo))
       bootstrapCommit = get_commit(org, repo, bootstrapRevision)
       image.tags = {
+        'deploymentId': bootstrapRevision,
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
         'diskImageCommitSha': diskImageCommit['sha'],
@@ -154,6 +155,7 @@ if platform == 'azure':
       print('snapshot: {}, has bootstrap revision: {} ({}/{})'.format(snapshot.name, bootstrapRevision, org, repo))
       bootstrapCommit = get_commit(org, repo, bootstrapRevision)
       snapshot.tags = {
+        'deploymentId': bootstrapRevision,
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
         'diskImageCommitSha': diskImageCommit['sha'],
