@@ -38,9 +38,16 @@ def purge_filter(resource, resource_group_name = None):
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
   secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
   secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure']
+  print('secrets fetched using taskcluster proxy')
+elif 'TASKCLUSTER_ROOT_URL' in os.environ and 'TASKCLUSTER_CLIENT_ID' in os.environ and 'TASKCLUSTER_ACCESS_TOKEN' in os.environ:
+  secretsClient = taskcluster.Secrets(taskcluster.optionsFromEnvironment())
+  secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure']
+  print('secrets fetched using taskcluster environment credentials')
 elif os.path.isfile('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME'])):
   secret = yaml.safe_load(open('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME']), 'r'))['azure']
+  print('secrets obtained from local filesystem')
 else:
+  print('failed to obtain taskcluster secrets')
   exit(1)
 
 azureCredentials = ServicePrincipalCredentials(client_id = secret['id'], secret = secret['key'], tenant = secret['account'])
@@ -75,6 +82,17 @@ resource_descriptors = {
     'purge': computeClient.disks.delete,
     'filter': lambda disk, resource_group_name: disk.disk_state == 'Unattached'
   }
+  #,
+  # commented out because this filter does not work for resource groups that have multiple worker types (eg: gecko-t). need to also filter on worker type.
+  #'image': {
+  #  'filter-descriptor': 'orphaned',
+  #  'list': computeClient.images.list_by_resource_group,
+  #  'purge': computeClient.images.delete,
+  #  # filter below will delete all images that have deploymentId and bootstrapCommitTime tags, except the two most recent images that have deploymentId and bootstrapCommitTime tags
+  #  
+  #  # todo: swap (in line below) bootstrapCommitTime for machineImageCommitTime, when that tag is available
+  #  'filter': lambda image, resource_group_name: image.tags and 'deploymentId' in image.tags and 'bootstrapCommitTime' in image.tags and image.name not in list(map(lambda ni: ni.name, list(sorted(filter(lambda i: i.tags and 'deploymentId' in i.tags and 'bootstrapCommitTime' in i.tags, computeClient.images.list_by_resource_group(resource_group_name)), key = lambda x: x.tags['bootstrapCommitTime'], reverse = True))[0:2]))
+  #}
 }
 
 print('scanning subscription (total resource groups: {}, target resource groups: {}): '.format(len(allGroups), len(targetGroups)))

@@ -127,6 +127,7 @@ if platform == 'azure':
         'architecture': config['image']['architecture']
       }
     else:
+      print('failed to guess image config using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}. using disk image tag subset only...'.format(key, group, diskImageRevision, bootstrapRevision))
       image.tags = {
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
