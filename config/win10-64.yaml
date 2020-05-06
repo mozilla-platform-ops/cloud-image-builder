@@ -30,7 +30,7 @@ manager:
       maximum: 3
     locations:
     - centralus
-    lifecycle: normal
+    #lifecycle: normal
     registrationTimeout: 120
     owner: mcornmesser@mozilla.com
     provider: azure
