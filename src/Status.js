@@ -75,7 +75,27 @@ class Status extends React.Component {
         &nbsp;
         {this.props.status.description.toLowerCase()}
         &nbsp;
-        ({this.state.taskCount} tasks in group <a href={this.props.status.target_url}>{this.state.taskGroupId})</a>
+        ({this.state.taskCount} tasks in group <a href={this.props.status.target_url}>{this.state.taskGroupId}</a>
+        &nbsp;
+        [{
+          ['completed', 'failed', 'exception'].map(status => (
+            (this.state.tasks.filter(t => t.status.state === status).length)
+              ? (
+                <span style={{
+                  color: (status === 'completed')
+                    ? 'green'
+                    : (status === 'failed')
+                      ? 'red'
+                      : (status === 'exception')
+                        ? 'orange'
+                        : 'black' }}>
+                  &nbsp;{status}: {this.state.tasks.filter(t => t.status.state === status).length}&nbsp;
+                </span>
+              )
+              : ''
+          ))
+        }]
+        )
         {
           (this.state.showAllTasks)
             ? <Tasks tasks={this.state.tasks} />
