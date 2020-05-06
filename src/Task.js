@@ -9,10 +9,12 @@ class Task extends React.Component {
           ? 'green'
           : (this.props.task.status.state === 'failed')
             ? 'red'
-            : 'black'
+            : (this.props.task.status.state === 'exception')
+              ? 'orange'
+              : 'gray'
       }}>
         {this.props.task.task.metadata.name}
-        <Runs runs={this.props.task.status.runs} />
+        <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} rootUrl={this.props.rootUrl} />
       </li>
     );
   }

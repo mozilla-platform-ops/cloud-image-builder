@@ -1,6 +1,41 @@
 import React from 'react'
 
 class Run extends React.Component {
+  state = {
+    artifacts: [],
+    images: []
+  };
+
+  componentDidMount() {
+    fetch(this.props.rootUrl + '/api/queue/v1/task/' + this.props.taskId + '/runs/' + this.props.run.runId + '/artifacts')
+    .then(responseArtifactsApi => responseArtifactsApi.json())
+    .then((container) => {
+      if (container.artifacts && container.artifacts.length) {
+        this.setState(state => ({
+          artifacts: container.artifacts
+        }));
+        if (container.artifacts.some(a => a.name.startsWith('public/') && a.name.endsWith('.json'))) {
+          let artifact = container.artifacts.find(a => a.name.startsWith('public/') && a.name.endsWith('.json'))
+          fetch(this.props.rootUrl + '/api/queue/v1/task/' + this.props.taskId + '/runs/' + this.props.run.runId + '/artifacts/' + artifact.name)
+          .then(responseArtifactApi => responseArtifactApi.json())
+          .then((container) => {
+            if (container.launchConfigs && container.launchConfigs.length) {
+              this.setState(state => ({
+                images: container.launchConfigs.map(launchConfig => launchConfig.storageProfile.imageReference.id)
+              }));
+            } else {
+              console.log(container);
+            }
+          })
+          .catch(console.log);
+        }
+      } else {
+        console.log(container);
+      }
+    })
+    .catch(console.log);
+  }
+
   render() {
     return (
       <li style={{
@@ -10,9 +45,26 @@ class Run extends React.Component {
             ? 'red'
             : (this.props.run.state === 'exception')
               ? 'orange'
-              : 'black'
+              : 'gray'
       }}>
-        {this.props.run.runId} {this.props.run.state}
+        <a href={this.props.rootUrl + '/tasks/' + this.props.taskId}>
+          {this.props.taskId}/{this.props.run.runId}
+        </a> {this.props.run.state}
+          {
+            (this.props.run.state === 'completed')
+              ? (
+                <ul>
+                  {
+                    this.state.images.map(image => (
+                      <li key={image}>
+                        {image.substring(image.lastIndexOf('/') + 1)}
+                      </li>
+                    ))
+                  }
+                </ul>
+              )
+              : ''
+          }
       </li>
     );
   }

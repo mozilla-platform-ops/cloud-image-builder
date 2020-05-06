@@ -16,15 +16,14 @@ class Commit extends React.Component {
   $ sudo npm install -g local-cors-proxy
 
   to run a local cors proxy with authenticated github requests:
-  $ lcp --proxyUrl https://grenade:$(pass github/grenade/token/travisci-minionsmanaged-observations)@api.github.com
+  $ lcp --proxyUrl https://grenade:$(pass github/grenade/token/cloud-image-builder)@api.github.com
   */
-  apiBase = (window.location.hostname === 'localhost')
-    ? 'http://localhost:8010/proxy'
-    : 'https://api.github.com';
 
   componentDidMount() {
     fetch(
-      this.apiBase + '/repos/mozilla-platform-ops/cloud-image-builder/commits/' + this.props.commit.sha + '/statuses'
+      (window.location.hostname === 'localhost')
+        ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits'
+        : 'https://grenade-cors-proxy.herokuapp.com/https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/' + this.props.commit.sha + '/statuses'
     )
     .then(responseGithubApiStatuses => responseGithubApiStatuses.json())
     .then((githubCommitStatuses) => {

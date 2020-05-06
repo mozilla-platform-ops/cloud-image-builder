@@ -7,7 +7,7 @@ class Tasks extends React.Component {
       <ul>
         {
           this.props.tasks.map(task => (
-            <Task task={task} key={task.status.taskId} />
+            <Task task={task} key={task.status.taskId} rootUrl={this.props.rootUrl} />
           ))
         }
       </ul>

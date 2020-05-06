@@ -60,7 +60,7 @@ class Status extends React.Component {
           ? 'green'
           : (this.props.status.state === 'failure')
             ? 'red'
-            : 'black'
+            : 'gray'
       }}>
         {
           new Intl.DateTimeFormat('en-GB', {
@@ -98,11 +98,11 @@ class Status extends React.Component {
         )
         {
           (this.state.showAllTasks)
-            ? <Tasks tasks={this.state.tasks} />
+            ? <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
             : (this.state.tasks.some(t => t.task.metadata.name.startsWith('04 :: generate')))
               ? (
                 <ul>
-                  <Task task={this.state.tasks.find(t => t.task.metadata.name.startsWith('04 :: generate'))} />
+                  <Task task={this.state.tasks.find(t => t.task.metadata.name.startsWith('04 :: generate'))} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
                 </ul>
               )
               : ''
