@@ -32,6 +32,7 @@ manager:
     - centralus
     lifecycle:
       registrationTimeout: 120
+      reregistrationTimeout: 345600
     owner: mcornmesser@mozilla.com
     provider: azure
     platform: azure
