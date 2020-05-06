@@ -30,7 +30,6 @@ manager:
       maximum: 3
     locations:
     - centralus
-    #
     lifecycle:
       registrationTimeout: 120
     owner: mcornmesser@mozilla.com
