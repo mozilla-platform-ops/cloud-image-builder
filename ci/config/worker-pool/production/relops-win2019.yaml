@@ -7,7 +7,7 @@ config:
     minCapacity: 0
     maxCapacity: 12
     launchConfigs:
-    - region: eu-central-1
+      - region: eu-central-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-07db1c26bda143e33
@@ -15,20 +15,20 @@ config:
                 AvailabilityZone: eu-central-1a
             SubnetId: subnet-935645fb
             SecurityGroupIds:
-            - sg-e43d0d8f
+              - sg-e43d0d8f
             InstanceType: c5.4xlarge
             BlockDeviceMappings: &BlockDeviceMappings
-            - DeviceName: /dev/sda1
+              - DeviceName: /dev/sda1
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 40
                     VolumeType: gp2
-            - DeviceName: /dev/sdb
+              - DeviceName: /dev/sdb
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
                     VolumeType: gp2
-            - DeviceName: /dev/sdc
+              - DeviceName: /dev/sdc
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -60,7 +60,7 @@ config:
                     wstServerURL: 'https://firefoxci-websocktunnel.services.mozilla.com'
         additionalUserData: &additionalUserData
             workerType: relops-image-builder
-    - region: eu-central-1
+      - region: eu-central-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-07db1c26bda143e33
@@ -68,13 +68,13 @@ config:
                 AvailabilityZone: eu-central-1b
             SubnetId: subnet-6988da13
             SecurityGroupIds:
-            - sg-e43d0d8f
+              - sg-e43d0d8f
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: eu-central-1
+      - region: eu-central-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-07db1c26bda143e33
@@ -82,13 +82,13 @@ config:
                 AvailabilityZone: eu-central-1c
             SubnetId: subnet-114d525b
             SecurityGroupIds:
-            - sg-e43d0d8f
+              - sg-e43d0d8f
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-1
+      - region: us-east-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-026ed942b8c9d7503
@@ -96,13 +96,13 @@ config:
                 AvailabilityZone: us-east-1a
             SubnetId: subnet-566e060c
             SecurityGroupIds:
-            - sg-27d72d57
+              - sg-27d72d57
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-1
+      - region: us-east-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-026ed942b8c9d7503
@@ -110,13 +110,13 @@ config:
                 AvailabilityZone: us-east-1b
             SubnetId: subnet-f2c93496
             SecurityGroupIds:
-            - sg-27d72d57
+              - sg-27d72d57
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-1
+      - region: us-east-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-026ed942b8c9d7503
@@ -124,13 +124,13 @@ config:
                 AvailabilityZone: us-east-1c
             SubnetId: subnet-c52454e9
             SecurityGroupIds:
-            - sg-27d72d57
+              - sg-27d72d57
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-1
+      - region: us-east-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-026ed942b8c9d7503
@@ -138,13 +138,13 @@ config:
                 AvailabilityZone: us-east-1d
             SubnetId: subnet-e7e6ccaf
             SecurityGroupIds:
-            - sg-27d72d57
+              - sg-27d72d57
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-1
+      - region: us-east-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-026ed942b8c9d7503
@@ -152,13 +152,13 @@ config:
                 AvailabilityZone: us-east-1f
             SubnetId: subnet-7f720d73
             SecurityGroupIds:
-            - sg-27d72d57
+              - sg-27d72d57
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-2
+      - region: us-east-2
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-0be81fd9f318f0272
@@ -166,13 +166,13 @@ config:
                 AvailabilityZone: us-east-2a
             SubnetId: subnet-6d481604
             SecurityGroupIds:
-            - sg-f581719d
+              - sg-f581719d
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-2
+      - region: us-east-2
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-0be81fd9f318f0272
@@ -180,13 +180,13 @@ config:
                 AvailabilityZone: us-east-2b
             SubnetId: subnet-b5db40ce
             SecurityGroupIds:
-            - sg-f581719d
+              - sg-f581719d
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-east-2
+      - region: us-east-2
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-0be81fd9f318f0272
@@ -194,13 +194,13 @@ config:
                 AvailabilityZone: us-east-2c
             SubnetId: subnet-ab62c0e6
             SecurityGroupIds:
-            - sg-f581719d
+              - sg-f581719d
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-west-1
+      - region: us-west-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-00f2cff76f39b3333
@@ -208,13 +208,13 @@ config:
                 AvailabilityZone: us-west-1b
             SubnetId: subnet-7641632e
             SecurityGroupIds:
-            - sg-fee02b98
+              - sg-fee02b98
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-west-1
+      - region: us-west-1
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-00f2cff76f39b3333
@@ -222,13 +222,13 @@ config:
                 AvailabilityZone: us-west-1c
             SubnetId: subnet-48a9b82c
             SecurityGroupIds:
-            - sg-fee02b98
+              - sg-fee02b98
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-west-2
+      - region: us-west-2
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-08dcc6990d39afe94
@@ -236,13 +236,13 @@ config:
                 AvailabilityZone: us-west-2a
             SubnetId: subnet-d948b6bf
             SecurityGroupIds:
-            - sg-3bd7bf41
+              - sg-3bd7bf41
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-west-2
+      - region: us-west-2
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-08dcc6990d39afe94
@@ -250,13 +250,13 @@ config:
                 AvailabilityZone: us-west-2b
             SubnetId: subnet-2eaaba67
             SecurityGroupIds:
-            - sg-3bd7bf41
+              - sg-3bd7bf41
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions
         workerConfig: *workerConfig
         additionalUserData: *additionalUserData
-    - region: us-west-2
+      - region: us-west-2
         capacityPerInstance: 1
         launchConfig:
             ImageId: ami-08dcc6990d39afe94
@@ -264,7 +264,7 @@ config:
                 AvailabilityZone: us-west-2c
             SubnetId: subnet-540a9f0f
             SecurityGroupIds:
-            - sg-3bd7bf41
+              - sg-3bd7bf41
             InstanceType: c5.4xlarge
             BlockDeviceMappings: *BlockDeviceMappings
             InstanceMarketOptions: *InstanceMarketOptions

@@ -7,7 +7,7 @@ config:
     minCapacity: 0
     maxCapacity: 24
     launchConfigs:
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -15,7 +15,7 @@ config:
                 AvailabilityZone: us-east-1a
             SubnetId: subnet-0c938056fff37f311
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
@@ -26,7 +26,7 @@ config:
             billingCycleInterval: 21600
             capacityManagement:
                 diskspaceThreshold: 30000000000
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -34,12 +34,12 @@ config:
                 AvailabilityZone: us-east-1a
             SubnetId: subnet-0c938056fff37f311
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -47,10 +47,10 @@ config:
                 AvailabilityZone: us-east-1a
             SubnetId: subnet-0c938056fff37f311
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -58,7 +58,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -66,12 +66,12 @@ config:
                 AvailabilityZone: us-east-1b
             SubnetId: subnet-00d682e89c23d7a86
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -79,12 +79,12 @@ config:
                 AvailabilityZone: us-east-1b
             SubnetId: subnet-00d682e89c23d7a86
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -92,10 +92,10 @@ config:
                 AvailabilityZone: us-east-1b
             SubnetId: subnet-00d682e89c23d7a86
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -103,7 +103,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -111,12 +111,12 @@ config:
                 AvailabilityZone: us-east-1c
             SubnetId: subnet-006eff582598db077
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -124,12 +124,12 @@ config:
                 AvailabilityZone: us-east-1c
             SubnetId: subnet-006eff582598db077
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -137,10 +137,10 @@ config:
                 AvailabilityZone: us-east-1c
             SubnetId: subnet-006eff582598db077
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -148,7 +148,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -156,12 +156,12 @@ config:
                 AvailabilityZone: us-east-1d
             SubnetId: subnet-01454cff97aa89f34
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -169,12 +169,12 @@ config:
                 AvailabilityZone: us-east-1d
             SubnetId: subnet-01454cff97aa89f34
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -182,10 +182,10 @@ config:
                 AvailabilityZone: us-east-1d
             SubnetId: subnet-01454cff97aa89f34
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -193,7 +193,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -201,12 +201,12 @@ config:
                 AvailabilityZone: us-east-1f
             SubnetId: subnet-0d8c0e26a6194119c
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -214,12 +214,12 @@ config:
                 AvailabilityZone: us-east-1f
             SubnetId: subnet-0d8c0e26a6194119c
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-east-1
         launchConfig:
             ImageId: ami-076b0e106674bfcbf
@@ -227,10 +227,10 @@ config:
                 AvailabilityZone: us-east-1f
             SubnetId: subnet-0d8c0e26a6194119c
             SecurityGroupIds:
-            - sg-01738525fc9991bd0
+              - sg-01738525fc9991bd0
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -238,7 +238,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-1
         launchConfig:
             ImageId: ami-052fe3192c0f750cb
@@ -246,12 +246,12 @@ config:
                 AvailabilityZone: us-west-1b
             SubnetId: subnet-01aac9d0ea7efdbc4
             SecurityGroupIds:
-            - sg-0f52b4554cfc115e7
+              - sg-0f52b4554cfc115e7
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-1
         launchConfig:
             ImageId: ami-052fe3192c0f750cb
@@ -259,12 +259,12 @@ config:
                 AvailabilityZone: us-west-1b
             SubnetId: subnet-01aac9d0ea7efdbc4
             SecurityGroupIds:
-            - sg-0f52b4554cfc115e7
+              - sg-0f52b4554cfc115e7
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-1
         launchConfig:
             ImageId: ami-052fe3192c0f750cb
@@ -272,10 +272,10 @@ config:
                 AvailabilityZone: us-west-1b
             SubnetId: subnet-01aac9d0ea7efdbc4
             SecurityGroupIds:
-            - sg-0f52b4554cfc115e7
+              - sg-0f52b4554cfc115e7
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -283,7 +283,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -291,12 +291,12 @@ config:
                 AvailabilityZone: us-west-2a
             SubnetId: subnet-06b091438ea962936
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -304,12 +304,12 @@ config:
                 AvailabilityZone: us-west-2a
             SubnetId: subnet-06b091438ea962936
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -317,10 +317,10 @@ config:
                 AvailabilityZone: us-west-2a
             SubnetId: subnet-06b091438ea962936
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -328,7 +328,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -336,12 +336,12 @@ config:
                 AvailabilityZone: us-west-2b
             SubnetId: subnet-00927443142f01ddf
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -349,12 +349,12 @@ config:
                 AvailabilityZone: us-west-2b
             SubnetId: subnet-00927443142f01ddf
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -362,10 +362,10 @@ config:
                 AvailabilityZone: us-west-2b
             SubnetId: subnet-00927443142f01ddf
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
@@ -373,7 +373,7 @@ config:
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -381,12 +381,12 @@ config:
                 AvailabilityZone: us-west-2c
             SubnetId: subnet-0ab2f88a3fa4ab7a0
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: c5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -394,12 +394,12 @@ config:
                 AvailabilityZone: us-west-2c
             SubnetId: subnet-0ab2f88a3fa4ab7a0
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: m5d.xlarge
             InstanceMarketOptions:
                 MarketType: spot
         workerConfig: *workerConfig
-    - capacityPerInstance: 2
+      - capacityPerInstance: 2
         region: us-west-2
         launchConfig:
             ImageId: ami-0a89ebd64d44aebdb
@@ -407,10 +407,10 @@ config:
                 AvailabilityZone: us-west-2c
             SubnetId: subnet-0ab2f88a3fa4ab7a0
             SecurityGroupIds:
-            - sg-07ca8c96f1574d42b
+              - sg-07ca8c96f1574d42b
             InstanceType: c5.xlarge
             BlockDeviceMappings:
-            - DeviceName: "/dev/xvdb"
+              - DeviceName: "/dev/xvdb"
                 Ebs:
                     DeleteOnTermination: true
                     VolumeSize: 120
