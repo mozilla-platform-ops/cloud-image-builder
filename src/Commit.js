@@ -22,7 +22,7 @@ class Commit extends React.Component {
   componentDidMount() {
     fetch(
       (window.location.hostname === 'localhost')
-        ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits'
+        ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits/' + this.props.commit.sha + '/statuses'
         : 'https://grenade-cors-proxy.herokuapp.com/https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/' + this.props.commit.sha + '/statuses'
     )
     .then(responseGithubApiStatuses => responseGithubApiStatuses.json())
@@ -30,7 +30,7 @@ class Commit extends React.Component {
       if (githubCommitStatuses.length) {
         this.setState(state => ({
           contexts: [...new Set(githubCommitStatuses.map(s => s.context))].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())),
-          statuses: githubCommitStatuses.filter(s => s.state !== 'pending')
+          statuses: githubCommitStatuses//.filter(s => s.state !== 'pending')
         }));
       }
     })
