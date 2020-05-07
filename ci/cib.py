@@ -17,12 +17,16 @@ def getConfig(revision, key):
 def updateRole(auth, configPath, roleId):
   with open(configPath, 'r') as stream:
     payload = yaml.safe_load(stream)
+    role = None
     try:
-      auth.role(roleId = roleId)
+      role = auth.role(roleId = roleId)
+    except:
+      print('error:', sys.exc_info()[0])
+    if role:
       print('info: role {} existence detected'.format(roleId))
       auth.updateRole(roleId, payload)
       print('info: role {} updated'.format(roleId))
-    except:
+    else:
       print('info: role {} absence detected'.format(roleId))
       auth.createRole(roleId, payload)
       print('info: role {} created'.format(roleId))
