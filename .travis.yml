@@ -1,22 +1,22 @@
 ---
 language: python
 install:
-    - pip install cachetools | grep -v "^[[:space:]]*$"
-    - pip install pyyaml | grep -v "^[[:space:]]*$"
-    - pip install taskcluster | grep -v "^[[:space:]]*$"
-    - pip install urllib3 | grep -v "^[[:space:]]*$"
+  - pip install cachetools | grep -v "^[[:space:]]*$"
+  - pip install pyyaml | grep -v "^[[:space:]]*$"
+  - pip install taskcluster | grep -v "^[[:space:]]*$"
+  - pip install urllib3 | grep -v "^[[:space:]]*$"
 jobs:
-- name: 'taskcluster/production: create or update pools'
+  - name: 'taskcluster/production: create or update pools'
     script:
-    - python ./ci/relops-pool-deploy.py
+      - python ./ci/relops-pool-deploy.py
     env:
-    - TASKCLUSTER_ROOT_URL='https://firefox-ci-tc.services.mozilla.com'
-    - TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'
-    - secure: o55Dx7f10PB0xG2EnaqCcJkAFzeeuSq2eHB4K7U0WGa3LPkUcUbCQKFvk1Vwc2mls1iBlfRewR/SKvYn4BI4QnfJ621xkMZymZri8E5Tw9OyOR+x8W3poUyuJ2jrsYn/EuK75Q7HKCLu1uUbghmeQZGFYaMhtCfqxYNnZZwiz+4eN65WIKR88lbXX5+WXesDtPT3n37mL6JkQEv2QGtD+Ke7ow26ZobHHSn7QjZXsXBwELU+jMJYz/pOEMlJFOfiCwyoyGhDGeSvYLOLoFV7tH/zH/Q2G1/kRV4+Tj2Hn9ECp2SBtGUhGShvjmnhXdupjji4C8Fk7g1qutfQK1bfTQCWiEd/kycCJ+25DSSkeAiMrgAV8qe+I+MUg86ffxA3niukxlLeP/QqwhZ2Ufge933lGgLrYgfrQQLr7Kl00xGeq+0k1LjRMANkYOvH8Z4KE4iEXKiUSBx4bTCPPhqcpjzFrr9lUCz4mDz7DM4hWakZDw3ilyED7s6lyuFRIvvzoLBl2SnbXUX64lw+AzrCIZMFZx8ttosbdssfh9Lcc86g37lew9DfS89Y/Fds/qKFceTJXmeuoy4fROI+C+6kagvs5EI+Ytmf1w4y2QAC9SxsXrZiTEnL3+f8/YL+yVNlX9M654GZd7KHSDozvb6R7FKuIfS1imMLh6YxdIAGGuk=
-- name: 'taskcluster/staging: create or update pools'
+      - TASKCLUSTER_ROOT_URL='https://firefox-ci-tc.services.mozilla.com'
+      - TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'
+      - secure: o55Dx7f10PB0xG2EnaqCcJkAFzeeuSq2eHB4K7U0WGa3LPkUcUbCQKFvk1Vwc2mls1iBlfRewR/SKvYn4BI4QnfJ621xkMZymZri8E5Tw9OyOR+x8W3poUyuJ2jrsYn/EuK75Q7HKCLu1uUbghmeQZGFYaMhtCfqxYNnZZwiz+4eN65WIKR88lbXX5+WXesDtPT3n37mL6JkQEv2QGtD+Ke7ow26ZobHHSn7QjZXsXBwELU+jMJYz/pOEMlJFOfiCwyoyGhDGeSvYLOLoFV7tH/zH/Q2G1/kRV4+Tj2Hn9ECp2SBtGUhGShvjmnhXdupjji4C8Fk7g1qutfQK1bfTQCWiEd/kycCJ+25DSSkeAiMrgAV8qe+I+MUg86ffxA3niukxlLeP/QqwhZ2Ufge933lGgLrYgfrQQLr7Kl00xGeq+0k1LjRMANkYOvH8Z4KE4iEXKiUSBx4bTCPPhqcpjzFrr9lUCz4mDz7DM4hWakZDw3ilyED7s6lyuFRIvvzoLBl2SnbXUX64lw+AzrCIZMFZx8ttosbdssfh9Lcc86g37lew9DfS89Y/Fds/qKFceTJXmeuoy4fROI+C+6kagvs5EI+Ytmf1w4y2QAC9SxsXrZiTEnL3+f8/YL+yVNlX9M654GZd7KHSDozvb6R7FKuIfS1imMLh6YxdIAGGuk=
+  - name: 'taskcluster/staging: create or update pools'
     script:
-    - python ./ci/relops-pool-deploy.py
+      - python ./ci/relops-pool-deploy.py
     env:
-    - TASKCLUSTER_ROOT_URL='https://stage.taskcluster.nonprod.cloudops.mozgcp.net'
-    - TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'
-    - secure: os/e74OyY8iPj537OQSG7TlPl0mgNoCqbOKGnWbjkQirfEy+/rVVeGQ5SeAMUQV3AVgcRrdTi41Zmgxuhj/lkxjW92uqjUhmKYNVKZRMrI3eS7lQ9gX3XNmIBnuqvu224fPtk5SbVIE7c5aDXsScjndxqMDRJBsOyKg2qeFhRdA7PsA3LZhjZj27TlzpL+X0yWNMs30OHCPNnfrEyYj06nCGkqWHA8BfRSROn2nhoN36wNAJh9T7kxTxdnI+GqJSgQSegr0Ekg2urgYcA06d10r8lkk0yDs2eKa2Mbxi+bEOtgsF30LcA377yU74PHsnLxEGAXuw5E3RnFk7Kbdz+jquUr523WgGR8WUCzqb9XzVA9YQPvpMlvqC+AjTq51gAoFJmKyaHMuedMwncH0asU0nvWZozWRQxoZblug3aSKNBdExid7FXqiKGfKA8+Q8mbDycxGiCy0E8IwvJWPdMTtZPYrXc+NnD7Kq1f1JWCiaajSA2MI7kLlAdhWpaIY34Qe0AW+hWp5b8dTloGIeeaG/a1hwIPRU2DNRuMYuJscCC7lfg1yjTr2gqrsygymcmpJlHOgVbpvZJWSFb6wWhQsVvlPN68Vtntr1vFPw5LQnwGu3gSPgTZE7zhr1i23lDbj247EdkSpd/T8XLJSf1jPSP1Vy22QAOxj8dkTW9Nc=
+      - TASKCLUSTER_ROOT_URL='https://stage.taskcluster.nonprod.cloudops.mozgcp.net'
+      - TASKCLUSTER_CLIENT_ID='project/relops/image-builder/dev'
+      - secure: os/e74OyY8iPj537OQSG7TlPl0mgNoCqbOKGnWbjkQirfEy+/rVVeGQ5SeAMUQV3AVgcRrdTi41Zmgxuhj/lkxjW92uqjUhmKYNVKZRMrI3eS7lQ9gX3XNmIBnuqvu224fPtk5SbVIE7c5aDXsScjndxqMDRJBsOyKg2qeFhRdA7PsA3LZhjZj27TlzpL+X0yWNMs30OHCPNnfrEyYj06nCGkqWHA8BfRSROn2nhoN36wNAJh9T7kxTxdnI+GqJSgQSegr0Ekg2urgYcA06d10r8lkk0yDs2eKa2Mbxi+bEOtgsF30LcA377yU74PHsnLxEGAXuw5E3RnFk7Kbdz+jquUr523WgGR8WUCzqb9XzVA9YQPvpMlvqC+AjTq51gAoFJmKyaHMuedMwncH0asU0nvWZozWRQxoZblug3aSKNBdExid7FXqiKGfKA8+Q8mbDycxGiCy0E8IwvJWPdMTtZPYrXc+NnD7Kq1f1JWCiaajSA2MI7kLlAdhWpaIY34Qe0AW+hWp5b8dTloGIeeaG/a1hwIPRU2DNRuMYuJscCC7lfg1yjTr2gqrsygymcmpJlHOgVbpvZJWSFb6wWhQsVvlPN68Vtntr1vFPw5LQnwGu3gSPgTZE7zhr1i23lDbj247EdkSpd/T8XLJSf1jPSP1Vy22QAOxj8dkTW9Nc=
