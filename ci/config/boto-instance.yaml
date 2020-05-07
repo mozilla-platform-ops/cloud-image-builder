@@ -17,7 +17,7 @@ SecurityGroupIds:
     - sg-3bd7bf41
 SubnetId: subnet-f94cb29f
 InstanceInitiatedShutdownBehavior: stop
-UserData: 'string',
-ClientToken: 'string',
+UserData: string
+ClientToken: string
 IamInstanceProfile:
     Arn: 'arn:aws:iam::692406183521:instance-profile/windows-ami-builder'
