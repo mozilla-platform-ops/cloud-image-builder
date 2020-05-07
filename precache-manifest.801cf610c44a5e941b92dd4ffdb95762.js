@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "e8fb2b03477ad66612b50f94e0bc2bc3",
+    "revision": "3a472573fa5fcd3a54b600c0516f1c4f",
     "url": "/cloud-image-builder/index.html"
   },
   {
