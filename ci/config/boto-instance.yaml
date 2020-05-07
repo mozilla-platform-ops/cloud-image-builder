@@ -1,15 +1,15 @@
 ---
 BlockDeviceMappings:
     - DeviceName: /dev/sda1
-        Ebs:
-            DeleteOnTermination: true
-            VolumeSize: 40
-            VolumeType: gp2
+      Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 40
+          VolumeType: gp2
     - DeviceName: /dev/sdb
-        Ebs:
-            DeleteOnTermination: true
-            VolumeSize: 120
-            VolumeType: gp2
+      Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 120
+          VolumeType: gp2
 ImageId: ami-0d5ab31b93c643ca8
 InstanceType: c5.4xlarge
 KeyName: ''
