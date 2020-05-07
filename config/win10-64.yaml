@@ -30,9 +30,9 @@ manager:
       maximum: 3
     locations:
     - centralus
-    lifecycle:
-      registrationTimeout: 120
-      reregistrationTimeout: 345600
+    #lifecycle:
+    #  registrationTimeout: 120
+    #  reregistrationTimeout: 345600
     owner: mcornmesser@mozilla.com
     provider: azure
     platform: azure
