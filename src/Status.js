@@ -86,7 +86,7 @@ class Status extends React.Component {
         &nbsp;
         [
           {
-            ['completed', 'failed', 'exception', 'running', 'pending'].map(status => (
+            ['completed', 'failed', 'exception', 'running', 'pending', 'unscheduled'].map(status => (
               (this.state.tasks.filter(t => t.status.state === status).length)
                 ? (
                   <span style={{
@@ -100,7 +100,9 @@ class Status extends React.Component {
                             ? 'darkorchid'
                             : (status === 'running')
                               ? 'steelblue'
-                              : 'gray' }}>
+                              : (status === 'unscheduled')
+                                ? 'gray'
+                                : 'black' }}>
                     &nbsp;{status}: {this.state.tasks.filter(t => t.status.state === status).length}&nbsp;
                   </span>
                 )
@@ -128,13 +130,15 @@ class Status extends React.Component {
         {
           (this.state.showAllTasks)
             ? <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
-            : (this.state.tasks.some(t => t.task.metadata.name.startsWith('04 :: generate')))
-              ? (
+            : (
                 <ul>
-                  <Task task={this.state.tasks.find(t => t.task.metadata.name.startsWith('04 :: generate'))} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
+                  {
+                    (this.state.tasks.filter(t => t.task.metadata.name.startsWith('04 :: generate') && t.status.state === 'completed').map(task => (
+                      <Task task={task} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
+                    )))
+                  }
                 </ul>
               )
-              : ''
         }
       </li>
     );

@@ -11,9 +11,18 @@ class Task extends React.Component {
             ? 'red'
             : (this.props.task.status.state === 'exception')
               ? 'orange'
-              : 'gray'
-      }}>
+              : (this.props.task.status.state === 'pending')
+                ? 'darkorchid'
+                : (this.props.task.status.state === 'running')
+                  ? 'steelblue'
+                  : (this.props.task.status.state === 'unscheduled')
+                    ? 'gray'
+                    : 'black' }}>
         {this.props.task.task.metadata.name}
+        &nbsp;
+        <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
+          {this.props.task.status.taskId.substring(0, 7)}...
+        </a>
         <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} rootUrl={this.props.rootUrl} />
       </li>
     );

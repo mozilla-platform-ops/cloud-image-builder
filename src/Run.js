@@ -45,15 +45,20 @@ class Run extends React.Component {
             ? 'red'
             : (this.props.run.state === 'exception')
               ? 'orange'
-              : 'gray'
-      }}>
+              : (this.props.run.state === 'pending')
+                ? 'darkorchid'
+                : (this.props.run.state === 'running')
+                  ? 'steelblue'
+                  : (this.props.run.state === 'unscheduled')
+                    ? 'gray'
+                    : 'black' }}>
         <a href={this.props.rootUrl + '/tasks/' + this.props.taskId}>
-          {this.props.taskId}/{this.props.run.runId}
+         run {this.props.run.runId}
         </a> {this.props.run.state}
           {
             (this.props.run.state === 'completed')
               ? (
-                <ul>
+                <ul style={{ color: 'black' }}>
                   {
                     this.state.images.map(image => (
                       <li key={image}>
