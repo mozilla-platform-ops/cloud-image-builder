@@ -50,13 +50,17 @@ def guess_config(key, group, diskImageRevision, bootstrapRevision):
   for commit in commits[0:cut_index]:
     configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commit['sha'], key)
     if requests.head(configUrl).status_code == requests.codes.ok:
-      config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
-      configTargetGroup = next((t for t in config['target'] if t['group'] == group))
-      deploymentId = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'deploymentId'), { 'value': None })['value']
-      sourceRevision = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRevision'), { 'value': None })['value']
-      if sourceRevision == bootstrapRevision or deploymentId == bootstrapRevision:
-        break
-      else:
+      try:
+        config = yaml.safe_load(urllib.request.urlopen(configUrl).read().decode())
+        configTargetGroup = next((t for t in config['target'] if t['group'] == group))
+        deploymentId = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'deploymentId'), { 'value': None })['value']
+        sourceRevision = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRevision'), { 'value': None })['value']
+        if sourceRevision == bootstrapRevision or deploymentId == bootstrapRevision:
+          break
+        else:
+          config = None
+      except:
+        print('failed to parse config from: {}'.format(configUrl))
         config = None
   return config
 
