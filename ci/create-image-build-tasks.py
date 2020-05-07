@@ -103,6 +103,28 @@ print('[debug] auth.currentScopes:')
 for scope in auth.currentScopes()['scopes']:
   print(' - {}'.format(scope))
 
+yamlLintTaskId = slugid.nice()
+createTask(
+  queue = queue,
+  image = 'python',
+  taskId = yamlLintTaskId,
+  taskName = '00 :: validate all yaml files in repo',
+  taskDescription = 'run a linter against each yaml file in the repository',
+  maxRunMinutes = 10,
+  retries = 5,
+  retriggerOnExitCodes = [ 123 ],
+  provisioner = 'relops',
+  workerType = 'decision',
+  priority = 'high',
+  commands = [
+    '/bin/bash',
+    '--login',
+    '-c',
+    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install yamllint | grep -v "^[[:space:]]*$" && yamllint .'.format(commitSha)
+  ],
+  taskGroupId = taskGroupId
+)
+
 azurePurgeTaskId = slugid.nice()
 createTask(
   queue = queue,
@@ -135,6 +157,7 @@ createTask(
   taskId = azurePurgeTaskId,
   taskName = '00 :: purge deprecated azure resources - python (fast)',
   taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
+  dependencies = [ yamlLintTaskId ],
   maxRunMinutes = 60,
   retries = 5,
   retriggerOnExitCodes = [ 123 ],
