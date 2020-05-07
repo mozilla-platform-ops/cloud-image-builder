@@ -2,6 +2,7 @@ import React from 'react'
 import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row';
 import Image from 'react-bootstrap/Image';
+import CommitMessage from './CommitMessage';
 import Statuses from './Statuses';
 
 class Commit extends React.Component {
@@ -72,6 +73,7 @@ class Commit extends React.Component {
               <pre>
                 { this.props.commit.message.join('\n') }
               </pre>
+              <CommitMessage message={this.props.commit.message} />
               <Statuses contexts={this.state.contexts} statuses={this.state.statuses} />
             </Card.Body>
           </Card>
