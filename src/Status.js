@@ -7,14 +7,36 @@ class Status extends React.Component {
     showAllTasks: false,
     taskGroupId: null,
     taskCount: 0,
-    tasks: []
+    tasks: [],
+    builds: [],
+    travisApiResponse: {}
   };
+  travisBuildResults = [
+    'completed',
+    'failed',
+  ];
 
   componentDidMount() {
-    let tasksApi = false;
     switch (this.props.status.context) {
       case 'continuous-integration/travis-ci/push':
-        tasksApi = false;
+        let pathname = (new URL(this.props.status.target_url)).pathname;
+        let buildId = pathname.substring(pathname.lastIndexOf('/') + 1);
+        this.setState(state => ({
+          taskGroupId: buildId
+        }));
+        let buildsApi = 'https://api.travis-ci.org/repos/mozilla-platform-ops/cloud-image-builder/builds/' + buildId;
+        fetch(buildsApi)
+        .then(responseBuildsApi => responseBuildsApi.json())
+        .then((container) => {
+          if (container.matrix) {
+            this.setState(state => ({
+              taskCount: container.matrix.length,
+              builds: container.matrix,
+              travisApiResponse: container
+            }));
+          }
+        })
+        .catch(console.log);
         break;
       default:
         let taskGroupHtmlUrl = new URL(this.props.status.target_url);
@@ -22,7 +44,7 @@ class Status extends React.Component {
         this.setState(state => ({
           taskGroupId: taskGroupId
         }));
-        tasksApi = 'https://' + taskGroupHtmlUrl.hostname + '/api/queue/v1/task-group/' + taskGroupId + '/list';
+        let tasksApi = 'https://' + taskGroupHtmlUrl.hostname + '/api/queue/v1/task-group/' + taskGroupId + '/list';
         fetch(tasksApi)
         .then(responseTasksApi => responseTasksApi.json())
         .then((container) => {
@@ -35,21 +57,6 @@ class Status extends React.Component {
         })
         .catch(console.log);
         break;
-    }
-    if (tasksApi) {
-      fetch(tasksApi)
-      .then(responseTasksApi => responseTasksApi.json())
-      .then((container) => {
-        if (container.tasks && container.tasks.length) {
-          this.setState(state => ({
-            tasks: container.tasks
-          }));
-        } else {
-          console.log('error fetching: ' + tasksApi);
-          console.log(container);
-        }
-      })
-      .catch(console.log);
     }
   }
 
@@ -75,26 +82,48 @@ class Status extends React.Component {
         &nbsp;
         {this.props.status.description.toLowerCase()}
         &nbsp;
-        ({this.state.taskCount} tasks in group <a href={this.props.status.target_url}>{this.state.taskGroupId}</a>
+        ({this.state.taskCount} tasks in group <a href={this.props.status.target_url} title={this.state.taskGroupId}>{this.state.taskGroupId && this.state.taskGroupId.substring(0, 7)}...</a>
         &nbsp;
-        [{
-          ['completed', 'failed', 'exception'].map(status => (
-            (this.state.tasks.filter(t => t.status.state === status).length)
-              ? (
-                <span style={{
-                  color: (status === 'completed')
-                    ? 'green'
-                    : (status === 'failed')
-                      ? 'red'
-                      : (status === 'exception')
-                        ? 'orange'
+        [
+          {
+            ['completed', 'failed', 'exception', 'running', 'pending'].map(status => (
+              (this.state.tasks.filter(t => t.status.state === status).length)
+                ? (
+                  <span style={{
+                    color: (status === 'completed')
+                      ? 'green'
+                      : (status === 'failed')
+                        ? 'red'
+                        : (status === 'exception')
+                          ? 'orange'
+                          : (status === 'pending')
+                            ? 'darkorchid'
+                            : (status === 'running')
+                              ? 'steelblue'
+                              : 'gray' }}>
+                    &nbsp;{status}: {this.state.tasks.filter(t => t.status.state === status).length}&nbsp;
+                  </span>
+                )
+                : ''
+            ))
+          }
+          {
+            [0, 1].map(result => (
+              (this.state.builds.filter(b => b.result === result).length)
+                ? (
+                  <span style={{
+                    color: (result === 0)
+                      ? 'green'
+                      : (result === 1)
+                        ? 'red'
                         : 'black' }}>
-                  &nbsp;{status}: {this.state.tasks.filter(t => t.status.state === status).length}&nbsp;
-                </span>
-              )
-              : ''
-          ))
-        }]
+                    &nbsp;{this.travisBuildResults[result]}: {this.state.builds.filter(b => b.result === result).length}&nbsp;
+                  </span>
+                )
+                : ''
+            ))
+          }
+        ]
         )
         {
           (this.state.showAllTasks)
