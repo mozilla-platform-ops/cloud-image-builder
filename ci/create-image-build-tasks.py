@@ -285,7 +285,7 @@ for platform in ['amazon', 'azure']:
             maxRunMinutes = 180,
             retries = 4,
             retriggerOnExitCodes = [ 123 ],
-            dependencies = [] if poolDeploy else [ machineImageBuildTaskId ],
+            dependencies = [ machineImageBuildTaskId ] if queueMachineImageBuild else [],
             provisioner = 'relops',
             workerType = 'decision',
             priority = 'low',
