@@ -21,6 +21,7 @@ def updateRole(auth, configPath, roleId):
     try:
       role = auth.role(roleId = roleId)
     except:
+      print('TASKCLUSTER_ROOT_URL:', os.environ['TASKCLUSTER_ROOT_URL'])
       print('error:', sys.exc_info()[0])
     if role:
       print('info: role {} existence detected'.format(roleId))
