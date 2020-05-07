@@ -66,6 +66,10 @@ except:
 workerPool = {
   'minCapacity': poolConfig['capacity']['minimum'],
   'maxCapacity': poolConfig['capacity']['maximum'],
+  'lifecycle': {
+    'registrationTimeout': poolConfig['timeout']['registration'] if 'timeout' in poolConfig and 'registration' in poolConfig['timeout'] else 1800,
+    'reregistrationTimeout': poolConfig['timeout']['reregistration'] if 'timeout' in poolConfig and 'reregistration' in poolConfig['timeout'] else 86400
+  },
   'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in poolConfig['locations'] and x['location'] in includeRegions, map(lambda x: {
     'location': x['region'].lower().replace(' ', ''),
     'capacityPerInstance': 1,

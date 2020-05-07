@@ -28,6 +28,9 @@ manager:
           capacity:
               minimum: 0
               maximum: 3
+          timeout:
+              registration: 3600
+              reregistration: 86400
           locations:
               - centralus
               - northcentralus
@@ -44,6 +47,9 @@ manager:
           capacity:
               minimum: 0
               maximum: 3
+          timeout:
+              registration: 3600
+              reregistration: 86400
           locations:
               - centralus
           owner: grenade@mozilla.com
@@ -54,6 +60,9 @@ manager:
           capacity:
               minimum: 0
               maximum: 3
+          timeout:
+              registration: 3600
+              reregistration: 86400
           locations:
               - centralus
           owner: grenade@mozilla.com
@@ -64,6 +73,9 @@ manager:
           capacity:
               minimum: 0
               maximum: 3
+          timeout:
+              registration: 3600
+              reregistration: 86400
           locations:
               - centralus
           owner: grenade@mozilla.com

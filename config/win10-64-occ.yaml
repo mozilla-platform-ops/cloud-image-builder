@@ -29,6 +29,9 @@ manager:
           capacity:
               minimum: 0
               maximum: 3
+          timeout:
+              registration: 3600
+              reregistration: 86400
           locations:
               - centralus
               - eastus

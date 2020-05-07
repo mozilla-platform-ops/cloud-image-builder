@@ -28,6 +28,9 @@ manager:
           capacity:
               minimum: 0
               maximum: 1
+          timeout:
+              registration: 3600
+              reregistration: 86400
           locations:
               - eastus
           lifecycle: normal
