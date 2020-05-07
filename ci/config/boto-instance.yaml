@@ -1,23 +1,23 @@
 ---
 BlockDeviceMappings:
-  - DeviceName: /dev/sda1
-    Ebs:
-      DeleteOnTermination: true
-      VolumeSize: 40
-      VolumeType: gp2
-  - DeviceName: /dev/sdb
-    Ebs:
-      DeleteOnTermination: true
-      VolumeSize: 120
-      VolumeType: gp2
+    - DeviceName: /dev/sda1
+        Ebs:
+            DeleteOnTermination: true
+            VolumeSize: 40
+            VolumeType: gp2
+    - DeviceName: /dev/sdb
+        Ebs:
+            DeleteOnTermination: true
+            VolumeSize: 120
+            VolumeType: gp2
 ImageId: ami-0d5ab31b93c643ca8
 InstanceType: c5.4xlarge
 KeyName: ''
 SecurityGroupIds:
-  - sg-3bd7bf41
+    - sg-3bd7bf41
 SubnetId: subnet-f94cb29f
 InstanceInitiatedShutdownBehavior: stop
 UserData: 'string',
 ClientToken: 'string',
 IamInstanceProfile:
-  Arn: 'arn:aws:iam::692406183521:instance-profile/windows-ami-builder'
+    Arn: 'arn:aws:iam::692406183521:instance-profile/windows-ami-builder'

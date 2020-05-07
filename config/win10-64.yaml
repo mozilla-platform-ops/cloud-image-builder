@@ -1,248 +1,248 @@
 ---
 image:
-  os: Windows 10
-  edition: Professional
-  language: en-US
-  architecture: x86-64
-  timezone: UTC
-  hostname: '*'
-  gpu: false
-  owner: Mozilla RelOps
-  organization: Mozilla Corporation
-  partition: MBR
-  format: VHD
-  type: Fixed
-  target:
-    platform: amazon
-    bucket: windows-ami-builder
+    os: Windows 10
+    edition: Professional
+    language: en-US
+    architecture: x86-64
+    timezone: UTC
+    hostname: '*'
+    gpu: false
+    owner: Mozilla RelOps
+    organization: Mozilla Corporation
+    partition: MBR
+    format: VHD
+    type: Fixed
+    target:
+        platform: amazon
+        bucket: windows-ami-builder
 iso:
-  source:
-    platform: amazon
-    bucket: windows-ami-builder
-    key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
-  wimindex: 5
+    source:
+        platform: amazon
+        bucket: windows-ami-builder
+        key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
+    wimindex: 5
 manager:
-  pool:
-  - domain: gecko-t
-    variant: win10-64-azure
-    capacity:
-      minimum: 0
-      maximum: 3
-    locations:
-    - centralus
-    #lifecycle:
-    #  registrationTimeout: 120
-    #  reregistrationTimeout: 345600
-    owner: mcornmesser@mozilla.com
-    provider: azure
-    platform: azure
+    pool:
+    - domain: gecko-t
+        variant: win10-64-azure
+        capacity:
+            minimum: 0
+            maximum: 3
+        locations:
+        - centralus
+        #lifecycle:
+        #    registrationTimeout: 120
+        #    reregistrationTimeout: 345600
+        owner: mcornmesser@mozilla.com
+        provider: azure
+        platform: azure
 target:
 - platform: azure
-  group: rg-central-us-gecko-t
-  region: Central US
-  hostname: &hostname
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine: &machine
-    cpu: 3
-    ram: 14
-    format: Standard_DS{0}_v2
-  disk: &disk
-  - os: true
-    source: windows10-professional-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
-  network:
-    name: vn-central-us-gecko-t
-    prefix: '10.0.0.0/24'
-    dns: &dns
-    - '1.1.1.1'
-    - '1.0.0.1'
-    subnet:
-      name: sn-central-us-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-central-us-gecko-t
-      rules: &rules
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 110
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 111
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange: 22
-      - name: allow-winrm
-        description: 'allow: inbound tcp connections, for: winrm over http and https, from: whitelist, to: any host, on ports: 5985, 5986'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 112
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange:
-        - 5985
-        - 5986
-  tag: &tag
-  - name: workerType
-    value: gecko-t-win10-64-azure
-  - name: sourceOrganisation
-    value: mozilla-platform-ops
-  - name: sourceRepository
-    value: ronin_puppet
-  - name: sourceRevision
-    value: cloud_windows
-  - name: sourceScript
-    value: provisioners/windows/azure/azure-bootstrap.ps1
-  - name: deploymentId
-    value: 8c51170
-  bootstrap: &bootstrap
-    executions:
-    # set hostname to match the azure machine name so that debug logs can be found in papertrail
-    - name: set-computer-name
-      shell: azure-powershell
-      commands:
-      - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
-      - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
-      - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
-      - $env:COMPUTERNAME = $instanceName
-      - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
-      - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
-      test:
-        std:
-          out:
-            match: host renamed
-      on:
-        success: reboot
-    # trigger bootstrap script and await completion
-    - name: invoke-ronin-puppet
-      shell: azure-powershell
-      commands:
-      - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-    - name: verify-ronin-puppet
-      shell: azure-powershell
-      commands:
-      - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\ronin_puppet' -Name 'bootstrap_stage').bootstrap_stage -like 'complete') { Write-Output -InputObject ('puppet bootstrap stage is complete') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
-      test:
-        std:
-          out:
-            match: puppet bootstrap stage is complete
-      on:
-        failure: retry after 60 seconds
+    group: rg-central-us-gecko-t
+    region: Central US
+    hostname: &hostname
+        format: vm-{0}
+        slug:
+            type: uuid
+            length: 12
+    machine: &machine
+        cpu: 3
+        ram: 14
+        format: Standard_DS{0}_v2
+    disk: &disk
+    - os: true
+        source: windows10-professional-en-us-x86-64
+        variant: ssd
+        size: 64
+    - os: false
+        variant: ssd
+        size: 128
+    - os: false
+        variant: ssd
+        size: 128
+    network:
+        name: vn-central-us-gecko-t
+        prefix: '10.0.0.0/24'
+        dns: &dns
+        - '1.1.1.1'
+        - '1.0.0.1'
+        subnet:
+            name: sn-central-us-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-central-us-gecko-t
+            rules: &rules
+            - name: allow-rdp
+                description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 110
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange: 3389
+            - name: allow-ssh
+                description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 111
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange: 22
+            - name: allow-winrm
+                description: 'allow: inbound tcp connections, for: winrm over http and https, from: whitelist, to: any host, on ports: 5985, 5986'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 112
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange:
+                - 5985
+                - 5986
+    tag: &tag
+    - name: workerType
+        value: gecko-t-win10-64-azure
+    - name: sourceOrganisation
+        value: mozilla-platform-ops
+    - name: sourceRepository
+        value: ronin_puppet
+    - name: sourceRevision
+        value: cloud_windows
+    - name: sourceScript
+        value: provisioners/windows/azure/azure-bootstrap.ps1
+    - name: deploymentId
+        value: 8c51170
+    bootstrap: &bootstrap
+        executions:
+        # set hostname to match the azure machine name so that debug logs can be found in papertrail
+        - name: set-computer-name
+            shell: azure-powershell
+            commands:
+            - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+            - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
+            - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
+            - $env:COMPUTERNAME = $instanceName
+            - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
+            - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
+            test:
+                std:
+                    out:
+                        match: host renamed
+            on:
+                success: reboot
+        # trigger bootstrap script and await completion
+        - name: invoke-ronin-puppet
+            shell: azure-powershell
+            commands:
+            - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
+        - name: verify-ronin-puppet
+            shell: azure-powershell
+            commands:
+            - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\ronin_puppet' -Name 'bootstrap_stage').bootstrap_stage -like 'complete') { Write-Output -InputObject ('puppet bootstrap stage is complete') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
+            test:
+                std:
+                    out:
+                        match: puppet bootstrap stage is complete
+            on:
+                failure: retry after 60 seconds
 - platform: azure
-  group: rg-east-us-gecko-t
-  region: East US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-east-us-gecko-t
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-east-us-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-east-us-gecko-t
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-east-us-gecko-t
+    region: East US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-east-us-gecko-t
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-east-us-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-east-us-gecko-t
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-east-us-2-gecko-t
-  region: East US 2
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-east-us-2-gecko-t
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-east-us-2-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-east-us-2-gecko-t
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-east-us-2-gecko-t
+    region: East US 2
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-east-us-2-gecko-t
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-east-us-2-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-east-us-2-gecko-t
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-north-central-us-gecko-t
-  region: North Central US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-north-central-us-gecko-t
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-north-central-us-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-north-central-us-gecko-t
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-north-central-us-gecko-t
+    region: North Central US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-north-central-us-gecko-t
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-north-central-us-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-north-central-us-gecko-t
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-south-central-us-gecko-t
-  region: South Central US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-south-central-us-gecko-t
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-south-central-us-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-south-central-us-gecko-t
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-south-central-us-gecko-t
+    region: South Central US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-south-central-us-gecko-t
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-south-central-us-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-south-central-us-gecko-t
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-west-us-gecko-t
-  region: West US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-west-us-gecko-t
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-west-us-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-west-us-gecko-t
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-west-us-gecko-t
+    region: West US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-west-us-gecko-t
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-west-us-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-west-us-gecko-t
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap

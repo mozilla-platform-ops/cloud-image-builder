@@ -2,56 +2,56 @@
 version: 0
 tasks:
 - provisionerId: relops
-  workerType: decision
-  routes:
-  - 'index.project.relops.cloud-image-builder.decision.revision.{{event.head.sha}}'
-  - 'index.project.relops.cloud-image-builder.decision.latest'
-  scopes:
-  - 'generic-worker:os-group:relops/win2019/Administrators'
-  - 'generic-worker:run-as-administrator:relops/*'
-  - 'queue:create-task:highest:relops/*'
-  - 'queue:create-task:very-high:relops/*'
-  - 'queue:create-task:high:relops/*'
-  - 'queue:create-task:medium:relops/*'
-  - 'queue:create-task:low:relops/*'
-  - 'queue:route:index.project.relops.cloud-image-builder.*'
-  - 'queue:scheduler-id:taskcluster-github'
-  - 'worker-manager:manage-worker-pool:gecko-1/win*'
-  - 'worker-manager:manage-worker-pool:gecko-3/win*'
-  - 'worker-manager:manage-worker-pool:gecko-t/win*'
-  - 'worker-manager:manage-worker-pool:mpd001-1/win*'
-  - 'worker-manager:manage-worker-pool:mpd001-3/win*'
-  - 'worker-manager:manage-worker-pool:relops/win*'
-  - 'worker-manager:provider:aws'
-  - 'worker-manager:provider:azure'
-  - 'secrets:get:project/relops/image-builder/dev'
-  extra:
-    github:
-      env: true
-      events:
-      #- pull_request.*
-      - push
-    data:
-      base:
-        sha: '{{event.base.sha}}'
-        user:
-          login: '{{event.base.user.login}}'
-      head:
-        sha: '{{event.head.sha}}'
-        user:
-          email: '{{event.head.user.email}}'
-  payload:
-    maxRunTime: 600
-    image: python
-    features:
-      taskclusterProxy: true
-    command: 
-    - '/bin/bash'
-    - '--login'
-    - '-c'
-    - 'pip install azure-mgmt-compute boto3 cachetools pyyaml slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && git clone --quiet {{event.head.repo.url}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder fetch && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder checkout {{event.head.repo.branch}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder reset --hard {{event.head.sha}} && python ./cloud-image-builder/ci/create-image-build-tasks.py'
-  metadata:
-    name: '00 :: create maintenance and image build tasks'
-    description: determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same
-    owner: '{{event.head.user.email}}'
-    source: '{{event.head.repo.url}}'
+    workerType: decision
+    routes:
+    - 'index.project.relops.cloud-image-builder.decision.revision.{{event.head.sha}}'
+    - 'index.project.relops.cloud-image-builder.decision.latest'
+    scopes:
+    - 'generic-worker:os-group:relops/win2019/Administrators'
+    - 'generic-worker:run-as-administrator:relops/*'
+    - 'queue:create-task:highest:relops/*'
+    - 'queue:create-task:very-high:relops/*'
+    - 'queue:create-task:high:relops/*'
+    - 'queue:create-task:medium:relops/*'
+    - 'queue:create-task:low:relops/*'
+    - 'queue:route:index.project.relops.cloud-image-builder.*'
+    - 'queue:scheduler-id:taskcluster-github'
+    - 'worker-manager:manage-worker-pool:gecko-1/win*'
+    - 'worker-manager:manage-worker-pool:gecko-3/win*'
+    - 'worker-manager:manage-worker-pool:gecko-t/win*'
+    - 'worker-manager:manage-worker-pool:mpd001-1/win*'
+    - 'worker-manager:manage-worker-pool:mpd001-3/win*'
+    - 'worker-manager:manage-worker-pool:relops/win*'
+    - 'worker-manager:provider:aws'
+    - 'worker-manager:provider:azure'
+    - 'secrets:get:project/relops/image-builder/dev'
+    extra:
+        github:
+            env: true
+            events:
+            #- pull_request.*
+            - push
+        data:
+            base:
+                sha: '{{event.base.sha}}'
+                user:
+                    login: '{{event.base.user.login}}'
+            head:
+                sha: '{{event.head.sha}}'
+                user:
+                    email: '{{event.head.user.email}}'
+    payload:
+        maxRunTime: 600
+        image: python
+        features:
+            taskclusterProxy: true
+        command: 
+        - '/bin/bash'
+        - '--login'
+        - '-c'
+        - 'pip install azure-mgmt-compute boto3 cachetools pyyaml slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && git clone --quiet {{event.head.repo.url}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder fetch && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder checkout {{event.head.repo.branch}} && git --git-dir=./cloud-image-builder/.git --work-tree=./cloud-image-builder reset --hard {{event.head.sha}} && python ./cloud-image-builder/ci/create-image-build-tasks.py'
+    metadata:
+        name: '00 :: create maintenance and image build tasks'
+        description: determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same
+        owner: '{{event.head.user.email}}'
+        source: '{{event.head.repo.url}}'

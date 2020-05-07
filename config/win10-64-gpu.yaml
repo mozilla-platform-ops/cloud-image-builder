@@ -1,123 +1,123 @@
 ---
 image:
-  os: Windows 10
-  edition: Professional
-  language: en-US
-  architecture: x86-64
-  timezone: UTC
-  hostname: '*'
-  gpu: true
-  owner: Mozilla RelOps
-  organization: Mozilla Corporation
-  partition: MBR
-  format: VHD
-  type: Fixed
-  target:
-    platform: amazon
-    bucket: windows-ami-builder
+    os: Windows 10
+    edition: Professional
+    language: en-US
+    architecture: x86-64
+    timezone: UTC
+    hostname: '*'
+    gpu: true
+    owner: Mozilla RelOps
+    organization: Mozilla Corporation
+    partition: MBR
+    format: VHD
+    type: Fixed
+    target:
+        platform: amazon
+        bucket: windows-ami-builder
 iso:
-  source:
-    platform: amazon
-    bucket: windows-ami-builder
-    key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
-  wimindex: 5
+    source:
+        platform: amazon
+        bucket: windows-ami-builder
+        key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
+    wimindex: 5
 manager:
-  pool:
-  - domain: gecko-t
-    variant: win10-64-gpu-azure
-    capacity:
-      minimum: 0
-      maximum: 1
-    locations:
-    - eastus
-    lifecycle: normal
-    owner: grenade@mozilla.com
-    provider: azure
-    platform: azure
+    pool:
+    - domain: gecko-t
+        variant: win10-64-gpu-azure
+        capacity:
+            minimum: 0
+            maximum: 1
+        locations:
+        - eastus
+        lifecycle: normal
+        owner: grenade@mozilla.com
+        provider: azure
+        platform: azure
 target:
 - platform: azure
-  group: rg-east-us-gecko-t
-  region: East US
-  hostname:
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine:
-    cpu: 6
-    ram: 56
-    format: Standard_NV{0}_Promo
-  disk:
-  - os: true
-    source: windows10-professional-en-us-x86-64-gpu
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
-  network:
-    name: vn-east-us-gecko-t
-    prefix: '10.0.0.0/24'
-    dns:
-    - '1.1.1.1'
-    - '1.0.0.1'
-    subnet:
-      name: sn-east-us-gecko-t
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-east-us-gecko-t
-      rules:
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 110
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 111
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange: 22
-      - name: allow-winrm
-        description: 'allow: inbound tcp connections, for: winrm over http and https, from: whitelist, to: any host, on ports: 5985, 5986'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 112
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange:
-        - 5985
-        - 5986
-  tag:
-  - name: workerType
-    value: gecko-t-win10-64-gpu-azure
-  - name: sourceOrganisation
-    value: mozilla-platform-ops
-  - name: sourceRepository
-    value: ronin_puppet
-  - name: sourceRevision
-    value: cloud_windows
-  - name: sourceScript
-    value: provisioners/windows/azure/azure-bootstrap.ps1
-  - name: deploymentId
-    value: def9e8f
+    group: rg-east-us-gecko-t
+    region: East US
+    hostname:
+        format: vm-{0}
+        slug:
+            type: uuid
+            length: 12
+    machine:
+        cpu: 6
+        ram: 56
+        format: Standard_NV{0}_Promo
+    disk:
+    - os: true
+        source: windows10-professional-en-us-x86-64-gpu
+        variant: ssd
+        size: 64
+    - os: false
+        variant: ssd
+        size: 128
+    - os: false
+        variant: ssd
+        size: 128
+    network:
+        name: vn-east-us-gecko-t
+        prefix: '10.0.0.0/24'
+        dns:
+        - '1.1.1.1'
+        - '1.0.0.1'
+        subnet:
+            name: sn-east-us-gecko-t
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-east-us-gecko-t
+            rules:
+            - name: allow-rdp
+                description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 110
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange: 3389
+            - name: allow-ssh
+                description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 111
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange: 22
+            - name: allow-winrm
+                description: 'allow: inbound tcp connections, for: winrm over http and https, from: whitelist, to: any host, on ports: 5985, 5986'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 112
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange:
+                - 5985
+                - 5986
+    tag:
+    - name: workerType
+        value: gecko-t-win10-64-gpu-azure
+    - name: sourceOrganisation
+        value: mozilla-platform-ops
+    - name: sourceRepository
+        value: ronin_puppet
+    - name: sourceRevision
+        value: cloud_windows
+    - name: sourceScript
+        value: provisioners/windows/azure/azure-bootstrap.ps1
+    - name: deploymentId
+        value: def9e8f

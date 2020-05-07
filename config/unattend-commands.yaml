@@ -1,163 +1,163 @@
 ---
 - unattend:
-  - description: remove winhttp proxy
-    command: 'cmd /c C:\Windows\System32\netsh.exe winhttp reset proxy'
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: remove winhttp proxy
+        command: 'cmd /c C:\Windows\System32\netsh.exe winhttp reset proxy'
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: set power profile to high performance
-    command: cmd /c C:\Windows\System32\powercfg.exe /setactive SCHEME_MIN
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: set power profile to high performance
+        command: cmd /c C:\Windows\System32\powercfg.exe /setactive SCHEME_MIN
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: enable windows firewall for all profiles (domain, public, private)
-    command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall set allprofiles state on'
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: enable windows firewall for all profiles (domain, public, private)
+        command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall set allprofiles state on'
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: enable remote desktop firewall exception
-    command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes'
-  target:
-    cloud:
-    - amazon
-    - azure
-    - google
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: enable remote desktop firewall exception
+        command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes'
+    target:
+        cloud:
+        - amazon
+        - azure
+        - google
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: enable powershell remoting
-    command: 'cmd /c C:\Windows\System32\winrm.cmd quickconfig -quiet -transport:http -force'
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: enable powershell remoting
+        command: 'cmd /c C:\Windows\System32\winrm.cmd quickconfig -quiet -transport:http -force'
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: accept powershell remoting connections from all hosts
-    command: 'cmd /c C:\Windows\System32\winrm.cmd set winrm/config/client @{TrustedHosts="*"}'
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: accept powershell remoting connections from all hosts
+        command: 'cmd /c C:\Windows\System32\winrm.cmd set winrm/config/client @{TrustedHosts="*"}'
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: enable remote management firewall exception
-    command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any'
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: enable remote management firewall exception
+        command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any'
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false
 - unattend:
-  - description: enable file and printer sharing firewall exception (allows icmp response on azure vnet)
-    command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes'
-  target:
-    cloud:
-    - azure
-    os:
-    - Windows 7
-    - Windows 8.1
-    - Windows 10
-    - Windows Server 2012 R2
-    - Windows Server 2016
-    - Windows Server 2019
-    - Windows Server
-    architecture:
-    - x86
-    - x86-64
-    gpu:
-    - true
-    - false
+    - description: enable file and printer sharing firewall exception (allows icmp response on azure vnet)
+        command: 'cmd /c C:\Windows\System32\netsh.exe advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes'
+    target:
+        cloud:
+        - azure
+        os:
+        - Windows 7
+        - Windows 8.1
+        - Windows 10
+        - Windows Server 2012 R2
+        - Windows Server 2016
+        - Windows Server 2019
+        - Windows Server
+        architecture:
+        - x86
+        - x86-64
+        gpu:
+        - true
+        - false

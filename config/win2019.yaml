@@ -1,263 +1,263 @@
 ---
 image:
-  os: Windows Server 2019
-  edition: Datacenter
-  language: en-US
-  architecture: x86-64
-  timezone: UTC
-  hostname: '*'
-  gpu: false
-  owner: Mozilla RelOps
-  organization: Mozilla Corporation
-  partition: MBR
-  format: VHD
-  type: Fixed
-  target:
-    platform: amazon
-    bucket: windows-ami-builder
+    os: Windows Server 2019
+    edition: Datacenter
+    language: en-US
+    architecture: x86-64
+    timezone: UTC
+    hostname: '*'
+    gpu: false
+    owner: Mozilla RelOps
+    organization: Mozilla Corporation
+    partition: MBR
+    format: VHD
+    type: Fixed
+    target:
+        platform: amazon
+        bucket: windows-ami-builder
 iso:
-  source:
-    platform: amazon
-    bucket: windows-ami-builder
-    key: iso/en_windows_server_2019_updated_sept_2019_x64_dvd_199664ce.iso
-  wimindex: 4
+    source:
+        platform: amazon
+        bucket: windows-ami-builder
+        key: iso/en_windows_server_2019_updated_sept_2019_x64_dvd_199664ce.iso
+    wimindex: 4
 manager:
-  pool:
-  - domain: relops
-    variant: win2019
-    capacity:
-      minimum: 0
-      maximum: 2
-    locations:
-    - centralus
-    lifecycle: normal
-    owner: grenade@mozilla.com
-    provider: azure
-    platform: azure
+    pool:
+    - domain: relops
+        variant: win2019
+        capacity:
+            minimum: 0
+            maximum: 2
+        locations:
+        - centralus
+        lifecycle: normal
+        owner: grenade@mozilla.com
+        provider: azure
+        platform: azure
 target:
 - platform: azure
-  group: rg-central-us-relops
-  region: Central US
-  hostname: &hostname
-    format: vm-{0}
-    slug:
-      type: uuid
-      length: 12
-  machine: &machine
-    cpu: 2
-    ram: 4
-    format: Standard_A{0}
-  disk: &disk
-  - os: true
-    source: windowsserver2019-datacenter-en-us-x86-64
-    variant: ssd
-    size: 64
-  - os: false
-    variant: ssd
-    size: 128
-  - os: false
-    variant: ssd
-    size: 128
-  network:
-    name: vn-central-us-relops
-    prefix: '10.0.0.0/24'
-    dns: &dns
-    - '1.1.1.1'
-    - '1.0.0.1'
-    subnet:
-      name: sn-central-us-relops
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-central-us-relops
-      rules: &rules
-      - name: allow-rdp
-        description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 110
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange: 3389
-      - name: allow-ssh
-        description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
-        access: Allow
-        protocol: Tcp
-        direction: Inbound
-        priority: 111
-        sourceAddressPrefix:
-        - 185.189.196.96/27
-        - 185.189.196.128/25
-        sourcePortRange: '*'
-        destinationAddressPrefix: '*'
-        destinationPortRange: 22
-  tag: &tag
-  - name: workerType
-    value: relops-win2019-azure
-  - name: sourceOrganisation
-    value: mozilla-releng
-  - name: sourceRepository
-    value: OpenCloudConfig
-  - name: sourceRevision
-    value: ca3c0aa
-  - name: sourceScript
-    value: userdata/rundsc.ps1
-  - name: deploymentId
-    value: ca3c0aa
-  bootstrap: &bootstrap
-    executions:
-    # set hostname to match the azure machine name so that debug logs can be found in papertrail
-    - name: set-computer-name
-      shell: azure-powershell
-      commands:
-      - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
-      - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
-      - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
-      - $env:COMPUTERNAME = $instanceName
-      - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
-      - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
-      test:
-        std:
-          out:
-            match: host renamed
-      on:
-        success: reboot
-    # set maintenance secrets in the windows registry
-    - name: create-registry-value-mozilla-generic-worker-access-token
-      shell: azure-powershell
-      commands:
-      - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
-      - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker created') }
-      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value '{0}' -Type 'String';
-        tokens:
-        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.accessToken.azure.'gecko-1'.'win2019-azure'
-      - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker\accessToken repudiated') }
-      test:
-        std:
-          out:
-            match: validated
-      on:
-        failure: retry after 60 seconds
-    - name: create-registry-value-mozilla-tooltool-access-token
-      shell: azure-powershell
-      commands:
-      - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
-      - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool created') }
-      - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
-        tokens:
-        - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltool.token
-      - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken repudiated') }
-      test:
-        std:
-          out:
-            match: validated
-      on:
-        failure: retry after 60 seconds
-    # trigger bootstrap script and await completion
-    - name: invoke-occ
-      shell: azure-powershell
-      commands:
-      - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-    - name: verify-occ
-      shell: azure-powershell
-      commands:
-      - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
-      test:
-        std:
-          out:
-            match: ed25519 private key detected
-      on:
-        failure: retry after 60 seconds
+    group: rg-central-us-relops
+    region: Central US
+    hostname: &hostname
+        format: vm-{0}
+        slug:
+            type: uuid
+            length: 12
+    machine: &machine
+        cpu: 2
+        ram: 4
+        format: Standard_A{0}
+    disk: &disk
+    - os: true
+        source: windowsserver2019-datacenter-en-us-x86-64
+        variant: ssd
+        size: 64
+    - os: false
+        variant: ssd
+        size: 128
+    - os: false
+        variant: ssd
+        size: 128
+    network:
+        name: vn-central-us-relops
+        prefix: '10.0.0.0/24'
+        dns: &dns
+        - '1.1.1.1'
+        - '1.0.0.1'
+        subnet:
+            name: sn-central-us-relops
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-central-us-relops
+            rules: &rules
+            - name: allow-rdp
+                description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 110
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange: 3389
+            - name: allow-ssh
+                description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
+                access: Allow
+                protocol: Tcp
+                direction: Inbound
+                priority: 111
+                sourceAddressPrefix:
+                - 185.189.196.96/27
+                - 185.189.196.128/25
+                sourcePortRange: '*'
+                destinationAddressPrefix: '*'
+                destinationPortRange: 22
+    tag: &tag
+    - name: workerType
+        value: relops-win2019-azure
+    - name: sourceOrganisation
+        value: mozilla-releng
+    - name: sourceRepository
+        value: OpenCloudConfig
+    - name: sourceRevision
+        value: ca3c0aa
+    - name: sourceScript
+        value: userdata/rundsc.ps1
+    - name: deploymentId
+        value: ca3c0aa
+    bootstrap: &bootstrap
+        executions:
+        # set hostname to match the azure machine name so that debug logs can be found in papertrail
+        - name: set-computer-name
+            shell: azure-powershell
+            commands:
+            - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+            - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
+            - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
+            - $env:COMPUTERNAME = $instanceName
+            - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
+            - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
+            test:
+                std:
+                    out:
+                        match: host renamed
+            on:
+                success: reboot
+        # set maintenance secrets in the windows registry
+        - name: create-registry-value-mozilla-generic-worker-access-token
+            shell: azure-powershell
+            commands:
+            - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
+            - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'GenericWorker' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker created') }
+            - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken' -Value '{0}' -Type 'String';
+                tokens:
+                - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.accessToken.azure.'gecko-1'.'win2019-azure'
+            - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\GenericWorker' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\GenericWorker\accessToken repudiated') }
+            test:
+                std:
+                    out:
+                        match: validated
+            on:
+                failure: retry after 60 seconds
+        - name: create-registry-value-mozilla-tooltool-access-token
+            shell: azure-powershell
+            commands:
+            - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
+            - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool created') }
+            - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
+                tokens:
+                - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltool.token
+            - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken repudiated') }
+            test:
+                std:
+                    out:
+                        match: validated
+            on:
+                failure: retry after 60 seconds
+        # trigger bootstrap script and await completion
+        - name: invoke-occ
+            shell: azure-powershell
+            commands:
+            - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
+        - name: verify-occ
+            shell: azure-powershell
+            commands:
+            - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
+            test:
+                std:
+                    out:
+                        match: ed25519 private key detected
+            on:
+                failure: retry after 60 seconds
 - platform: azure
-  group: rg-east-us-relops
-  region: East US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-east-us-relops
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-east-us-relops
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-east-us-relops
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-east-us-relops
+    region: East US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-east-us-relops
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-east-us-relops
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-east-us-relops
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-east-us-2-relops
-  region: East US 2
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-east-us-2-relops
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-east-us-2-relops
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-east-us-2-relops
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-east-us-2-relops
+    region: East US 2
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-east-us-2-relops
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-east-us-2-relops
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-east-us-2-relops
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-north-central-us-relops
-  region: North Central US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-north-central-us-relops
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-north-central-us-relops
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-north-central-us-relops
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-north-central-us-relops
+    region: North Central US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-north-central-us-relops
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-north-central-us-relops
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-north-central-us-relops
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-south-central-us-relops
-  region: South Central US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-south-central-us-relops
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-south-central-us-relops
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-south-central-us-relops
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-south-central-us-relops
+    region: South Central US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-south-central-us-relops
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-south-central-us-relops
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-south-central-us-relops
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
 - platform: azure
-  group: rg-west-us-relops
-  region: West US
-  hostname: *hostname
-  machine: *machine
-  disk: *disk
-  network:
-    name: vn-west-us-relops
-    prefix: '10.0.0.0/24'
-    dns: *dns
-    subnet:
-      name: sn-west-us-relops
-      prefix: '10.0.0.0/24'
-    flow:
-      name: nsg-west-us-relops
-      rules: *rules
-  tag: *tag
-  bootstrap: *bootstrap
+    group: rg-west-us-relops
+    region: West US
+    hostname: *hostname
+    machine: *machine
+    disk: *disk
+    network:
+        name: vn-west-us-relops
+        prefix: '10.0.0.0/24'
+        dns: *dns
+        subnet:
+            name: sn-west-us-relops
+            prefix: '10.0.0.0/24'
+        flow:
+            name: nsg-west-us-relops
+            rules: *rules
+    tag: *tag
+    bootstrap: *bootstrap
