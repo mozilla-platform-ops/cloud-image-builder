@@ -1,6 +1,7 @@
 import React from 'react'
 import Task from './Task';
 import Tasks from './Tasks';
+import Badge from 'react-bootstrap/Badge';
 
 class Status extends React.Component {
   state = {
@@ -15,6 +16,14 @@ class Status extends React.Component {
     'completed',
     'failed',
   ];
+  badgeVariants = {
+    completed: 'success',
+    failed: 'danger',
+    exception: 'warning',
+    running: 'primary',
+    pending: 'info',
+    unscheduled: 'secondary'
+  }
 
   componentDidMount() {
     switch (this.props.status.context) {
@@ -84,48 +93,28 @@ class Status extends React.Component {
         &nbsp;
         ({this.state.taskCount} tasks in group <a href={this.props.status.target_url} title={this.state.taskGroupId}>{this.state.taskGroupId && this.state.taskGroupId.substring(0, 7)}...</a>
         &nbsp;
-        [
-          {
-            ['completed', 'failed', 'exception', 'running', 'pending', 'unscheduled'].map(status => (
-              (this.state.tasks.filter(t => t.status.state === status).length)
-                ? (
-                  <span style={{
-                    color: (status === 'completed')
-                      ? 'green'
-                      : (status === 'failed')
-                        ? 'red'
-                        : (status === 'exception')
-                          ? 'orange'
-                          : (status === 'pending')
-                            ? 'darkorchid'
-                            : (status === 'running')
-                              ? 'steelblue'
-                              : (status === 'unscheduled')
-                                ? 'gray'
-                                : 'black' }}>
-                    &nbsp;{status}: {this.state.tasks.filter(t => t.status.state === status).length}&nbsp;
-                  </span>
+        {
+          Object.keys(this.badgeVariants).map(status => (
+            (this.state.tasks.filter(t => t.status.state === status).length)
+              ? (
+                  <Badge style={{ margin: '0 1px' }} variant={this.badgeVariants[status]} title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
+                    {this.state.tasks.filter(t => t.status.state === status).length}
+                  </Badge>
                 )
-                : ''
-            ))
-          }
-          {
-            [0, 1].map(result => (
-              (this.state.builds.filter(b => b.result === result).length)
-                ? (
-                  <span style={{
-                    color: (result === 0)
-                      ? 'green'
-                      : (result === 1)
-                        ? 'red'
-                        : 'black' }}>
-                    &nbsp;{this.travisBuildResults[result]}: {this.state.builds.filter(b => b.result === result).length}&nbsp;
-                  </span>
+              : ''
+          ))
+        }
+        {
+          [0, 1].map(result => (
+            (this.state.builds.filter(b => b.result === result).length)
+              ? (
+                  <Badge style={{ margin: '0 1px' }} variant={this.badgeVariants[this.travisBuildResults[result]]} title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
+                    {this.state.builds.filter(b => b.result === result).length}
+                  </Badge>
                 )
-                : ''
-            ))
-          }
-        ]
+              : ''
+          ))
+        }
         )
         {
           (this.state.showAllTasks)
