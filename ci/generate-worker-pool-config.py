@@ -91,27 +91,7 @@ workerPool = {
       'genericWorker': {
         'config': {
           'idleTimeoutSecs': 90,
-          'cachesDir': 'Z:\\caches',
-          'cleanUpTaskDirs': True,
           'deploymentId': commitSha[0:7],
-          'disableReboots': True,
-          'downloadsDir': 'Z:\\downloads',
-          'ed25519SigningKeyLocation': 'C:\\generic-worker\\ed25519-private.key',
-          'livelogExecutable': 'C:\\generic-worker\\livelog.exe',
-          'livelogPUTPort': 60022,
-          'numberOfTasksToRun': 0,
-          'provisionerId': poolConfig['domain'],
-          'runAfterUserCreation': 'C:\\generic-worker\\task-user-init.cmd',
-          'runTasksAsCurrentUser': False,
-          'sentryProject': 'generic-worker',
-          'shutdownMachineOnIdle': False,
-          'shutdownMachineOnInternalError': True,
-          'taskclusterProxyExecutable': 'C:\\generic-worker\\taskcluster-proxy.exe',
-          'taskclusterProxyPort': 80,
-          'tasksDir': 'Z:\\',
-          'workerGroup': x['group'],
-          'workerLocation': '{{"cloud":"azure","region":"{}","availabilityZone":"{}"}}'.format(x['region'].lower().replace(' ', ''), x['region'].lower().replace(' ', '')),
-          'workerType': poolConfig['variant'],
           'wstAudience': 'cloudopsstage' if currentEnvironment == 'staging' else 'firefoxcitc',
           'wstServerURL': 'https://websocktunnel-stage.taskcluster.nonprod.cloudops.mozgcp.net' if currentEnvironment == 'staging' else 'https://firefoxci-websocktunnel.services.mozilla.com'
         }
