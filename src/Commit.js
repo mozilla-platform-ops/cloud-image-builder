@@ -43,10 +43,6 @@ class Commit extends React.Component {
         <Row>
           <Card style={{ width: '100%' }}>
             <Card.Header>
-              <a href={this.props.commit.url}>
-                { this.props.commit.sha.substring(0, 7) }
-              </a>
-              &nbsp;
               {
                 new Intl.DateTimeFormat('en-GB', {
                   year: 'numeric',
@@ -57,6 +53,10 @@ class Commit extends React.Component {
                   timeZoneName: 'short'
                 }).format(new Date(this.props.commit.committer.date))
               }
+              &nbsp;
+              <a href={this.props.commit.url}>
+                { this.props.commit.sha.substring(0, 7) }
+              </a>
               <Image
                 src={this.props.commit.author.avatar}
                 alt={this.props.commit.author.name}
