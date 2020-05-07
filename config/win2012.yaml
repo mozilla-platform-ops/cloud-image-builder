@@ -23,54 +23,54 @@ iso:
     wimindex: 4
 manager:
     pool:
-    - domain: gecko-1
+      - domain: gecko-1
         variant: win2012-azure
         capacity:
             minimum: 0
             maximum: 3
         locations:
-        - centralus
-        - northcentralus
-        - southcentralus
-        - eastus
-        - eastus2
-        - westus
+          - centralus
+          - northcentralus
+          - southcentralus
+          - eastus
+          - eastus2
+          - westus
         lifecycle: normal
         owner: grenade@mozilla.com
         provider: azure
         platform: azure
-    - domain: gecko-3
+      - domain: gecko-3
         variant: win2012-azure
         capacity:
             minimum: 0
             maximum: 3
         locations:
-        - centralus
+          - centralus
         owner: grenade@mozilla.com
         provider: azure
         platform: azure
-    - domain: mpd001-1
+      - domain: mpd001-1
         variant: win2012-amazon
         capacity:
             minimum: 0
             maximum: 3
         locations:
-        - centralus
+          - centralus
         owner: grenade@mozilla.com
         provider: aws
         platform: amazon
-    - domain: mpd001-3
+      - domain: mpd001-3
         variant: win2012-amazon
         capacity:
             minimum: 0
             maximum: 3
         locations:
-        - centralus
+          - centralus
         owner: grenade@mozilla.com
         provider: aws
         platform: amazon
 target:
-- platform: azure
+  - platform: azure
     group: rg-central-us-gecko-1
     region: Central US
     hostname: &hostname
@@ -83,77 +83,77 @@ target:
         ram: 16
         format: Standard_DS{0}_v2
     disk: &disk
-    - os: true
+      - os: true
         source: windowsserver2012r2-datacenter-en-us-x86-64
         variant: ssd
         size: 64
-    - os: false
+      - os: false
         variant: ssd
         size: 128
-    - os: false
+      - os: false
         variant: ssd
         size: 128
     network:
         name: vn-central-us-gecko-1
         prefix: '10.0.0.0/24'
         dns: &dns
-        - '1.1.1.1'
-        - '1.0.0.1'
+          - '1.1.1.1'
+          - '1.0.0.1'
         subnet:
             name: sn-central-us-gecko-1
             prefix: '10.0.0.0/24'
         flow:
             name: nsg-central-us-gecko-1
             rules: &rules
-            - name: allow-rdp
+              - name: allow-rdp
                 description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
                 access: Allow
                 protocol: Tcp
                 direction: Inbound
                 priority: 110
                 sourceAddressPrefix:
-                - 185.189.196.96/27
-                - 185.189.196.128/25
+                  - 185.189.196.96/27
+                  - 185.189.196.128/25
                 sourcePortRange: '*'
                 destinationAddressPrefix: '*'
                 destinationPortRange: 3389
-            - name: allow-ssh
+              - name: allow-ssh
                 description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
                 access: Allow
                 protocol: Tcp
                 direction: Inbound
                 priority: 111
                 sourceAddressPrefix:
-                - 185.189.196.96/27
-                - 185.189.196.128/25
+                  - 185.189.196.96/27
+                  - 185.189.196.128/25
                 sourcePortRange: '*'
                 destinationAddressPrefix: '*'
                 destinationPortRange: 22
     tag: &tag-gecko-1
-    - name: workerType
+      - name: workerType
         value: gecko-1-b-win2012-azure
-    - name: sourceOrganisation
+      - name: sourceOrganisation
         value: mozilla-releng
-    - name: sourceRepository
+      - name: sourceRepository
         value: OpenCloudConfig
-    - name: sourceRevision
+      - name: sourceRevision
         value: ca3c0aa
-    - name: sourceScript
+      - name: sourceScript
         value: userdata/rundsc.ps1
-    - name: deploymentId
+      - name: deploymentId
         value: ca3c0aa
     bootstrap: &bootstrap
         executions:
         # set hostname to match the azure machine name so that debug logs can be found in papertrail
-        - name: set-computer-name
+          - name: set-computer-name
             shell: azure-powershell
             commands:
-            - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
-            - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
-            - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
-            - $env:COMPUTERNAME = $instanceName
-            - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
-            - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
+              - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
+              - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
+              - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
+              - $env:COMPUTERNAME = $instanceName
+              - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
+              - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
             test:
                 std:
                     out:
@@ -161,15 +161,15 @@ target:
             on:
                 success: reboot
         # set maintenance secrets in the windows registry
-        - name: create-registry-value-mozilla-tooltool-access-token
+          - name: create-registry-value-mozilla-tooltool-access-token
             shell: azure-powershell
             commands:
-            - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
-            - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool created') }
-            - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
+              - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla detected') } else { New-Item -Path 'HKLM:\SOFTWARE' -Name 'Mozilla' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla created') }
+              - if (Get-Item -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool detected') } else { New-Item -Path 'HKLM:\SOFTWARE\Mozilla' -Name 'tooltool' | Out-Null; Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool created') }
+              - format: Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken' -Value '{0}' -Type 'String';
                 tokens:
-                - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltool.token
-            - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken repudiated') }
+                  - (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret.tooltool.token
+              - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\tooltool' -Name 'accessToken').accessToken.Length -eq 44) { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken validated') } else { Write-Output -InputObject ('HKLM:\SOFTWARE\Mozilla\tooltool\accessToken repudiated') }
             test:
                 std:
                     out:
@@ -177,21 +177,21 @@ target:
             on:
                 failure: retry after 60 seconds
         # trigger bootstrap script and await completion
-        - name: invoke-occ
+          - name: invoke-occ
             shell: azure-powershell
             commands:
-            - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-        - name: verify-occ
+              - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
+          - name: verify-occ
             shell: azure-powershell
             commands:
-            - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
+              - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
             test:
                 std:
                     out:
                         match: ed25519 private key detected
             on:
                 failure: retry after 60 seconds
-- platform: azure
+  - platform: azure
     group: rg-east-us-gecko-1
     region: East US
     hostname: *hostname
@@ -209,7 +209,7 @@ target:
             rules: *rules
     tag: *tag-gecko-1
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-east-us-2-gecko-1
     region: East US 2
     hostname: *hostname
@@ -227,7 +227,7 @@ target:
             rules: *rules
     tag: *tag-gecko-1
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-north-central-us-gecko-1
     region: North Central US
     hostname: *hostname
@@ -245,7 +245,7 @@ target:
             rules: *rules
     tag: *tag-gecko-1
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-south-central-us-gecko-1
     region: South Central US
     hostname: *hostname
@@ -263,7 +263,7 @@ target:
             rules: *rules
     tag: *tag-gecko-1
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-west-us-gecko-1
     region: West US
     hostname: *hostname
@@ -281,7 +281,7 @@ target:
             rules: *rules
     tag: *tag-gecko-1
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-central-us-gecko-3
     region: Central US
     hostname: *hostname
@@ -298,20 +298,20 @@ target:
             name: nsg-central-us-gecko-3
             rules: *rules
     tag: &tag-gecko-3
-    - name: workerType
+      - name: workerType
         value: gecko-3-b-win2012-azure
-    - name: sourceOrganisation
+      - name: sourceOrganisation
         value: mozilla-releng
-    - name: sourceRepository
+      - name: sourceRepository
         value: OpenCloudConfig
-    - name: sourceRevision
+      - name: sourceRevision
         value: ca3c0aa
-    - name: sourceScript
+      - name: sourceScript
         value: userdata/rundsc.ps1
-    - name: deploymentId
+      - name: deploymentId
         value: ca3c0aa
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-east-us-gecko-3
     region: East US
     hostname: *hostname
@@ -329,7 +329,7 @@ target:
             rules: *rules
     tag: *tag-gecko-3
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-east-us-2-gecko-3
     region: East US 2
     hostname: *hostname
@@ -347,7 +347,7 @@ target:
             rules: *rules
     tag: *tag-gecko-3
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-north-central-us-gecko-3
     region: North Central US
     hostname: *hostname
@@ -365,7 +365,7 @@ target:
             rules: *rules
     tag: *tag-gecko-3
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-south-central-us-gecko-3
     region: South Central US
     hostname: *hostname
@@ -383,7 +383,7 @@ target:
             rules: *rules
     tag: *tag-gecko-3
     bootstrap: *bootstrap
-- platform: azure
+  - platform: azure
     group: rg-west-us-gecko-3
     region: West US
     hostname: *hostname
@@ -401,7 +401,7 @@ target:
             rules: *rules
     tag: *tag-gecko-3
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-central-us-mpd001-1
     region: Central US
     hostname: *hostname
@@ -418,18 +418,18 @@ target:
             name: nsg-central-us-mpd001-1
             rules: *rules
     tag: &tag-mpd001-1
-    - name: workerType
+      - name: workerType
         value: mpd001-1-b-win2012-amazon
-    - name: sourceOrganisation
+      - name: sourceOrganisation
         value: mozilla-platform-ops
-    - name: sourceRepository
+      - name: sourceRepository
         value: ronin_puppet
-    - name: sourceRevision
+      - name: sourceRevision
         value: cloud_windows
-    - name: sourceScript
+      - name: sourceScript
         value: provisioners/windows/azure/azure-bootstrap.ps1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-east-us-mpd001-1
     region: East US
     hostname: *hostname
@@ -447,7 +447,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-east-us-2-mpd001-1
     region: East US 2
     hostname: *hostname
@@ -465,7 +465,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-north-central-us-mpd001-1
     region: North Central US
     hostname: *hostname
@@ -483,7 +483,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-south-central-us-mpd001-1
     region: South Central US
     hostname: *hostname
@@ -501,7 +501,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-west-us-mpd001-1
     region: West US
     hostname: *hostname
@@ -519,7 +519,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-central-us-mpd001-3
     region: Central US
     hostname: *hostname
@@ -536,18 +536,18 @@ target:
             name: nsg-central-us-mpd001-3
             rules: *rules
     tag: &tag-mpd001-3
-    - name: workerType
+      - name: workerType
         value: mpd001-3-b-win2012-amazon
-    - name: sourceOrganisation
+      - name: sourceOrganisation
         value: mozilla-platform-ops
-    - name: sourceRepository
+      - name: sourceRepository
         value: ronin_puppet
-    - name: sourceRevision
+      - name: sourceRevision
         value: cloud_windows
-    - name: sourceScript
+      - name: sourceScript
         value: provisioners/windows/azure/azure-bootstrap.ps1
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-east-us-mpd001-3
     region: East US
     hostname: *hostname
@@ -565,7 +565,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-3
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-east-us-2-mpd001-3
     region: East US 2
     hostname: *hostname
@@ -583,7 +583,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-3
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-north-central-us-mpd001-3
     region: North Central US
     hostname: *hostname
@@ -601,7 +601,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-3
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-south-central-us-mpd001-3
     region: South Central US
     hostname: *hostname
@@ -619,7 +619,7 @@ target:
             rules: *rules
     tag: *tag-mpd001-3
     bootstrap: *bootstrap
-- platform: amazon
+  - platform: amazon
     group: rg-west-us-mpd001-3
     region: West US
     hostname: *hostname
