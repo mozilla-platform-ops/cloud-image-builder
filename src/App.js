@@ -33,7 +33,8 @@ class App extends React.Component {
             committer: {...c.commit.committer, ...{ id: c.committer.id, username: c.committer.login, avatar: c.committer.avatar_url }},
             message: c.commit.message.split('\n').filter(line => line !== ''),
             verification: c.commit.verification
-          }))
+          })),
+          latest: githubCommits[0].sha
         }));
       } else {
         console.log(githubCommits)
@@ -45,7 +46,7 @@ class App extends React.Component {
   render() {
     return (
       <Container>
-        <Commits commits={this.state.commits} />
+        <Commits commits={this.state.commits} latest={this.state.latest} />
       </Container>
     );
   }

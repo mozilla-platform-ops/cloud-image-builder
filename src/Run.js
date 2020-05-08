@@ -1,4 +1,8 @@
 import React from 'react'
+import Badge from 'react-bootstrap/Badge';
+import Button from 'react-bootstrap/Button';
+import StatusBadgeVariantMap from './StatusBadgeVariantMap';
+//import { Server } from 'react-bootstrap-icons';
 
 class Run extends React.Component {
   state = {
@@ -38,27 +42,21 @@ class Run extends React.Component {
 
   render() {
     return (
-      <li style={{
-        color: (this.props.run.state === 'completed')
-          ? 'green'
-          : (this.props.run.state === 'failed')
-            ? 'red'
-            : (this.props.run.state === 'exception')
-              ? 'orange'
-              : (this.props.run.state === 'pending')
-                ? 'darkorchid'
-                : (this.props.run.state === 'running')
-                  ? 'steelblue'
-                  : (this.props.run.state === 'unscheduled')
-                    ? 'gray'
-                    : 'black' }}>
-        <a href={this.props.rootUrl + '/tasks/' + this.props.taskId}>
-         run {this.props.run.runId}
-        </a> {this.props.run.state}
-          {
-            (this.props.run.state === 'completed')
-              ? (
-                <ul style={{ color: 'black' }}>
+      <li>
+        <Button
+          size="sm"
+          href={this.props.rootUrl + '/tasks/' + this.props.taskId + '/runs/' + this.props.run.runId}
+          style={{ marginLeft: '0.7em' }}
+          variant={'outline-' + StatusBadgeVariantMap[this.props.run.state]}
+          title={'task ' + this.props.taskId + ', run ' + this.props.run.runId + ': ' + this.props.run.state}>
+          {'task ' + this.props.taskId + ', run ' + this.props.run.runId}
+        </Button>
+        {
+          (this.props.run.state === 'completed' && this.state.images.length)
+            ? (
+              <div>
+                <span>worker manager image deployments:</span>
+                <ul>
                   {
                     this.state.images.map(image => (
                       <li key={image}>
@@ -67,9 +65,10 @@ class Run extends React.Component {
                     ))
                   }
                 </ul>
-              )
-              : ''
-          }
+              </div>
+            )
+            : ''
+        }
       </li>
     );
   }

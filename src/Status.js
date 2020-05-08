@@ -1,10 +1,19 @@
 import React from 'react'
 import Task from './Task';
 import Tasks from './Tasks';
+import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 import Badge from 'react-bootstrap/Badge';
 
 class Status extends React.Component {
   state = {
+    summary: {
+      completed: 0,
+      failed: 0,
+      exception: 0,
+      running: 0,
+      pending: 0,
+      unscheduled: 0
+    },
     showAllTasks: false,
     taskGroupId: null,
     taskCount: 0,
@@ -16,13 +25,25 @@ class Status extends React.Component {
     'completed',
     'failed',
   ];
-  badgeVariants = {
-    completed: 'success',
-    failed: 'danger',
-    exception: 'warning',
-    running: 'primary',
-    pending: 'info',
-    unscheduled: 'secondary'
+
+  constructor(props) {
+    super(props);
+    this.appendToSummary = this.appendToSummary.bind(this);
+  }
+
+  appendToSummary(summary) {
+    this.setState(state => {
+      let combined = {
+        completed: state.summary.completed + summary.completed,
+        failed: state.summary.failed + summary.failed,
+        exception: state.summary.exception + summary.exception,
+        running: state.summary.running + summary.running,
+        pending: state.summary.pending + summary.pending,
+        unscheduled: state.summary.unscheduled + summary.unscheduled
+      };
+      this.props.appender(combined);
+      return { summary: combined };
+    });
   }
 
   componentDidMount() {
@@ -43,6 +64,14 @@ class Status extends React.Component {
               builds: container.matrix,
               travisApiResponse: container
             }));
+            this.appendToSummary({
+              completed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').length,
+              failed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'failed').length,
+              exception: 0,
+              running: 0,
+              pending: 0,
+              unscheduled: 0
+            });
           }
         })
         .catch(console.log);
@@ -62,6 +91,14 @@ class Status extends React.Component {
               taskCount: container.tasks.length,
               tasks: container.tasks//.sort((a, b) => a.task.metadata.name.localeCompare(b.task.metadata.name))
             }));
+            this.appendToSummary({
+              completed: container.tasks.filter(x => x.status.state === 'completed').length,
+              failed: container.tasks.filter(x => x.status.state === 'failed').length,
+              exception: container.tasks.filter(x => x.status.state === 'exception').length,
+              running: container.tasks.filter(x => x.status.state === 'running').length,
+              pending: container.tasks.filter(x => x.status.state === 'pending').length,
+              unscheduled: container.tasks.filter(x => x.status.state === 'unscheduled').length
+            });
           }
         })
         .catch(console.log);
@@ -71,13 +108,7 @@ class Status extends React.Component {
 
   render() {
     return (
-      <li style={{
-        color: (this.props.status.state === 'success')
-          ? 'green'
-          : (this.props.status.state === 'failure')
-            ? 'red'
-            : 'gray'
-      }}>
+      <li>
         {
           new Intl.DateTimeFormat('en-GB', {
             year: 'numeric',
@@ -102,12 +133,12 @@ class Status extends React.Component {
         </a>
         &nbsp;
         {
-          Object.keys(this.badgeVariants).map(status => (
+          Object.keys(StatusBadgeVariantMap).map(status => (
             (this.state.tasks.filter(t => t.status.state === status).length)
               ? (
                   <Badge
                     style={{ margin: '0 1px' }}
-                    variant={this.badgeVariants[status]}
+                    variant={StatusBadgeVariantMap[status]}
                     title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
                     {this.state.tasks.filter(t => t.status.state === status).length}
                   </Badge>
@@ -121,7 +152,7 @@ class Status extends React.Component {
               ? (
                   <Badge
                     style={{ margin: '0 1px' }}
-                    variant={this.badgeVariants[this.travisBuildResults[result]]}
+                    variant={StatusBadgeVariantMap[this.travisBuildResults[result]]}
                     title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
                     {this.state.builds.filter(b => b.result === result).length}
                   </Badge>

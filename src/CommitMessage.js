@@ -26,7 +26,7 @@ class CommitMessage extends React.Component {
             ? (
                 (this.props.message.filter(line => (line.match(/^(pool-deploy|no-ci|no-taskcluster-ci|no-travis-ci)$/i)))).map(instruction => (
                   <Badge
-                    style={{ margin: '0 4px 0 0' }}
+                    style={{ marginRight: '0.7em' }}
                     variant={(instruction === 'pool-deploy') ? 'primary' : 'dark'}>
                     {
                       (instruction === 'pool-deploy')
@@ -58,7 +58,7 @@ class CommitMessage extends React.Component {
                         this.props.message.filter(line => line.startsWith(inex + ' ' + type + ': ')).map(line => (
                           line.replace(inex + ' ' + type + ': ', '').split(', ').map(item => (
                             <Badge
-                              style={{ margin: '0 4px 0 0' }}
+                              style={{ marginRight: '0.7em' }}
                               variant={(inex === 'include') ? 'info' : 'dark'}
                               title={inex + ' ' + type.slice(0, -1) + ': ' + item}>
                               {
