@@ -134,7 +134,7 @@ createTask(
   maxRunMinutes = 60,
   retries = 5,
   retriggerOnExitCodes = [ 123 ],
-  provisioner = 'relops',
+  provisioner = 'relops-3',
   workerType = 'win2019',
   priority = 'low',
   features = {
@@ -161,7 +161,7 @@ createTask(
   maxRunMinutes = 60,
   retries = 5,
   retriggerOnExitCodes = [ 123 ],
-  provisioner = 'relops',
+  provisioner = 'relops-3',
   workerType = 'decision',
   priority = 'high',
   features = {
@@ -196,7 +196,7 @@ for platform in ['amazon', 'azure']:
           maxRunMinutes = 180,
           retries = 1,
           retriggerOnExitCodes = [ 123 ],
-          provisioner = 'relops',
+          provisioner = 'relops-3',
           workerType = 'win2019',
           priority = 'high',
           artifacts = [
@@ -225,8 +225,8 @@ for platform in ['amazon', 'azure']:
             'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
           ],
           scopes = [
-            'generic-worker:os-group:relops/win2019/Administrators',
-            'generic-worker:run-as-administrator:relops/win2019',
+            'generic-worker:os-group:relops-3/win2019/Administrators',
+            'generic-worker:run-as-administrator:relops-3/win2019',
             'secrets:get:project/relops/image-builder/dev'
           ],
           routes = [
@@ -270,7 +270,7 @@ for platform in ['amazon', 'azure']:
               retries = 5,
               retriggerOnExitCodes = [ 123 ],
               dependencies = machineImageBuildDependencies,
-              provisioner = 'relops',
+              provisioner = 'relops-3',
               workerType = 'win2019',
               priority = 'low',
               osGroups = [
@@ -287,8 +287,8 @@ for platform in ['amazon', 'azure']:
                 'powershell -File build-machine-image.ps1 {} {} {}'.format(platform, key, target['group'])
               ],
               scopes = [
-                'generic-worker:os-group:relops/win2019/Administrators',
-                'generic-worker:run-as-administrator:relops/win2019',
+                'generic-worker:os-group:relops-3/win2019/Administrators',
+                'generic-worker:run-as-administrator:relops-3/win2019',
                 'secrets:get:project/relops/image-builder/dev'
               ],
               routes = [
@@ -311,7 +311,7 @@ for platform in ['amazon', 'azure']:
           #  retries = 4,
           #  retriggerOnExitCodes = [ 123 ],
           #  dependencies = [ machineImageBuildTaskId ] if queueMachineImageBuild else [],
-          #  provisioner = 'relops',
+          #  provisioner = 'relops-3',
           #  workerType = 'decision',
           #  priority = 'low',
           #  features = {
@@ -359,7 +359,7 @@ for platform in ['amazon', 'azure']:
             ],
             #dependencies = taggingTaskIdsForPool,
             dependencies = machineImageBuildTaskIdsForPool,
-            provisioner = 'relops',
+            provisioner = 'relops-3',
             workerType = 'decision',
             priority = 'low',
             features = {
@@ -378,7 +378,7 @@ for platform in ['amazon', 'azure']:
               'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
             ],
             scopes = [
-              'secrets:get:project/relops/image-builder/dev',
+              'secrets:get:project/relops-3/image-builder/dev',
               'worker-manager:manage-worker-pool:{}/{}'.format(pool['domain'], pool['variant']),
               'worker-manager:provider:{}'.format(pool['provider'])
             ],
