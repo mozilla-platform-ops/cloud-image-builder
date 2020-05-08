@@ -91,13 +91,24 @@ class Status extends React.Component {
         &nbsp;
         {this.props.status.description.toLowerCase()}
         &nbsp;
-        ({this.state.taskCount} tasks in group <a href={this.props.status.target_url} title={this.state.taskGroupId}>{this.state.taskGroupId && this.state.taskGroupId.substring(0, 7)}...</a>
+        ({this.state.taskCount} tasks in group
+        &nbsp;
+        <a href={this.props.status.target_url} title={this.state.taskGroupId}>
+          {
+            (this.state.builds.length)
+              ? this.state.taskGroupId
+              : (this.state.taskGroupId && this.state.taskGroupId.slice(0, 7)) + '...'
+          }
+        </a>
         &nbsp;
         {
           Object.keys(this.badgeVariants).map(status => (
             (this.state.tasks.filter(t => t.status.state === status).length)
               ? (
-                  <Badge style={{ margin: '0 1px' }} variant={this.badgeVariants[status]} title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
+                  <Badge
+                    style={{ margin: '0 1px' }}
+                    variant={this.badgeVariants[status]}
+                    title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
                     {this.state.tasks.filter(t => t.status.state === status).length}
                   </Badge>
                 )
@@ -108,7 +119,10 @@ class Status extends React.Component {
           [0, 1].map(result => (
             (this.state.builds.filter(b => b.result === result).length)
               ? (
-                  <Badge style={{ margin: '0 1px' }} variant={this.badgeVariants[this.travisBuildResults[result]]} title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
+                  <Badge
+                    style={{ margin: '0 1px' }}
+                    variant={this.badgeVariants[this.travisBuildResults[result]]}
+                    title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
                     {this.state.builds.filter(b => b.result === result).length}
                   </Badge>
                 )

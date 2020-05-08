@@ -1,5 +1,6 @@
 import React from 'react';
 import Badge from 'react-bootstrap/Badge';
+import { DashCircleFill, PlusCircleFill } from 'react-bootstrap-icons';
 
 class CommitMessage extends React.Component {
   render() {
@@ -24,7 +25,19 @@ class CommitMessage extends React.Component {
           )))
             ? (
                 (this.props.message.filter(line => (line.match(/^(pool-deploy|no-ci|no-taskcluster-ci|no-travis-ci)$/i)))).map(instruction => (
-                  <Badge style={{ margin: '0 4px 0 0' }} variant={(instruction == 'pool-deploy') ? 'primary' : 'dark'}>
+                  <Badge
+                    style={{ margin: '0 4px 0 0' }}
+                    variant={(instruction === 'pool-deploy') ? 'primary' : 'dark'}>
+                    {
+                      (instruction === 'pool-deploy')
+                        ? ''
+                        : (
+                            <span>
+                              <DashCircleFill />
+                              &nbsp;
+                            </span>
+                          )
+                    }
                     {instruction}
                   </Badge>
                 ))
@@ -44,8 +57,16 @@ class CommitMessage extends React.Component {
                       ['environments', 'integrations', 'keys', 'pools', 'regions'].map(type => (
                         this.props.message.filter(line => line.startsWith(inex + ' ' + type + ': ')).map(line => (
                           line.replace(inex + ' ' + type + ': ', '').split(', ').map(item => (
-                            <Badge style={{ margin: '0 4px 0 0', textDecoration: (inex === 'include') ? 'none' : 'line-through' }} variant={(inex === 'include') ? 'info' : 'warning'}>
-                              {item}
+                            <Badge
+                              style={{ margin: '0 4px 0 0' }}
+                              variant={(inex === 'include') ? 'info' : 'dark'}
+                              title={inex + ' ' + type.slice(0, -1) + ': ' + item}>
+                              {
+                                (inex === 'include')
+                                  ? <PlusCircleFill />
+                                  : <DashCircleFill />
+                              }
+                              &nbsp;{item}
                             </Badge>
                           ))
                         ))
