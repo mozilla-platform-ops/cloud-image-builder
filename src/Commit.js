@@ -70,9 +70,6 @@ class Commit extends React.Component {
               </span>
             </Card.Header>
             <Card.Body>
-              <pre>
-                { this.props.commit.message.join('\n') }
-              </pre>
               <CommitMessage message={this.props.commit.message} />
               <Statuses contexts={this.state.contexts} statuses={this.state.statuses} />
             </Card.Body>

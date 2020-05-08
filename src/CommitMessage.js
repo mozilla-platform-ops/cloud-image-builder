@@ -59,36 +59,55 @@ class CommitMessage extends React.Component {
     return (
       <div>
         {
-          this.props.message.filter(l => (
-            l !== 'no-ci'
-            && l !== 'no-taskcluster-ci'
-            && l !== 'no-travis-ci'
-            && !l.startsWith('exclude environments: ')
-            && !l.startsWith('include environments: ')
-            && !l.startsWith('exclude keys: ')
-            && !l.startsWith('include keys: ')
-            && !l.startsWith('exclude pools: ')
-            && !l.startsWith('include pools: ')
-            && !l.startsWith('exclude regions: ')
-            && !l.startsWith('include regions: ')
+          this.props.message.filter(line => (
+            !line.match((new RegExp ('^(include|exclude) (environment|key|pool|region)s: .*$', 'i')))
+            &&
+            !line.match((new RegExp ('^(pool-deploy|no-ci|no-taskcluster-ci|no-travis-ci)$', 'i')))
           )).map(line => (
-            <span>
-              {line}
-              <br />
-            </span>
+            <strong>
+              {line}<br />
+            </strong>
           ))
         }
         {
-          ['include', 'exclude'].map(inex => (
-            ['environments', 'integrations', 'keys', 'pools', 'regions'].map(type => (
-              this.props.message.filter(line => line.startsWith(inex + ' ' + type + ': ')).map(line => (
-                line.replace(inex + ' ' + type + ': ', '').split(', ').map(item => (
-                  <Badge style={{ margin: '0 1px' }} variant={(inex === 'include') ? 'light' : 'dark'}>
-                    {inex + ' ' + type.replace('s', '') + ': ' + item}
+          (this.props.message.some(line => (
+            line.match(/^(include|exclude) (environment|key|pool|region)s: .*$/i)
+            ||
+            line.match(/^(pool-deploy|no-ci|no-taskcluster-ci|no-travis-ci)$/i)
+          )))
+            ? (
+                (this.props.message.filter(line => (line.match(/^(pool-deploy|no-ci|no-taskcluster-ci|no-travis-ci)$/i)))).map(instruction => (
+                  <Badge style={{ margin: '0 4px 0 0' }} variant={(instruction == 'pool-deploy') ? 'primary' : 'dark'}>
+                    {instruction}
                   </Badge>
                 ))
-              ))
-            ))
+              )
+            : (
+                <Badge variant="warning">
+                  no commit syntax ci instructions
+                </Badge>
+              )
+        }
+        {
+          ['include', 'exclude'].map(inex => (
+            (this.props.message.some(line => line.match((new RegExp ('^' + inex + ' (environment|key|pool|region)s: .*$', 'i')))))
+              ? (
+                  <span>
+                    {
+                      ['environments', 'integrations', 'keys', 'pools', 'regions'].map(type => (
+                        this.props.message.filter(line => line.startsWith(inex + ' ' + type + ': ')).map(line => (
+                          line.replace(inex + ' ' + type + ': ', '').split(', ').map(item => (
+                            <Badge style={{ margin: '0 4px 0 0', textDecoration: (inex === 'include') ? 'none' : 'line-through' }} variant={(inex === 'include') ? 'info' : 'warning'}>
+                              {item}
+                            </Badge>
+                          ))
+                        ))
+                      ))
+                    }
+                    <br />
+                  </span>
+                )
+              : ''
           ))
         }
       </div>
