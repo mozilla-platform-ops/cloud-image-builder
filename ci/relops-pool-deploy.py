@@ -1,6 +1,6 @@
 import os
 import taskcluster
-from cib import updateRole, updateWorkerPool
+from cib import updateRole
 
 
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
@@ -32,11 +32,3 @@ updateRole(
   auth = taskclusterAuth,
   configPath = 'ci/config/role/branch-master.yaml',
   roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
-updateWorkerPool(
-  workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/{}/relops-decision.yaml'.format(currentEnvironment),
-  workerPoolId = 'relops/decision')
-updateWorkerPool(
-  workerManager = taskclusterWorkerManager,
-  configPath = 'ci/config/worker-pool/{}/relops-win2019.yaml'.format(currentEnvironment),
-  workerPoolId = 'relops/win2019')
