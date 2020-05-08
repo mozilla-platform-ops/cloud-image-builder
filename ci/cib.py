@@ -15,20 +15,20 @@ def getConfig(revision, key):
 
 
 def updateRole(auth, configPath, roleId):
+  print('TASKCLUSTER_ROOT_URL:', os.environ['TASKCLUSTER_ROOT_URL'])
   with open(configPath, 'r') as stream:
     payload = yaml.safe_load(stream)
     role = None
     try:
       role = auth.role(roleId = roleId)
-    except:
-      print('TASKCLUSTER_ROOT_URL:', os.environ['TASKCLUSTER_ROOT_URL'])
-      print('error:', sys.exc_info()[0])
-    if role:
       print('info: role {} existence detected'.format(roleId))
+    except:
+      role = None
+      print('info: role {} absence detected'.format(roleId))
+    if role:
       auth.updateRole(roleId, payload)
       print('info: role {} updated'.format(roleId))
     else:
-      print('info: role {} absence detected'.format(roleId))
       auth.createRole(roleId, payload)
       print('info: role {} created'.format(roleId))
 
