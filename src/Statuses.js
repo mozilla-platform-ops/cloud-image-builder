@@ -4,12 +4,15 @@ import Status from './Status';
 class Statuses extends React.Component {
   state = {
     summary: {
-      completed: 0,
-      failed: 0,
-      exception: 0,
-      running: 0,
-      pending: 0,
-      unscheduled: 0
+      task: {
+        completed: 0,
+        failed: 0,
+        exception: 0,
+        running: 0,
+        pending: 0,
+        unscheduled: 0
+      },
+      image: {}
     }
   };
 
@@ -21,27 +24,18 @@ class Statuses extends React.Component {
   appendToSummary(summary) {
     this.setState(state => {
       let combined = {
-        completed: state.summary.completed + summary.completed,
-        failed: state.summary.failed + summary.failed,
-        exception: state.summary.exception + summary.exception,
-        running: state.summary.running + summary.running,
-        pending: state.summary.pending + summary.pending,
-        unscheduled: state.summary.unscheduled + summary.unscheduled
+        task: {
+          completed: state.summary.task.completed + summary.task.completed,
+          failed: state.summary.task.failed + summary.task.failed,
+          exception: state.summary.task.exception + summary.task.exception,
+          running: state.summary.task.running + summary.task.running,
+          pending: state.summary.task.pending + summary.task.pending,
+          unscheduled: state.summary.task.unscheduled + summary.task.unscheduled
+        },
+        image: { ...state.summary.image, ...summary.image }
       };
       this.props.appender(combined);
       return { summary: combined };
-    });
-  }
-
-  componentDidMount() {
-    // mock:
-    this.appendToSummary({
-      completed: 3,
-      failed: 0,
-      exception: 2,
-      running: 0,
-      pending: 0,
-      unscheduled: 0
     });
   }
 

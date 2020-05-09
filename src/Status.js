@@ -7,12 +7,15 @@ import Badge from 'react-bootstrap/Badge';
 class Status extends React.Component {
   state = {
     summary: {
-      completed: 0,
-      failed: 0,
-      exception: 0,
-      running: 0,
-      pending: 0,
-      unscheduled: 0
+      task: {
+        completed: 0,
+        failed: 0,
+        exception: 0,
+        running: 0,
+        pending: 0,
+        unscheduled: 0
+      },
+      image: {}
     },
     showAllTasks: false,
     taskGroupId: null,
@@ -34,12 +37,15 @@ class Status extends React.Component {
   appendToSummary(summary) {
     this.setState(state => {
       let combined = {
-        completed: state.summary.completed + summary.completed,
-        failed: state.summary.failed + summary.failed,
-        exception: state.summary.exception + summary.exception,
-        running: state.summary.running + summary.running,
-        pending: state.summary.pending + summary.pending,
-        unscheduled: state.summary.unscheduled + summary.unscheduled
+        task: {
+          completed: state.summary.task.completed + summary.task.completed,
+          failed: state.summary.task.failed + summary.task.failed,
+          exception: state.summary.task.exception + summary.task.exception,
+          running: state.summary.task.running + summary.task.running,
+          pending: state.summary.task.pending + summary.task.pending,
+          unscheduled: state.summary.task.unscheduled + summary.task.unscheduled
+        },
+        image: { ...state.summary.image, ...summary.image }
       };
       this.props.appender(combined);
       return { summary: combined };
@@ -65,12 +71,15 @@ class Status extends React.Component {
               travisApiResponse: container
             }));
             this.appendToSummary({
-              completed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').length,
-              failed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'failed').length,
-              exception: 0,
-              running: 0,
-              pending: 0,
-              unscheduled: 0
+              task: {
+                completed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').length,
+                failed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'failed').length,
+                exception: 0,
+                running: 0,
+                pending: 0,
+                unscheduled: 0
+              },
+              image: []
             });
           }
         })
@@ -92,12 +101,15 @@ class Status extends React.Component {
               tasks: container.tasks//.sort((a, b) => a.task.metadata.name.localeCompare(b.task.metadata.name))
             }));
             this.appendToSummary({
-              completed: container.tasks.filter(x => x.status.state === 'completed').length,
-              failed: container.tasks.filter(x => x.status.state === 'failed').length,
-              exception: container.tasks.filter(x => x.status.state === 'exception').length,
-              running: container.tasks.filter(x => x.status.state === 'running').length,
-              pending: container.tasks.filter(x => x.status.state === 'pending').length,
-              unscheduled: container.tasks.filter(x => x.status.state === 'unscheduled').length
+              task: {
+                completed: container.tasks.filter(x => x.status.state === 'completed').length,
+                failed: container.tasks.filter(x => x.status.state === 'failed').length,
+                exception: container.tasks.filter(x => x.status.state === 'exception').length,
+                running: container.tasks.filter(x => x.status.state === 'running').length,
+                pending: container.tasks.filter(x => x.status.state === 'pending').length,
+                unscheduled: container.tasks.filter(x => x.status.state === 'unscheduled').length
+              },
+              image: []
             });
           }
         })
@@ -163,12 +175,12 @@ class Status extends React.Component {
         )
         {
           (this.state.showAllTasks)
-            ? <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
+            ? <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} />
             : (
                 <ul>
                   {
                     (this.state.tasks.filter(t => t.task.metadata.name.startsWith('04 :: generate') && t.status.state === 'completed').map(task => (
-                      <Task task={task} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} />
+                      <Task task={task} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} />
                     )))
                   }
                 </ul>

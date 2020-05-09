@@ -45,7 +45,7 @@ class App extends React.Component {
 
   render() {
     return (
-      <Container>
+      <Container fluid>
         <Commits commits={this.state.commits} latest={this.state.latest} />
       </Container>
     );

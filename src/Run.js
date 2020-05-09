@@ -1,14 +1,49 @@
 import React from 'react'
 import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
+import Images from './Images';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 //import { Server } from 'react-bootstrap-icons';
 
 class Run extends React.Component {
   state = {
+    summary: {
+      task: {
+        completed: 0,
+        failed: 0,
+        exception: 0,
+        running: 0,
+        pending: 0,
+        unscheduled: 0
+      },
+      image: {}
+    },
     artifacts: [],
     images: []
   };
+
+  constructor(props) {
+    super(props);
+    this.appendToSummary = this.appendToSummary.bind(this);
+  }
+
+  appendToSummary(summary) {
+    this.setState(state => {
+      let combined = {
+        task: {
+          completed: state.summary.task.completed + summary.task.completed,
+          failed: state.summary.task.failed + summary.task.failed,
+          exception: state.summary.task.exception + summary.task.exception,
+          running: state.summary.task.running + summary.task.running,
+          pending: state.summary.task.pending + summary.task.pending,
+          unscheduled: state.summary.task.unscheduled + summary.task.unscheduled
+        },
+        image: { ...state.summary.image, ...summary.image }
+      };
+      this.props.appender(combined);
+      return { summary: combined };
+    });
+  }
 
   componentDidMount() {
     fetch(this.props.rootUrl + '/api/queue/v1/task/' + this.props.taskId + '/runs/' + this.props.run.runId + '/artifacts')
@@ -24,9 +59,28 @@ class Run extends React.Component {
           .then(responseArtifactApi => responseArtifactApi.json())
           .then((container) => {
             if (container.launchConfigs && container.launchConfigs.length) {
+              let imageIds = container.launchConfigs.map(launchConfig => launchConfig.storageProfile.imageReference.id);
               this.setState(state => ({
-                images: container.launchConfigs.map(launchConfig => launchConfig.storageProfile.imageReference.id)
+                images: imageIds
               }));
+              let re = /^((north|south|east|west|(north-|south-|east-|west-)?central)-us(-2)?)-(.*)-(win.*)-([a-f0-9]{7})-([a-f0-9]{7})$/i;
+              this.appendToSummary({
+                task: {
+                  completed: 0,
+                  failed: 0,
+                  exception: 0,
+                  running: 0,
+                  pending: 0,
+                  unscheduled: 0
+                },
+                image: imageIds.reduce(function(a, imageId, i) {
+                  let image = imageId.substring(imageId.lastIndexOf('/') + 1);
+                  let matches = image.match(re);
+                  let pool = matches[5] + '/' + matches[6];
+                  a[pool] = (a[pool] || 0) + 1;
+                  return a;
+                }, {})
+              });
             } else {
               console.log(container);
             }
@@ -53,20 +107,7 @@ class Run extends React.Component {
         </Button>
         {
           (this.props.run.state === 'completed' && this.state.images.length)
-            ? (
-              <div>
-                <span>worker manager image deployments:</span>
-                <ul>
-                  {
-                    this.state.images.map(image => (
-                      <li key={image}>
-                        {image.substring(image.lastIndexOf('/') + 1)}
-                      </li>
-                    ))
-                  }
-                </ul>
-              </div>
-            )
+            ? (<Images images={this.state.images} /> )
             : ''
         }
       </li>
