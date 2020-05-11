@@ -17,7 +17,6 @@ class Status extends React.Component {
       },
       image: {}
     },
-    showAllTasks: false,
     taskGroupId: null,
     taskCount: 0,
     tasks: [],
@@ -174,7 +173,7 @@ class Status extends React.Component {
         }
         )
         {
-          (this.state.showAllTasks)
+          (this.props.settings.showAllTasks)
             ? <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} />
             : (
                 <ul>

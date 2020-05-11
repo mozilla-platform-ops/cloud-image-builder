@@ -51,10 +51,10 @@ class Statuses extends React.Component {
                 // only show pending statuses if there are no others (eg: failed/completed)
                 (this.props.statuses.some(s => s.context === context && s.state !== 'pending'))
                   ? this.props.statuses.filter(s => s.context === context && s.state !== 'pending').map((status) => (
-                    <Status status={status} key={status.id} appender={this.appendToSummary} />
+                    <Status status={status} key={status.id} appender={this.appendToSummary} settings={this.props.settings} />
                   ))
                   : this.props.statuses.filter(s => s.context === context).map((status) => (
-                    <Status status={status} key={status.id} appender={this.appendToSummary} />
+                    <Status status={status} key={status.id} appender={this.appendToSummary} settings={this.props.settings} />
                   ))
               }
               </ul>
