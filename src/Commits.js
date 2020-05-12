@@ -1,6 +1,7 @@
 import React from 'react'
 import Commit from './Commit';
 import Accordion from 'react-bootstrap/Accordion';
+import Spinner from 'react-bootstrap/Spinner';
 
 class Commits extends React.Component {
   /*
@@ -16,13 +17,21 @@ class Commits extends React.Component {
   */
   render() {
     return (
-      <Accordion defaultActiveKey={null/*this.props.latest*/}>
-        {
-          this.props.commits.map(commit => (
-            <Commit commit={commit} key={commit.sha} expand={false/*(commit.sha === this.props.latest)*/} settings={this.props.settings} />
-          ))
-        }
-      </Accordion>
+      (this.props.commits.length)
+        ? (
+            <Accordion defaultActiveKey={null/*this.props.latest*/}>
+              {
+                this.props.commits.map(commit => (
+                  <Commit commit={commit} key={commit.sha} expand={false/*(commit.sha === this.props.latest)*/} settings={this.props.settings} />
+                ))
+              }
+            </Accordion>
+          )
+        : (
+            <div style={{textAlign: 'center', width: '100%', padding: '100px'}}>
+              <Spinner animation="border" />
+            </div>
+          )
     );
   }
 }
