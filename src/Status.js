@@ -71,11 +71,11 @@ class Status extends React.Component {
             }));
             this.appendToSummary({
               task: {
-                completed: { ...container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                failed: { ...container.matrix.filter(x => this.travisBuildResults[x.result] === 'failed').map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                completed: { ...container.matrix.filter(x => x.result === 0).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                failed: { ...container.matrix.filter(x => x.result !== null && x.result !== 0).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
                 exception: {},
                 running: {},
-                pending: {},
+                pending: { ...container.matrix.filter(x => x.result === null).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
                 unscheduled: {}
               },
               image: []
@@ -158,12 +158,12 @@ class Status extends React.Component {
           ))
         }
         {
-          [0, 1].map(result => (
+          [0, 1, null].map(result => (
             (this.state.builds.filter(b => b.result === result).length)
               ? (
                   <Badge
                     style={{ margin: '0 1px' }}
-                    variant={StatusBadgeVariantMap[this.travisBuildResults[result]]}
+                    variant={(result === null) ? 'info' : StatusBadgeVariantMap[this.travisBuildResults[result]]}
                     title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
                     {this.state.builds.filter(b => b.result === result).length}
                   </Badge>

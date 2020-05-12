@@ -53,6 +53,7 @@ class Statuses extends React.Component {
                   ? this.props.statuses.filter(s => s.context === context && s.state !== 'pending').map((status) => (
                     <Status status={status} key={status.id} appender={this.appendToSummary} settings={this.props.settings} />
                   ))
+                  // todo: add a reducer below to remove duplicate pending statuses
                   : this.props.statuses.filter(s => s.context === context).map((status) => (
                     <Status status={status} key={status.id} appender={this.appendToSummary} settings={this.props.settings} />
                   ))
