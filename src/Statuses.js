@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'react-bootstrap/Image';
 import Status from './Status';
 
 class Statuses extends React.Component {
@@ -44,7 +45,17 @@ class Statuses extends React.Component {
       <ul>
         {
           this.props.contexts.map((context, cI) => (
-            <li key={cI}>
+            <li
+              key={cI}
+              style={{
+                margin: '10px 0 0 0',
+                padding: '0 0 0 40px',
+                listStyle: 'none',
+                backgroundImage: 'url("' + this.props.statuses.find(s => s.context === context).avatar_url + '")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'left top',
+                backgroundSize: '30px'
+              }}>
               { context }
               <ul>
               {
