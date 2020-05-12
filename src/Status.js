@@ -69,9 +69,6 @@ class Status extends React.Component {
               builds: container.matrix,
               travisApiResponse: container
             }));
-
-
-            /*
             this.appendToSummary({
               task: {
                 completed: { ...container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
@@ -83,7 +80,6 @@ class Status extends React.Component {
               },
               image: []
             });
-            */
           }
         })
         .catch(console.log);
