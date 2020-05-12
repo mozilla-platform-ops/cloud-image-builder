@@ -1,11 +1,14 @@
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCloud, faImage, faHammer } from '@fortawesome/free-solid-svg-icons'
 import Commits from './Commits';
+import Badge from  'react-bootstrap/Badge';
+import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Cookies from 'universal-cookie';
-import Badge from  'react-bootstrap/Badge';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 
 class App extends React.Component {
@@ -61,8 +64,11 @@ class App extends React.Component {
     return (
       <Container fluid={this.state.settings.fluid}>
         <Row>
-          <h1 style={{ padding: '0 2em' }}>
-            recent cloud-image-builder commits and builds
+          <h1 style={{ padding: '0 1em' }}>
+            <FontAwesomeIcon style={{ marginRight: '0.4em' }} icon={faCloud} />
+            <FontAwesomeIcon style={{ marginRight: '0.4em' }} icon={faImage} />
+            <FontAwesomeIcon style={{ marginRight: '0.4em' }} icon={faHammer} />
+            recent commits and builds
           </h1>
         </Row>
         <Row>
@@ -71,18 +77,27 @@ class App extends React.Component {
           </Col>
           <Col sm="2">
             <strong>
-              legend:
+              legend
             </strong>
-            <br />
+            <br style={{ marginTop: '20px' }} />
+            task status:
             {
               Object.keys(StatusBadgeVariantMap).map(status => (
                 <Badge
-                  style={{ marginLeft: '0.3em' }}
+                  style={{ display: 'block', margin: '10px 20px' }}
                   variant={StatusBadgeVariantMap[status]}>
                   {status}
                 </Badge>
               ))
             }
+            image deployment:
+            <br />
+            <Button
+              style={{ marginLeft: '0.3em' }}
+              variant="outline-info"
+              size="sm">
+              worker pool <Badge variant="info">region count</Badge>
+            </Button>
             <hr />
             <strong>
               display settings:
