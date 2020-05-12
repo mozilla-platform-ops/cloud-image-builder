@@ -11,7 +11,13 @@ import Statuses from './Statuses';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 import { CaretDown, CaretRight } from 'react-bootstrap-icons';
 
+const minIntervalMs = 5000; // minimum random refresh interval in milliseconds
+const maxIntervalMs = 60000; // maximum random refresh interval in milliseconds
+
 class Commit extends React.Component {
+
+  interval;
+
   state = {
     summary: {
       task: {
@@ -62,6 +68,20 @@ class Commit extends React.Component {
 
   componentDidMount() {
     this.setState(state => ({ expanded: this.props.expand }));
+    this.getBuildStatuses();
+
+    // refresh data in this component at a random interval, in
+    // order to prevent all components updating simultaneously
+    // https://blog.stvmlbrn.com/2019/02/20/automatically-refreshing-data-in-react.html
+    let intervalMs = Math.floor(Math.random() * (maxIntervalMs - minIntervalMs)) + minIntervalMs;
+    this.interval = setInterval(this.getBuildStatuses.bind(this), intervalMs);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  getBuildStatuses() {
     fetch(
       (window.location.hostname === 'localhost')
         ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits/' + this.props.commit.sha + '/statuses'

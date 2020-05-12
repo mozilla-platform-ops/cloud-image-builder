@@ -12,6 +12,9 @@ import Cookies from 'universal-cookie';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 
 class App extends React.Component {
+
+  interval;
+
   cookies = new Cookies();
   state = {
     commits: [],
@@ -34,6 +37,15 @@ class App extends React.Component {
     if (this.cookies.get('fluid') === null) {
       this.cookies.set('fluid', true, { path: '/' });
     }
+    this.getCommits();
+
+    // refresh commit list every 5 minutes
+    // https://blog.stvmlbrn.com/2019/02/20/automatically-refreshing-data-in-react.html
+    let intervalMs = (5 * 60 * 1000);
+    this.interval = setInterval(this.getCommits.bind(this), intervalMs);
+  }
+
+  getCommits() {
     fetch(
       (window.location.hostname === 'localhost')
         ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits'
