@@ -8,12 +8,12 @@ class Status extends React.Component {
   state = {
     summary: {
       task: {
-        completed: 0,
-        failed: 0,
-        exception: 0,
-        running: 0,
-        pending: 0,
-        unscheduled: 0
+        completed: {},
+        failed: {},
+        exception: {},
+        running: {},
+        pending: {},
+        unscheduled: {}
       },
       image: {}
     },
@@ -37,12 +37,12 @@ class Status extends React.Component {
     this.setState(state => {
       let combined = {
         task: {
-          completed: state.summary.task.completed + summary.task.completed,
-          failed: state.summary.task.failed + summary.task.failed,
-          exception: state.summary.task.exception + summary.task.exception,
-          running: state.summary.task.running + summary.task.running,
-          pending: state.summary.task.pending + summary.task.pending,
-          unscheduled: state.summary.task.unscheduled + summary.task.unscheduled
+          completed: { ...state.summary.task.completed, ...summary.task.completed },
+          failed: { ...state.summary.task.failed, ...summary.task.failed },
+          exception: { ...state.summary.task.exception, ...summary.task.exception },
+          running: { ...state.summary.task.running, ...summary.task.running },
+          pending: { ...state.summary.task.pending, ...summary.task.pending },
+          unscheduled: { ...state.summary.task.unscheduled, ...summary.task.unscheduled }
         },
         image: { ...state.summary.image, ...summary.image }
       };
@@ -69,17 +69,21 @@ class Status extends React.Component {
               builds: container.matrix,
               travisApiResponse: container
             }));
+
+
+            /*
             this.appendToSummary({
               task: {
-                completed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').length,
-                failed: container.matrix.filter(x => this.travisBuildResults[x.result] === 'failed').length,
-                exception: 0,
-                running: 0,
-                pending: 0,
-                unscheduled: 0
+                completed: { ...container.matrix.filter(x => this.travisBuildResults[x.result] === 'completed').map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                failed: { ...container.matrix.filter(x => this.travisBuildResults[x.result] === 'failed').map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                exception: {},
+                running: {},
+                pending: {},
+                unscheduled: {}
               },
               image: []
             });
+            */
           }
         })
         .catch(console.log);
@@ -101,12 +105,12 @@ class Status extends React.Component {
             }));
             this.appendToSummary({
               task: {
-                completed: container.tasks.filter(x => x.status.state === 'completed').length,
-                failed: container.tasks.filter(x => x.status.state === 'failed').length,
-                exception: container.tasks.filter(x => x.status.state === 'exception').length,
-                running: container.tasks.filter(x => x.status.state === 'running').length,
-                pending: container.tasks.filter(x => x.status.state === 'pending').length,
-                unscheduled: container.tasks.filter(x => x.status.state === 'unscheduled').length
+                completed: { ...container.tasks.filter(x => x.status.state === 'completed').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                failed: { ...container.tasks.filter(x => x.status.state === 'failed').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                exception: { ...container.tasks.filter(x => x.status.state === 'exception').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                running: { ...container.tasks.filter(x => x.status.state === 'running').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                pending: { ...container.tasks.filter(x => x.status.state === 'pending').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                unscheduled: { ...container.tasks.filter(x => x.status.state === 'unscheduled').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
               },
               image: []
             });

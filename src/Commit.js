@@ -1,8 +1,8 @@
 import React from 'react'
 import Card from 'react-bootstrap/Card';
-import Row from 'react-bootstrap/Row';
+//import Row from 'react-bootstrap/Row';
 import Accordion from 'react-bootstrap/Accordion';
-import { useAccordionToggle } from 'react-bootstrap/AccordionToggle';
+//import { useAccordionToggle } from 'react-bootstrap/AccordionToggle';
 import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import Image from 'react-bootstrap/Image';
@@ -15,12 +15,12 @@ class Commit extends React.Component {
   state = {
     summary: {
       task: {
-        completed: 0,
-        failed: 0,
-        exception: 0,
-        running: 0,
-        pending: 0,
-        unscheduled: 0
+        completed: {},
+        failed: {},
+        exception: {},
+        running: {},
+        pending: {},
+        unscheduled: {}
       },
       image: {}
     },
@@ -38,12 +38,12 @@ class Commit extends React.Component {
     this.setState(state => ({
       summary: {
         task: {
-          completed: state.summary.task.completed + summary.task.completed,
-          failed: state.summary.task.failed + summary.task.failed,
-          exception: state.summary.task.exception + summary.task.exception,
-          running: state.summary.task.running + summary.task.running,
-          pending: state.summary.task.pending + summary.task.pending,
-          unscheduled: state.summary.task.unscheduled + summary.task.unscheduled
+          completed: { ...state.summary.task.completed, ...summary.task.completed },
+          failed: { ...state.summary.task.failed, ...summary.task.failed },
+          exception: { ...state.summary.task.exception, ...summary.task.exception },
+          running: { ...state.summary.task.running, ...summary.task.running },
+          pending: { ...state.summary.task.pending, ...summary.task.pending },
+          unscheduled: { ...state.summary.task.unscheduled, ...summary.task.unscheduled }
         },
         image: { ...state.summary.image, ...summary.image }
       }
@@ -103,11 +103,11 @@ class Commit extends React.Component {
             { this.props.commit.sha.substring(0, 7) }
           </a>
           {
-            Object.keys(this.state.summary.task).filter(k => this.state.summary.task[k] > 0).map(k => (
+            Object.keys(this.state.summary.task).filter(k => Object.keys(this.state.summary.task[k]).length > 0).map(k => (
               <Badge
                 style={{ marginLeft: '0.3em' }}
                 variant={StatusBadgeVariantMap[k]}>
-                {this.state.summary.task[k]}
+                {Object.keys(this.state.summary.task[k]).length}
               </Badge>
             ))
           }
