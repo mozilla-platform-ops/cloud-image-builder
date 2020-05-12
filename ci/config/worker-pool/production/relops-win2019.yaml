@@ -44,7 +44,7 @@ config:
                       deploymentId: f37dd7ee1cae
                       disableReboots: true
                       downloadsDir: Z:\downloads
-                      ed25519SigningKeyLocation: >
+                      ed25519SigningKeyLocation: >-
                           C:\generic-worker\ed25519-private.key
                       livelogExecutable: C:\generic-worker\livelog.exe
                       livelogPUTPort: 60022
@@ -54,12 +54,12 @@ config:
                       sentryProject: generic-worker
                       shutdownMachineOnIdle: false
                       shutdownMachineOnInternalError: true
-                      taskclusterProxyExecutable: >
+                      taskclusterProxyExecutable: >-
                           C:\generic-worker\taskcluster-proxy.exe
                       taskclusterProxyPort: 80
                       tasksDir: Z:\
                       wstAudience: firefoxcitc
-                      wstServerURL: >
+                      wstServerURL: >-
                           https://firefoxci-websocktunnel.services.mozilla.com
           additionalUserData: &additionalUserData
               workerType: relops-image-builder

@@ -40,9 +40,9 @@
           - true
           - false
 - unattend:
-    - description: >
+    - description: >-
           enable windows firewall for all profiles (domain, public, private)
-      command: >
+      command: >-
           cmd /c
           \ C:\Windows\System32\netsh.exe advfirewall set allprofiles state on
       target:
@@ -64,7 +64,7 @@
           - false
 - unattend:
     - description: enable remote desktop firewall exception
-      command: >
+      command: >-
           cmd /c
           \ C:\Windows\System32\netsh.exe advfirewall firewall set rule
           \ group="Remote Desktop" new enable=yes
@@ -89,7 +89,7 @@
           - false
 - unattend:
     - description: enable powershell remoting
-      command: >
+      command: >-
           cmd /c
           \ C:\Windows\System32\winrm.cmd quickconfig
           \ -quiet -transport:http -force
@@ -112,7 +112,7 @@
           - false
 - unattend:
     - description: accept powershell remoting connections from all hosts
-      command: >
+      command: >-
           cmd /c
           \ C:\Windows\System32\winrm.cmd
           \ set winrm/config/client @{TrustedHosts="*"}
@@ -135,7 +135,7 @@
           - false
 - unattend:
     - description: enable remote management firewall exception
-      command: >
+      command: >-
           cmd /c
           \ C:\Windows\System32\netsh.exe
           \ advfirewall firewall
@@ -162,10 +162,10 @@
           - true
           - false
 - unattend:
-    - description: >
+    - description: >-
         enable file and printer sharing firewall exception
         \ (allows icmp response on azure vnet)
-      command: >
+      command: >-
           cmd /c
           \ C:\Windows\System32\netsh.exe
           \ advfirewall firewall

@@ -4,7 +4,9 @@ tasks:
     - provisionerId: relops
       workerType: decision
       routes:
-          - 'index.project.relops.cloud-image-builder.decision.revision.{{event.head.sha}}'
+          - >-
+            index.project.relops.cloud-image-builder.decision.revision.
+            {{event.head.sha}}
           - 'index.project.relops.cloud-image-builder.decision.latest'
       scopes:
           - 'generic-worker:os-group:relops/win2019/Administrators'
@@ -49,7 +51,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - >
+              - >-
                   pip install azure-mgmt-compute | grep -v "^[[:space:]]*$"
                   && pip install boto3 | grep -v "^[[:space:]]*$"
                   && pip install cachetools | grep -v "^[[:space:]]*$"
@@ -65,8 +67,8 @@ tasks:
                   && python ci/create-image-build-tasks.py
       metadata:
           name: '00 :: create maintenance and image build tasks'
-          description: >
+          description: >-
               determine which cloud images should be built, where they should
-              be deployed and trigger appropriate build tasks for the same
+              \ be deployed and trigger appropriate build tasks for the same
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
