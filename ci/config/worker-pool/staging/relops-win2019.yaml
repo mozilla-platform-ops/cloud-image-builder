@@ -61,9 +61,8 @@ config:
                       taskclusterProxyPort: 80
                       tasksDir: Z:\
                       wstAudience: cloudopsstage
-                      wstServerURL: >-
-                        https://websocktunnel-stage.taskcluster.nonprod.
-                        cloudops.mozgcp.net
+                      # yamllint disable-line rule:line-length
+                      wstServerURL: https://websocktunnel-stage.taskcluster.nonprod.cloudops.mozgcp.net
           additionalUserData: &additionalUserData
               workerType: relops-image-builder
         - region: eu-central-1
