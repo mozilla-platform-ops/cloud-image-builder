@@ -62,8 +62,8 @@ config:
                       tasksDir: Z:\
                       wstAudience: cloudopsstage
                       wstServerURL: >-
-                        https://websocktunnel-stage.taskcluster.nonprod
-                        .cloudops.mozgcp.net
+                        https://websocktunnel-stage.taskcluster.nonprod.
+                        cloudops.mozgcp.net
           additionalUserData: &additionalUserData
               workerType: relops-image-builder
         - region: eu-central-1
