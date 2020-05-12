@@ -77,7 +77,7 @@ target:
               name: nsg-central-us-gecko-t
               rules: &rules
                   - name: allow-rdp
-                    description: >
+                    description: >-
                         allow: inbound tcp connections,
                         \ for: rdp,
                         \ from: whitelist,
@@ -94,7 +94,7 @@ target:
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389
                   - name: allow-ssh
-                    description: >
+                    description: >-
                         allow: inbound tcp connections,
                         \ for: ssh,
                         \ from: whitelist,
@@ -111,7 +111,7 @@ target:
                     destinationAddressPrefix: '*'
                     destinationPortRange: 22
                   - name: allow-winrm
-                    description: >
+                    description: >-
                         allow: inbound tcp connections,
                         \ for: winrm over http and https,
                         \ from: whitelist,
