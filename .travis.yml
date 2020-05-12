@@ -28,9 +28,8 @@ jobs:
       script:
           - python ./ci/relops-pool-deploy.py
       env:
-          - >-
-            TASKCLUSTER_ROOT_URL=
-            https://stage.taskcluster.nonprod.cloudops.mozgcp.net
+          # yamllint disable-line rule:line-length
+          - TASKCLUSTER_ROOT_URL=https://stage.taskcluster.nonprod.cloudops.mozgcp.net
           - TASKCLUSTER_CLIENT_ID=project/relops/image-builder/dev
           - secure: >-
               os/e74OyY8iPj537OQSG7TlPl0mgNoCqbOKGnWbjkQirfEy+/rVVeGQ5SeAMUQV3AV
