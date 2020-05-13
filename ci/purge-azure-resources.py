@@ -88,10 +88,8 @@ resource_descriptors = {
   #  'filter-descriptor': 'orphaned',
   #  'list': computeClient.images.list_by_resource_group,
   #  'purge': computeClient.images.delete,
-  #  # filter below will delete all images that have deploymentId and bootstrapCommitTime tags, except the two most recent images that have deploymentId and bootstrapCommitTime tags
-  #  
-  #  # todo: swap (in line below) bootstrapCommitTime for machineImageCommitTime, when that tag is available
-  #  'filter': lambda image, resource_group_name: image.tags and 'deploymentId' in image.tags and 'bootstrapCommitTime' in image.tags and image.name not in list(map(lambda ni: ni.name, list(sorted(filter(lambda i: i.tags and 'deploymentId' in i.tags and 'bootstrapCommitTime' in i.tags, computeClient.images.list_by_resource_group(resource_group_name)), key = lambda x: x.tags['bootstrapCommitTime'], reverse = True))[0:2]))
+  #  # filter below will delete all images that have deploymentId and machineImageCommitTime tags, except the two most recent images that have deploymentId and machineImageCommitTime tags
+  #  'filter': lambda image, resource_group_name: image.tags and 'deploymentId' in image.tags and 'machineImageCommitTime' in image.tags and image.name not in list(map(lambda ni: ni.name, list(sorted(filter(lambda i: i.tags and 'deploymentId' in i.tags and 'machineImageCommitTime' in i.tags, computeClient.images.list_by_resource_group(resource_group_name)), key = lambda x: x.tags['machineImageCommitTime'], reverse = True))[0:2]))
   #}
 }
 

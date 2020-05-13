@@ -245,7 +245,7 @@ if ((-not $resources) -or ($resources -contains 'all') -or ($resources -contains
     $rgImages = @($allAzImages | ? { $_.Name.StartsWith(('{0}-' -f $prefix)) });
     $keys = @($rgImages | % { $_.Name.SubString(0, ($_.Name.Length - 8)).Replace(('{0}-' -f $prefix), '').Trim() } | Select-Object -Unique);
     foreach ($key in $keys) {
-      $workerImages = @($rgImages | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) -and $_.Tags.ContainsKey('diskImageCommitTime') } | % { Add-Member -InputObject $_ -MemberType 'NoteProperty' -Name 'TimeCreated' -Value ([DateTime]$_.Tags['diskImageCommitTime']) -PassThru -Force } | Sort-Object -Property 'TimeCreated' -Descending);
+      $workerImages = @($rgImages | ? { $_.Name.StartsWith(('{0}-{1}' -f $prefix, $key)) -and $_.Tags.ContainsKey('machineImageCommitTime') } | % { Add-Member -InputObject $_ -MemberType 'NoteProperty' -Name 'TimeCreated' -Value ([DateTime]$_.Tags['machineImageCommitTime']) -PassThru -Force } | Sort-Object -Property 'TimeCreated' -Descending);
       if ($workerImages.Length -gt 2) {
         # delete all but newest and penultimate image
         for ($i = ($workerImages.Length -1); $i -gt 1; $i --) {
