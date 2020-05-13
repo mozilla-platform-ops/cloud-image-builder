@@ -892,6 +892,7 @@ $workFolder = (Resolve-Path -Path ('{0}\..' -f $PSScriptRoot));
 
 # constants and script config. these are probably ok as they are.
 $revision = $(& git rev-parse HEAD);
+$revisionCommitDate = $(& git @('show', '-s', '--format=%ci', $revision));
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, imageKey: {3}' -f $workFolder, $revision, $platform, $imageKey);
 
 Update-RequiredModules
@@ -985,16 +986,54 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 break;
               }
             }
+
+        #'deploymentId': bootstrapRevision,
+        #'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
+        #'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
+        #'diskImageCommitSha': diskImageCommit['sha'],
+        #'diskImageCommitMessage': diskImageCommit['commit']['message'].split('\n')[0],
+#
+        ##'machineImageCommitDate': machineImageCommit['commit']['committer']['date'][0:10],
+        ##'machineImageCommitTime': machineImageCommit['commit']['committer']['date'],
+        #'machineImageCommitSha': machineImageCommitSha,
+        ##'machineImageCommitSha': machineImageCommit['sha'],
+        ##'machineImageCommitMessage': machineImageCommit['commit']['message'].split('\n')[0],
+#
+        #'bootstrapCommitDate': bootstrapCommit['commit']['committer']['date'][0:10],
+        #'bootstrapCommitTime': bootstrapCommit['commit']['committer']['date'],
+        #'bootstrapCommitSha': bootstrapCommit['sha'],
+        #'bootstrapCommitMessage': bootstrapCommit['commit']['message'].split('\n')[0],
+        #'bootstrapCommitOrg': org,
+        #'bootstrapCommitRepo': repo,
+#
+        #'isoName': os.path.basename(config['iso']['source']['key']),
+        #'isoIndex': config['iso']['wimindex'],
+        #'os': config['image']['os'],
+        #'edition': config['image']['edition'],
+        #'language': config['image']['language'],
+        #'architecture': config['image']['architecture']
+
+
+
             $tags = @{
-              'diskImageBuildDate' = $imageArtifactDescriptor.build.date;
-              'diskImageBuildTime' = $imageArtifactDescriptor.build.time;
-              'diskImageBuildRevision' = $imageArtifactDescriptor.build.revision;
-              'machineImageBuildDate' = (Get-Date -UFormat '+%Y-%m-%d');
-              'machineImageBuildTime' = (Get-Date -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
-              'machineImageBuildRevision' = $revision;
+              'diskImageCommitTime' = (Get-Date -Date $imageArtifactDescriptor.build.time -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
+              'diskImageCommitSha' = $imageArtifactDescriptor.build.revision;
+              'machineImageCommitTime' = (Get-Date -Date $revisionCommitDate -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
+              'machineImageCommitSha' = $revision;
+              #'bootstrapRevision' = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
+              #'bootstrapOrganisation' = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
+              #'bootstrapRepository' = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
+              #'bootstrapScript' = @($target.tag | ? { $_.name -eq 'sourceScript' })[0].value;
+              #'workerType' = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
+              #'deploymentId' = @($target.tag | ? { $_.name -eq 'deploymentId' })[0].value;
               'imageKey' = $imageKey;
               'resourceId' = $resourceId;
-              'sourceIso' = ([System.IO.Path]::GetFileName($config.iso.source.key))
+              'os' = $config.image.os;
+              'edition' = $config.image.edition;
+              'language' = $config.image.language;
+              'architecture' = $config.image.architecture;
+              'isoIndex' = $config.iso.wimindex;
+              'isoName' = ([System.IO.Path]::GetFileName($config.iso.source.key))
             };
             foreach ($tag in $target.tag) {
               $tags[$tag.name] = $tag.value;
@@ -1090,7 +1129,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   -region $target.region `
                   -instanceName $instanceName `
                   -imageName $targetImageName;
-                  #-imageTags $tags; # todo: tag image when azure ps isn't broken
                 try {
                   $azImage = (Get-AzImage `
                     -ResourceGroupName $target.group `
@@ -1102,8 +1140,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                       Set-AzResource `
                         -ResourceId $azImage.id `
                         -Tag $tags `
-                        -Force
-                      Write-Output -InputObject ('image: {0}, tagging appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+                        -Force;
+                      Write-Output -InputObject ('image: {0}, tagged: {1}' -f $targetImageName, [String]::Join(', ', @($tags.GetEnumerator() | % { '{0}: {1}' -f $_.Key, $_.Value })));
                     } catch {
                       Write-Output -InputObject ('image: {0}, tagging threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
                     }

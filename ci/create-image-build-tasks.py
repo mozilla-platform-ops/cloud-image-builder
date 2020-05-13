@@ -240,7 +240,7 @@ for platform in ['amazon', 'azure']:
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
       for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools] :
-        taggingTaskIdsForPool = []
+        #taggingTaskIdsForPool = []
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain'])) and t['region'].lower().replace(' ', '') in includeRegions]:
           queueMachineImageBuild = (not poolDeploy) and (platform in platformClient) and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
             taskclusterIndex = index,
@@ -297,39 +297,39 @@ for platform in ['amazon', 'azure']:
           else:
             print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
 
-          taggingTaskId = slugid.nice()
-          taggingTaskIdsForPool.append(taggingTaskId)
-          createTask(
-            queue = queue,
-            image = 'python',
-            taskId = taggingTaskId,
-            taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
-            taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
-            maxRunMinutes = 180,
-            retries = 4,
-            retriggerOnExitCodes = [ 123 ],
-            dependencies = [ machineImageBuildTaskId ] if queueMachineImageBuild else [],
-            provisioner = 'relops',
-            workerType = 'decision',
-            priority = 'low',
-            features = {
-              'taskclusterProxy': True
-            },
-            env = {
-              'platform': platform,
-              'group': target['group'],
-              'key': key
-            },
-            commands = [
-              '/bin/bash',
-              '--login',
-              '-c',
-              'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml requests slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
-            ],
-            scopes = [
-              'secrets:get:project/relops/image-builder/dev'
-            ],
-            taskGroupId = taskGroupId)
+          #taggingTaskId = slugid.nice()
+          #taggingTaskIdsForPool.append(taggingTaskId)
+          #createTask(
+          #  queue = queue,
+          #  image = 'python',
+          #  taskId = taggingTaskId,
+          #  taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
+          #  taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
+          #  maxRunMinutes = 180,
+          #  retries = 4,
+          #  retriggerOnExitCodes = [ 123 ],
+          #  dependencies = [ machineImageBuildTaskId ] if queueMachineImageBuild else [],
+          #  provisioner = 'relops',
+          #  workerType = 'decision',
+          #  priority = 'low',
+          #  features = {
+          #    'taskclusterProxy': True
+          #  },
+          #  env = {
+          #    'platform': platform,
+          #    'group': target['group'],
+          #    'key': key
+          #  },
+          #  commands = [
+          #    '/bin/bash',
+          #    '--login',
+          #    '-c',
+          #    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml requests slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
+          #  ],
+          #  scopes = [
+          #    'secrets:get:project/relops/image-builder/dev'
+          #  ],
+          #  taskGroupId = taskGroupId)
 
         # todo: remove this hack which exists because non-azure builds don't yet work
         queueWorkerPoolConfigurationTask = platform in platformClient
@@ -355,7 +355,7 @@ for platform in ['amazon', 'azure']:
                 'path': '{}-{}.yaml'.format(pool['domain'], pool['variant']),
               }
             ],
-            dependencies = taggingTaskIdsForPool,
+            #dependencies = taggingTaskIdsForPool,
             provisioner = 'relops',
             workerType = 'decision',
             priority = 'low',
