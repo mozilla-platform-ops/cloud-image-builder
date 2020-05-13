@@ -47,6 +47,7 @@ def guess_config(key, group, diskImageRevision, bootstrapRevision):
   commits = get_commits('mozilla-platform-ops', 'cloud-image-builder')
   cut_index = next((i for i, c in enumerate(commits) if c['sha'].startswith(diskImageRevision)), len(commits) - 1)
   config = None
+  sha = None
   for commit in commits[0:cut_index]:
     configUrl = 'https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commit['sha'], key)
     if requests.head(configUrl).status_code == requests.codes.ok:
@@ -57,13 +58,16 @@ def guess_config(key, group, diskImageRevision, bootstrapRevision):
         sourceRevision = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRevision'), { 'value': None })['value']
         print('tag-machine-images/guess_config :: observed deployment id: {}, source revision: {}, for group: {}, in config: {}'.format(deploymentId, sourceRevision, group, configUrl))
         if sourceRevision == bootstrapRevision or deploymentId == bootstrapRevision:
+          sha = commit['sha']
           break
         else:
+          sha = None
           config = None
       except:
         print('tag-machine-images/guess_config :: failed to parse config from: {}'.format(configUrl))
+        sha = None
         config = None
-  return config
+  return sha, config
 
 
 secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
@@ -98,8 +102,9 @@ if platform == 'azure':
       print('tag-machine-images :: updating tags...')
     else:
       print('tag-machine-images :: image has no tags. creating tags...')
-    config = guess_config(key, group, diskImageRevision, bootstrapRevision)
+    machineImageCommitSha, config = guess_config(key, group, diskImageRevision, bootstrapRevision)
     if config is not None:
+      print('tag-machine-images :: machine image commit sha guessed as {} using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}'.format(machineImageCommitSha, key, group, diskImageRevision, bootstrapRevision))
       configTargetGroup = next((t for t in config['target'] if t['group'] == group), None)
       org = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceOrganisation'), { 'value': '' })['value']
       repo = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRepository'), { 'value': '' })['value']
@@ -114,6 +119,7 @@ if platform == 'azure':
 
         #'machineImageCommitDate': machineImageCommit['commit']['committer']['date'][0:10],
         #'machineImageCommitTime': machineImageCommit['commit']['committer']['date'],
+        'machineImageCommitSha': machineImageCommitSha,
         #'machineImageCommitSha': machineImageCommit['sha'],
         #'machineImageCommitMessage': machineImageCommit['commit']['message'].split('\n')[0],
 
@@ -132,7 +138,7 @@ if platform == 'azure':
         'architecture': config['image']['architecture']
       }
     else:
-      print('tag-machine-images :: failed to guess image config using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}. using disk image tag subset only...'.format(key, group, diskImageRevision, bootstrapRevision))
+      print('tag-machine-images :: failed to guess machine image commit sha using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}. using disk image tag subset only...'.format(key, group, diskImageRevision, bootstrapRevision))
       image.tags = {
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
@@ -154,8 +160,9 @@ if platform == 'azure':
       print('tag-machine-images :: updating tags...')
     else:
       print('tag-machine-images :: snapshot has no tags. creating tags...')
-    config = guess_config(key, group, diskImageRevision, bootstrapRevision)
+    machineImageCommitSha, config = guess_config(key, group, diskImageRevision, bootstrapRevision)
     if config is not None:
+      print('tag-machine-images :: machine image commit sha guessed as {} using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}'.format(machineImageCommitSha, key, group, diskImageRevision, bootstrapRevision))
       configTargetGroup = next((t for t in config['target'] if t['group'] == group), None)
       org = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceOrganisation'), { 'value': '' })['value']
       repo = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRepository'), { 'value': '' })['value']
@@ -170,6 +177,7 @@ if platform == 'azure':
 
         #'machineImageCommitDate': machineImageCommit['commit']['committer']['date'][0:10],
         #'machineImageCommitTime': machineImageCommit['commit']['committer']['date'],
+        'machineImageCommitSha': machineImageCommitSha,
         #'machineImageCommitSha': machineImageCommit['sha'],
         #'machineImageCommitMessage': machineImageCommit['commit']['message'].split('\n')[0],
 
@@ -188,6 +196,7 @@ if platform == 'azure':
         'architecture': config['image']['architecture']
       }
     else:
+      print('tag-machine-images :: failed to guess machine image commit sha using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}. using disk image tag subset only...'.format(key, group, diskImageRevision, bootstrapRevision))
       snapshot.tags = {
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],

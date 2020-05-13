@@ -1098,6 +1098,15 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     -ErrorAction SilentlyContinue);
                   if ($azImage) {
                     Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+                    try {
+                      Set-AzResource `
+                        -ResourceId $azImage.id `
+                        -Tag $tags `
+                        -Force
+                      Write-Output -InputObject ('image: {0}, tagging appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+                    } catch {
+                      Write-Output -InputObject ('image: {0}, tagging threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
+                    }
                   } else {
                     Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
                   }
