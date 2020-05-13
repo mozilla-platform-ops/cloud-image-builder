@@ -5,6 +5,7 @@ install:
     - pip install pyyaml | grep -v "^[[:space:]]*$"
     - pip install taskcluster | grep -v "^[[:space:]]*$"
     - pip install urllib3 | grep -v "^[[:space:]]*$"
+if: 'type = push and branch = master'
 jobs:
     - name: 'taskcluster/production: create or update pools'
       script:
