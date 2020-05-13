@@ -21,7 +21,7 @@ def get_commit(org, repo, revision):
   try:
     response = urllib.request.urlopen('https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, revision))
   except urllib.error.HTTPError as e:
-    print('error code {} on commit lookup for {}/{}/{}'.format(e.code, org, repo, revision))
+    print('tag-machine-images/get_commits :: error code {} on commit lookup for {}/{}/{}'.format(e.code, org, repo, revision))
     print(e.read())
     exit(123 if e.code == 403 else 1)
   return json.loads(response.read().decode())
@@ -31,7 +31,7 @@ def get_commits(org, repo):
   try:
     response = urllib.request.urlopen('https://api.github.com/repos/{}/{}/commits'.format(org, repo))
   except urllib.error.HTTPError as e:
-    print('error code {} on commits lookup for {}/{}'.format(e.code, org, repo))
+    print('tag-machine-images/get_commits :: error code {} on commits lookup for {}/{}'.format(e.code, org, repo))
     print(e.read())
     exit(123 if e.code == 403 else 1)
   return json.loads(response.read().decode())
@@ -55,12 +55,13 @@ def guess_config(key, group, diskImageRevision, bootstrapRevision):
         configTargetGroup = next((t for t in config['target'] if t['group'] == group))
         deploymentId = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'deploymentId'), { 'value': None })['value']
         sourceRevision = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRevision'), { 'value': None })['value']
+        print('tag-machine-images/guess_config :: observed deployment id: {}, source revision: {}, for group: {}, in config: {}'.format(deploymentId, sourceRevision, group, configUrl))
         if sourceRevision == bootstrapRevision or deploymentId == bootstrapRevision:
           break
         else:
           config = None
       except:
-        print('failed to parse config from: {}'.format(configUrl))
+        print('tag-machine-images/guess_config :: failed to parse config from: {}'.format(configUrl))
         config = None
   return config
 
@@ -86,23 +87,23 @@ if platform == 'azure':
 
   pattern = re.compile('^{}-{}-([a-f0-9]{{7}})-([a-f0-9]{{7}})$'.format(group.replace('rg-', ''), key))
   images = list([x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)])
-  print('found: {} images matching pattern: {}-{}-(disk-sha)-(deployment-id)'.format(len(images), group.replace('rg-', ''), key))
+  print('tag-machine-images :: found: {} images matching pattern: {}-{}-(disk-sha)-(deployment-id)'.format(len(images), group.replace('rg-', ''), key))
   for image in images:
     diskImageRevision = pattern.search(image.name).group(1)
     bootstrapRevision = pattern.search(image.name).group(2)
-    print('image: {}, has disk image revision: {} (mozilla-platform-ops/cloud-image-builder)'.format(image.name, diskImageRevision))
+    print('tag-machine-images :: image: {}, has disk image revision: {} (mozilla-platform-ops/cloud-image-builder)'.format(image.name, diskImageRevision))
     diskImageCommit = get_commit('mozilla-platform-ops', 'cloud-image-builder', diskImageRevision)
     if image.tags:
-      print('image has tags: {}'.format(', '.join(['%s: %s' % (k, v) for (k, v) in image.tags.items()])))
-      print('updating tags...')
+      print('tag-machine-images :: image has tags: {}'.format(', '.join(['%s: %s' % (k, v) for (k, v) in image.tags.items()])))
+      print('tag-machine-images :: updating tags...')
     else:
-      print('image has no tags. creating tags...')
+      print('tag-machine-images :: image has no tags. creating tags...')
     config = guess_config(key, group, diskImageRevision, bootstrapRevision)
     if config is not None:
       configTargetGroup = next((t for t in config['target'] if t['group'] == group), None)
       org = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceOrganisation'), { 'value': '' })['value']
       repo = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRepository'), { 'value': '' })['value']
-      print('image: {}, has bootstrap revision: {} ({}/{})'.format(image.name, bootstrapRevision, org, repo))
+      print('tag-machine-images :: image: {}, has bootstrap revision: {} ({}/{})'.format(image.name, bootstrapRevision, org, repo))
       bootstrapCommit = get_commit(org, repo, bootstrapRevision)
       image.tags = {
         'deploymentId': bootstrapRevision,
@@ -131,7 +132,7 @@ if platform == 'azure':
         'architecture': config['image']['architecture']
       }
     else:
-      print('failed to guess image config using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}. using disk image tag subset only...'.format(key, group, diskImageRevision, bootstrapRevision))
+      print('tag-machine-images :: failed to guess image config using params: key: {}, group: {}, disk image revision: {}, bootstrap revision: {}. using disk image tag subset only...'.format(key, group, diskImageRevision, bootstrapRevision))
       image.tags = {
         'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
         'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
@@ -139,26 +140,26 @@ if platform == 'azure':
         'diskImageCommitMessage': diskImageCommit['commit']['message']
       }
     azureComputeManagementClient.images.create_or_update(group, image.name, image)
-    print('image tags updated')
+    print('tag-machine-images :: image tags updated')
     print(', '.join(['%s:: %s' % (k, v) for (k, v) in image.tags.items()]))
 
   snapshots = [x for x in azureComputeManagementClient.snapshots.list_by_resource_group(group) if pattern.match(x.name)]
   for snapshot in snapshots:
     diskImageRevision = pattern.search(snapshot.name).group(1)
     bootstrapRevision = pattern.search(snapshot.name).group(2)
-    print('snapshot: {}, has disk image revision: {} (mozilla-platform-ops/cloud-image-builder)'.format(snapshot.name, diskImageRevision))
+    print('tag-machine-images :: snapshot: {}, has disk image revision: {} (mozilla-platform-ops/cloud-image-builder)'.format(snapshot.name, diskImageRevision))
     diskImageCommit = get_commit('mozilla-platform-ops', 'cloud-image-builder', diskImageRevision)
     if snapshot.tags:
-      print('snapshot has tags: {}'.format(', '.join(['%s:: %s' % (k, v) for (k, v) in snapshot.tags.items()])))
-      print('updating tags...')
+      print('tag-machine-images :: snapshot has tags: {}'.format(', '.join(['%s:: %s' % (k, v) for (k, v) in snapshot.tags.items()])))
+      print('tag-machine-images :: updating tags...')
     else:
-      print('snapshot has no tags. creating tags...')
+      print('tag-machine-images :: snapshot has no tags. creating tags...')
     config = guess_config(key, group, diskImageRevision, bootstrapRevision)
     if config is not None:
       configTargetGroup = next((t for t in config['target'] if t['group'] == group), None)
       org = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceOrganisation'), { 'value': '' })['value']
       repo = next((tag for tag in configTargetGroup['tag'] if tag['name'] == 'sourceRepository'), { 'value': '' })['value']
-      print('snapshot: {}, has bootstrap revision: {} ({}/{})'.format(snapshot.name, bootstrapRevision, org, repo))
+      print('tag-machine-images :: snapshot: {}, has bootstrap revision: {} ({}/{})'.format(snapshot.name, bootstrapRevision, org, repo))
       bootstrapCommit = get_commit(org, repo, bootstrapRevision)
       snapshot.tags = {
         'deploymentId': bootstrapRevision,
@@ -194,7 +195,7 @@ if platform == 'azure':
         'diskImageCommitMessage': diskImageCommit['commit']['message']
       }
     azureComputeManagementClient.snapshots.create_or_update(group, snapshot.name, snapshot)
-    print('snapshot tags updated')
+    print('tag-machine-images :: snapshot tags updated')
     print(', '.join(['%s:: %s' % (k, v) for (k, v) in snapshot.tags.items()]))
 else:
-  print('skipped image and snapshot tagging. not implemented for platform: {}'.format(platform))
+  print('tag-machine-images :: skipped image and snapshot tagging. not implemented for platform: {}'.format(platform))
