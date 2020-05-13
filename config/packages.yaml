@@ -3,8 +3,8 @@
   savepath: Windows\Temp\StackdriverLogging-v1-9.exe
   unattend:
       - description: install stackdriver
-        command: >-
-            cmd /c start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
   target:
       cloud:
           - amazon
@@ -32,8 +32,8 @@
   savepath: Windows\Temp\nxlog-ce.msi
   unattend:
       - description: install nxlog
-        command: >-
-            cmd /c start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
   target:
       cloud:
           - amazon
@@ -64,21 +64,17 @@
         bucket: windows-ami-builder
         key: package/nxlog-ce-2.10.2150.msi
       - platform: url
-        url: >-
-            https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.
-            msi
+        # yamllint disable-line rule:line-length
+        url: https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi
       - platform: url
-        url: >-
-            https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/pac
-            kage/nxlog-ce-2.10.2150.msi
+        # yamllint disable-line rule:line-length
+        url: https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/package/nxlog-ce-2.10.2150.msi
 - name: papertrail-bundle.pem
   savepath: Windows\Temp\papertrail-bundle.pem
   unattend:
       - description: install papertrail certificate
-        command: >-
-            cmd /c move /y
-            \ C:\Windows\Temp\papertrail-bundle.pem
-            \ "C:\Program Files\nxlog\cert\papertrail-bundle.pem"
+        # yamllint disable-line rule:line-length
+        command: cmd /c move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files\nxlog\cert\papertrail-bundle.pem"
   target:
       cloud:
           - amazon
@@ -93,17 +89,14 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/mas
-            ter/userdata/Configuration/nxlog/papertrail-bundle.pem
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/papertrail-bundle.pem
 - name: papertrail-bundle.pem
   savepath: Windows\Temp\papertrail-bundle.pem
   unattend:
       - description: install papertrail certificate
-        command: >-
-            cmd /c move /y
-            \ C:\Windows\Temp\papertrail-bundle.pem
-            \ "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
+        # yamllint disable-line rule:line-length
+        command: cmd /c move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
   target:
       cloud:
           - amazon
@@ -124,19 +117,16 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/mas
-            ter/userdata/Configuration/nxlog/papertrail-bundle.pem
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/papertrail-bundle.pem
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
       - description: install nxlog configuration
-        command: >-
-            cmd /c set COPYCMD=/Y
-            && move /y C:\Windows\Temp\nxlog.conf
-            \ "C:\Program Files\nxlog\conf\nxlog.conf"
+        # yamllint disable-line rule:line-length
+        command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
       - description: start nxlog service
         command: cmd /c net start nxlog
   target:
@@ -153,19 +143,16 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azu
-            re/userdata/Configuration/nxlog/win7.conf
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win7.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
       - description: install nxlog configuration
-        command: >-
-            cmd /c set COPYCMD=/Y
-            && move /y C:\Windows\Temp\nxlog.conf
-            \ "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        # yamllint disable-line rule:line-length
+        command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
       - description: start nxlog service
         command: cmd /c net start nxlog
   target:
@@ -182,19 +169,16 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azu
-            re/userdata/Configuration/nxlog/win10.conf
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win10.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
       - description: install nxlog configuration
-        command: >-
-            cmd /c set COPYCMD=/Y
-            && move /y C:\Windows\Temp\nxlog.conf
-            \ "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        # yamllint disable-line rule:line-length
+        command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
       - description: start nxlog service
         command: cmd /c net start nxlog
   target:
@@ -211,20 +195,16 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azu
-            re/userdata/Configuration/nxlog/win2012.conf
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2012.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
       - description: install nxlog configuration
-        command: >-
-            cmd /c
-            \ set COPYCMD=/Y
-            && move /y C:\Windows\Temp\nxlog.conf
-            \ "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        # yamllint disable-line rule:line-length
+        command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
       - description: start nxlog service
         command: cmd /c net start nxlog
   target:
@@ -241,20 +221,16 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azu
-            re/userdata/Configuration/nxlog/win2016.conf
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2016.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
       - description: install nxlog configuration
-        command: >-
-            cmd /c
-            \ set COPYCMD=/Y
-            && move /y C:\Windows\Temp\nxlog.conf
-            \ "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        # yamllint disable-line rule:line-length
+        command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
       - description: start nxlog service
         command: cmd /c net start nxlog
   target:
@@ -271,9 +247,8 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azu
-            re/userdata/Configuration/nxlog/win2019.conf
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2019.conf
 - name: EC2Install.zip
   savepath: Windows\Temp
   unattend:
@@ -305,10 +280,8 @@
   savepath: Windows\Temp\Ec2ConfigurationSettings.xml
   unattend:
       - description: install ec2config configuration
-        command: >-
-            cmd /c
-            \ move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml
-            \ "C:\Program Files\Amazon\Ec2ConfigService\Settings\config.xml"
+        # yamllint disable-line rule:line-length
+        command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\config.xml"
   target:
       cloud:
           - amazon
@@ -334,11 +307,8 @@
   savepath: Windows\Temp\WallpaperSettings.xml
   unattend:
       - description: install ec2 wallpaper configuration
-        command: >-
-            cmd /c
-            \ move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml
-            \ "C:\Program Files\Amazon\Ec2ConfigService\Settings\WallpaperSettin
-            gs.xml"
+        # yamllint disable-line rule:line-length
+        command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\WallpaperSettings.xml"
   target:
       cloud:
           - amazon
@@ -364,9 +334,8 @@
   savepath: Windows\Temp\WindowsAzureVmAgent.msi
   unattend:
       - description: install azure agent
-        command: >-
-            cmd /c start /wait
-            \ msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /quiet
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /quiet
   target:
       cloud:
           - azure
@@ -395,15 +364,13 @@
         bucket: windows-ami-builder
         key: package/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
       - platform: url
-        url: >-
-            https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/pac
-            kage/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
+        # yamllint disable-line rule:line-length
+        url: https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/package/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
       - platform: url
         url: https://go.microsoft.com/fwlink/?LinkID=394789
       - platform: url
-        url: >-
-            https://download.microsoft.com/download/3/4/3/3437907D-745F-46EF-811
-            6-7FC025BBEBDB/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
+        # yamllint disable-line rule:line-length
+        url: https://download.microsoft.com/download/3/4/3/3437907D-745F-46EF-8116-7FC025BBEBDB/WindowsAzureVmAgent.2.7.41491.949_191001-1418.fre.msi
 - name: psget-modules.zip
   savepath: Windows\System32\WindowsPowerShell\v1.0\Modules
   unattend: []
@@ -435,15 +402,8 @@
       - description: install occ trigger script
         command: cmd /c move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
       - description: create occ scheduled task
-        command: >-
-            cmd /c start /wait
-            \ schtasks /create /tn RunDesiredStateConfigurationAtStartup
-            \ /sc onstart
-            \ /ru SYSTEM
-            \ /rl HIGHEST
-            \ /tr "powershell -NoLogo -NoProfile -WindowStyle Hidden -File
-              \ C:\dsc\rundsc.ps1 -ExecutionPolicy RemoteSigned
-              \ -ConsoleOutputFile C:\dsc\rundsc-run.log" /f
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr "powershell -NoLogo -NoProfile -WindowStyle Hidden -File C:\dsc\rundsc.ps1 -ExecutionPolicy RemoteSigned -ConsoleOutputFile C:\dsc\rundsc-run.log" /f
   target:
       cloud:
           - azure
@@ -456,6 +416,5 @@
           - false
   sources:
       - platform: url
-        url: >-
-            https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/mas
-            ter/userdata/rundsc.ps1
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1
