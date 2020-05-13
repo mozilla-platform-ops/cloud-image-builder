@@ -45,6 +45,10 @@ class App extends React.Component {
     this.interval = setInterval(this.getCommits.bind(this), intervalMs);
   }
 
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
   getCommits() {
     fetch(
       (window.location.hostname === 'localhost')

@@ -1,14 +1,16 @@
 import React from 'react'
+
 import Card from 'react-bootstrap/Card';
-//import Row from 'react-bootstrap/Row';
 import Accordion from 'react-bootstrap/Accordion';
-//import { useAccordionToggle } from 'react-bootstrap/AccordionToggle';
 import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import Image from 'react-bootstrap/Image';
+import Spinner from 'react-bootstrap/Spinner';
+
 import CommitMessage from './CommitMessage';
 import Statuses from './Statuses';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
+//import { useInterval } from './useInterval';
 import { CaretDown, CaretRight } from 'react-bootstrap-icons';
 
 const minIntervalMs = 5000; // minimum random refresh interval in milliseconds
@@ -68,13 +70,18 @@ class Commit extends React.Component {
 
   componentDidMount() {
     this.setState(state => ({ expanded: this.props.expand }));
-    this.getBuildStatuses();
+    
 
     // refresh data in this component at a random interval, in
     // order to prevent all components updating simultaneously
     // https://blog.stvmlbrn.com/2019/02/20/automatically-refreshing-data-in-react.html
-    let intervalMs = Math.floor(Math.random() * (maxIntervalMs - minIntervalMs)) + minIntervalMs;
-    this.interval = setInterval(this.getBuildStatuses.bind(this), intervalMs);
+    let interval = Math.floor(Math.random() * (maxIntervalMs - minIntervalMs)) + minIntervalMs;
+    this.interval = setInterval(this.getBuildStatuses.bind(this), interval);
+    /*
+    useInterval(async () => {
+      this.getBuildStatuses();
+    }, interval);
+    */
   }
 
   componentWillUnmount() {
@@ -123,13 +130,23 @@ class Commit extends React.Component {
             { this.props.commit.sha.substring(0, 7) }
           </a>
           {
-            Object.keys(this.state.summary.task).filter(k => Object.keys(this.state.summary.task[k]).length > 0).map(k => (
-              <Badge
-                style={{ marginLeft: '0.3em' }}
-                variant={StatusBadgeVariantMap[k]}>
-                {Object.keys(this.state.summary.task[k]).length}
-              </Badge>
-            ))
+            (Object.keys(this.state.summary.task).some(k => (Object.keys(this.state.summary.task[k]).length > 0)))
+              ? (
+                  Object.keys(this.state.summary.task).filter(k => Object.keys(this.state.summary.task[k]).length > 0).map(k => (
+                    <Badge
+                      style={{ marginLeft: '0.3em' }}
+                      variant={StatusBadgeVariantMap[k]}>
+                      {Object.keys(this.state.summary.task[k]).length}
+                    </Badge>
+                  ))
+                )
+              : (
+                  <Spinner
+                    style={{ marginLeft: '0.3em' }}
+                    animation="border"
+                    size="sm"
+                    variant="info" />
+                )
           }
           <Image
             src={this.props.commit.author.avatar}

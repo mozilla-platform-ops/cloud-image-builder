@@ -30,11 +30,13 @@ class Image extends React.Component {
   render() {
     return (
       <li>
-        {this.state.region}
-        -{this.state.domain}
-        -{this.state.pool}
-        -{this.state.sha.disk}
-        -{this.state.sha.bootstrap}
+        <a href={'https://portal.azure.com/#@taskclusteraccountsmozilla.onmicrosoft.com/resource' + this.props.image} target="_blank">
+          {this.state.region}
+          -{this.state.domain}
+          -{this.state.pool}
+          -{this.state.sha.disk}
+          -{this.state.sha.bootstrap}
+        </a>
       </li>
     );
   }

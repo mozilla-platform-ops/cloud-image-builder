@@ -1,5 +1,4 @@
 import React from 'react'
-import Image from 'react-bootstrap/Image';
 import Status from './Status';
 
 class Statuses extends React.Component {
