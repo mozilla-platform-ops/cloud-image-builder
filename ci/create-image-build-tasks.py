@@ -251,8 +251,8 @@ for platform in ['amazon', 'azure']:
             key = key))
 
           machineImageBuildTaskId = slugid.nice()
-          machineImageBuildTaskIdsForPool.append(machineImageBuildTaskId)
           if queueMachineImageBuild:
+            machineImageBuildTaskIdsForPool.append(machineImageBuildTaskId)
             bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
             bootstrapRepository = next(x for x in target['tag'] if x['name'] == 'sourceRepository')['value']
             bootstrapOrganisation = next(x for x in target['tag'] if x['name'] == 'sourceOrganisation')['value']
