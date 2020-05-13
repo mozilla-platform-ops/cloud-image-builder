@@ -239,7 +239,8 @@ for platform in ['amazon', 'azure']:
         buildTaskId = None
         print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
-      for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools] :
+      for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools]:
+        machineImageBuildTaskIdsForPool = []
         #taggingTaskIdsForPool = []
         for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain'])) and t['region'].lower().replace(' ', '') in includeRegions]:
           queueMachineImageBuild = (not poolDeploy) and (platform in platformClient) and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
@@ -250,6 +251,7 @@ for platform in ['amazon', 'azure']:
             key = key))
 
           machineImageBuildTaskId = slugid.nice()
+          machineImageBuildTaskIdsForPool.append(machineImageBuildTaskId)
           if queueMachineImageBuild:
             bootstrapRevision = next(x for x in target['tag'] if x['name'] == 'sourceRevision')['value']
             bootstrapRepository = next(x for x in target['tag'] if x['name'] == 'sourceRepository')['value']
@@ -356,6 +358,7 @@ for platform in ['amazon', 'azure']:
               }
             ],
             #dependencies = taggingTaskIdsForPool,
+            dependencies = machineImageBuildTaskIdsForPool,
             provisioner = 'relops',
             workerType = 'decision',
             priority = 'low',
