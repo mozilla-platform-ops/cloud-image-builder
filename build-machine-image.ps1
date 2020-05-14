@@ -526,7 +526,6 @@ function Initialize-Platform {
         } catch {
           Write-Output -InputObject ('{0} :: for platform: {1}, acquire of platform tools, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
         }
-
       }
       'amazon' {
         try {
@@ -902,9 +901,15 @@ $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-b
 Initialize-Platform -platform 'amazon' -secret $secret
 Initialize-Platform -platform $platform -secret $secret
 
-# computed target specific settings. these are probably ok as they are.
-$config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
-if (-not ($config)) {
+try {
+  $config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
+} catch {
+  Write-Output -InputObject ('error: failed to find image config for {0}. {1}' -f $imageKey, $_.Exception.Message);
+  exit 1
+}
+if ($config) {
+  Write-Output -InputObject ('parsed image config for {0}' -f $imageKey);
+} else {
   Write-Output -InputObject ('error: failed to find image config for {0}' -f $imageKey);
   exit 1
 }
