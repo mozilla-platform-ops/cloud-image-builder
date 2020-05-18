@@ -44,10 +44,12 @@ includeEnvironments = [
   'staging'
 ]
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+overwriteMachineImage = False
 
 try:
   commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
   lines = commit['message'].splitlines()
+  overwriteMachineImage = any(line.lower().strip() == 'overwrite-machine-image' for line in lines)
   noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
   if noCI:
     print('info: **no ci** commit syntax detected. skipping ci task creation')
@@ -284,7 +286,13 @@ for platform in ['amazon', 'azure']:
                 'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
                 'cd cloud-image-builder',
                 'git reset --hard {}'.format(commitSha),
-                'powershell -File build-machine-image.ps1 {} {} {}'.format(platform, key, target['group'])
+                'powershell .\\build-machine-image.ps1 {} {} {} -enableSnapshotCopy:${} -overwrite:${}'.format(
+                  platform,
+                  key,
+                  target['group'],
+                  'false',
+                  'true' if overwriteMachineImage else 'false'
+                )
               ],
               scopes = [
                 'generic-worker:os-group:relops/win2019/Administrators',

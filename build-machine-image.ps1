@@ -6,8 +6,10 @@ param (
   [Parameter(Mandatory = $true)]
   [ValidateSet('win10-64-occ', 'win10-64', 'win10-64-gpu', 'win7-32', 'win7-32-gpu', 'win2012', 'win2019')]
   [string] $imageKey,
+
   [string] $group,
-  [switch] $enableSnapshotCopy = $false
+  [switch] $enableSnapshotCopy = $false,
+  [switch] $overwrite = $false
 )
 
 function Invoke-OptionalSleep {
@@ -931,8 +933,25 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
         -ImageName $targetImageName `
         -ErrorAction SilentlyContinue);
       if ($existingImage) {
-        Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
-        exit;
+        if ($overwrite) {
+          try {
+            Write-Output -InputObject ('removing existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated);
+            if (Remove-AzImage `
+              -ResourceGroupName $existingImage.ResourceGroupName `
+              -Name $existingImage.Name `
+              -AsJob `
+              -Force) {
+              Write-Output -InputObject ('removed existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated);
+            } else {
+              Write-Output -InputObject ('failed to remove existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated);
+            }
+          } catch {
+            Write-Output -InputObject ('exception removing existing machine image {0} / {1} / {2}, created {3:s}. {4}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated, $_.Exception.Message);
+          }
+        } else {
+          Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
+          exit;
+        }
       } elseif ($enableSnapshotCopy) {
         Invoke-SnapshotCopy -platform $platform -imageKey $imageKey -target $target -targetImageName $targetImageName -imageArtifactDescriptor $imageArtifactDescriptor
       }
