@@ -419,7 +419,7 @@ function Update-RequiredModules {
     [hashtable[]] $requiredModules = @(
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.72'
+        'version' = '0.0.73'
       },
       @{
         'module' = 'powershell-yaml';
@@ -935,18 +935,18 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
       if ($existingImage) {
         if ($overwrite) {
           try {
-            Write-Output -InputObject ('removing existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated);
+            Write-Output -InputObject ('removing existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
             if (Remove-AzImage `
               -ResourceGroupName $existingImage.ResourceGroupName `
               -Name $existingImage.Name `
               -AsJob `
               -Force) {
-              Write-Output -InputObject ('removed existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated);
+              Write-Output -InputObject ('removed existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
             } else {
-              Write-Output -InputObject ('failed to remove existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated);
+              Write-Output -InputObject ('failed to remove existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
             }
           } catch {
-            Write-Output -InputObject ('exception removing existing machine image {0} / {1} / {2}, created {3:s}. {4}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.TimeCreated, $_.Exception.Message);
+            Write-Output -InputObject ('exception removing existing machine image {0} / {1} / {2}, created {3:s}. {4}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime, $_.Exception.Message);
           }
         } else {
           Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
@@ -1010,46 +1010,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 break;
               }
             }
-
-        #'deploymentId': bootstrapRevision,
-        #'diskImageCommitDate': diskImageCommit['commit']['committer']['date'][0:10],
-        #'diskImageCommitTime': diskImageCommit['commit']['committer']['date'],
-        #'diskImageCommitSha': diskImageCommit['sha'],
-        #'diskImageCommitMessage': diskImageCommit['commit']['message'].split('\n')[0],
-#
-        ##'machineImageCommitDate': machineImageCommit['commit']['committer']['date'][0:10],
-        ##'machineImageCommitTime': machineImageCommit['commit']['committer']['date'],
-        #'machineImageCommitSha': machineImageCommitSha,
-        ##'machineImageCommitSha': machineImageCommit['sha'],
-        ##'machineImageCommitMessage': machineImageCommit['commit']['message'].split('\n')[0],
-#
-        #'bootstrapCommitDate': bootstrapCommit['commit']['committer']['date'][0:10],
-        #'bootstrapCommitTime': bootstrapCommit['commit']['committer']['date'],
-        #'bootstrapCommitSha': bootstrapCommit['sha'],
-        #'bootstrapCommitMessage': bootstrapCommit['commit']['message'].split('\n')[0],
-        #'bootstrapCommitOrg': org,
-        #'bootstrapCommitRepo': repo,
-#
-        #'isoName': os.path.basename(config['iso']['source']['key']),
-        #'isoIndex': config['iso']['wimindex'],
-        #'os': config['image']['os'],
-        #'edition': config['image']['edition'],
-        #'language': config['image']['language'],
-        #'architecture': config['image']['architecture']
-
-
-
             $tags = @{
               'diskImageCommitTime' = (Get-Date -Date $imageArtifactDescriptor.build.time -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
               'diskImageCommitSha' = $imageArtifactDescriptor.build.revision;
               'machineImageCommitTime' = (Get-Date -Date $revisionCommitDate -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
               'machineImageCommitSha' = $revision;
-              #'bootstrapRevision' = @($target.tag | ? { $_.name -eq 'sourceRevision' })[0].value;
-              #'bootstrapOrganisation' = @($target.tag | ? { $_.name -eq 'sourceOrganisation' })[0].value;
-              #'bootstrapRepository' = @($target.tag | ? { $_.name -eq 'sourceRepository' })[0].value;
-              #'bootstrapScript' = @($target.tag | ? { $_.name -eq 'sourceScript' })[0].value;
-              #'workerType' = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
-              #'deploymentId' = @($target.tag | ? { $_.name -eq 'deploymentId' })[0].value;
               'imageKey' = $imageKey;
               'resourceId' = $resourceId;
               'os' = $config.image.os;
@@ -1152,7 +1117,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   -resourceGroupName $target.group `
                   -region $target.region `
                   -instanceName $instanceName `
-                  -imageName $targetImageName;
+                  -imageName $targetImageName
+                  -imageTags $tags;
                 try {
                   $azImage = (Get-AzImage `
                     -ResourceGroupName $target.group `
@@ -1160,15 +1126,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     -ErrorAction SilentlyContinue);
                   if ($azImage) {
                     Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
-                    try {
-                      Set-AzResource `
-                        -ResourceId $azImage.id `
-                        -Tag $tags `
-                        -Force;
-                      Write-Output -InputObject ('image: {0}, tagged: {1}' -f $targetImageName, [String]::Join(', ', @($tags.GetEnumerator() | % { '{0}: {1}' -f $_.Key, $_.Value })));
-                    } catch {
-                      Write-Output -InputObject ('image: {0}, tagging threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
-                    }
                   } else {
                     Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
                   }
