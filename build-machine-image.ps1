@@ -1117,7 +1117,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   -resourceGroupName $target.group `
                   -region $target.region `
                   -instanceName $instanceName `
-                  -imageName $targetImageName
+                  -imageName $targetImageName `
                   -imageTags $tags;
                 try {
                   $azImage = (Get-AzImage `
