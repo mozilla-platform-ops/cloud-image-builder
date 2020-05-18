@@ -30,7 +30,7 @@ class Image extends React.Component {
   render() {
     return (
       <li>
-        <a href={'https://portal.azure.com/#@taskclusteraccountsmozilla.onmicrosoft.com/resource' + this.props.image} target="_blank">
+        <a href={'https://portal.azure.com/#@taskclusteraccountsmozilla.onmicrosoft.com/resource' + this.props.image} target="_blank" rel="noopener noreferrer">
           {this.state.region}
           -{this.state.domain}
           -{this.state.pool}

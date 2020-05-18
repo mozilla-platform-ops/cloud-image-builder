@@ -1,5 +1,7 @@
 import React from 'react'
 import Runs from './Runs';
+import StatusBadgeVariantMap from './StatusBadgeVariantMap';
+import Badge from 'react-bootstrap/Badge';
 
 class Task extends React.Component {
   state = {
@@ -47,6 +49,16 @@ class Task extends React.Component {
         <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
           {this.props.task.status.taskId.substring(0, 7)}...
         </a>
+        {
+          Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
+            <Badge
+              style={{ margin: '0 1px' }}
+              variant={StatusBadgeVariantMap[state]}
+              title={state + ': ' + this.props.task.status.runs.filter(r => r.state === state).length}>
+              {this.props.task.status.runs.filter(r => r.state === state).length}
+            </Badge>
+          ))
+        }
         <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
       </li>
     );
