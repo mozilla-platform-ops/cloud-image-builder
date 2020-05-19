@@ -87,8 +87,7 @@ target:
                     priority: 110
                     sourceAddressPrefix:
                         # grenade - gnet, bulgaria
-                        - 185.189.196.0/24
-                        - 185.189.197.0/24
+                        - 185.189.196.0/22
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389
@@ -105,8 +104,7 @@ target:
                     priority: 111
                     sourceAddressPrefix:
                         # grenade - gnet, bulgaria
-                        - 185.189.196.0/24
-                        - 185.189.197.0/24
+                        - 185.189.196.0/22
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 22
@@ -123,8 +121,7 @@ target:
                     priority: 112
                     sourceAddressPrefix:
                         # grenade - gnet, bulgaria
-                        - 185.189.196.0/24
-                        - 185.189.197.0/24
+                        - 185.189.196.0/22
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange:
