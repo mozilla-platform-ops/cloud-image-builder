@@ -419,7 +419,7 @@ function Update-RequiredModules {
     [hashtable[]] $requiredModules = @(
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.73'
+        'version' = '0.0.74'
       },
       @{
         'module' = 'powershell-yaml';

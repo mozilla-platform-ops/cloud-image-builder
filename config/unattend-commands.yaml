@@ -23,6 +23,71 @@
           - true
           - false
 - unattend:
+    - description: disable set-network-location prompt
+      # yamllint disable-line rule:line-length
+      command: reg add "HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
+      target:
+        cloud:
+          - amazon
+          - azure
+          - google
+        os:
+          - Windows 7
+        architecture:
+          - x86
+          - x86-64
+        gpu:
+          - true
+          - false
+- unattend:
+    - description: set power configuration to high performance
+      command: cmd /c powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+      target:
+        cloud:
+          - amazon
+          - azure
+          - google
+        os:
+          - Windows 7
+        architecture:
+          - x86
+          - x86-64
+        gpu:
+          - true
+          - false
+- unattend:
+    - description: turn off ac power saving timeout
+      command: cmd /c powercfg -change -monitor-timeout-ac 0
+      target:
+        cloud:
+          - amazon
+          - azure
+          - google
+        os:
+          - Windows 7
+        architecture:
+          - x86
+          - x86-64
+        gpu:
+          - true
+          - false
+- unattend:
+    - description: turn off dc power saving timeout
+      command: cmd /c powercfg -change -monitor-timeout-dc 0
+      target:
+        cloud:
+          - amazon
+          - azure
+          - google
+        os:
+          - Windows 7
+        architecture:
+          - x86
+          - x86-64
+        gpu:
+          - true
+          - false
+- unattend:
     - description: remove winhttp proxy
       command: cmd /c netsh.exe winhttp reset proxy
       target:

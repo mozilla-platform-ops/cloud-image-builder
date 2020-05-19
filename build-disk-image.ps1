@@ -18,7 +18,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.73' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.74' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -155,7 +155,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
         -commands $commands `
-        -os $config.image.os;
+        -os $config.image.os `
+        -enableRDP $(if ($config.image.rdp) { $true } else { $false });
       Copy-Item -Path $unattendLocalPath -Destination ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar))
     } catch {
       Write-Output -InputObject ('exception creating unattend: {0}. retrying... {1}' -f $unattendLocalPath, $_.Exception.Message);

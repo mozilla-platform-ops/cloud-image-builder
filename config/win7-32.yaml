@@ -12,6 +12,7 @@ image:
     partition: MBR
     format: VHD
     type: Fixed
+    rdp: true
     target:
         platform: amazon
         bucket: windows-ami-builder
