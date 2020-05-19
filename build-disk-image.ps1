@@ -18,7 +18,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.72' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.74' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -106,26 +106,26 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
   $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
   # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-  $productKey = (Get-Content -Path ('config\product-keys.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
-  $drivers = @((Get-Content -Path ('config\drivers.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $productKey = (Get-Content -Path ('{0}\cloud-image-builder\config\product-keys.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
+  $drivers = @((Get-Content -Path ('{0}\cloud-image-builder\config\drivers.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $unattendCommands = @((Get-Content -Path ('config\unattend-commands.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $unattendCommands = @((Get-Content -Path ('{0}\cloud-image-builder\config\unattend-commands.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $packages = @((Get-Content -Path ('config\packages.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $packages = @((Get-Content -Path ('{0}\cloud-image-builder\config\packages.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $disableWindowsService = @((Get-Content -Path ('config\disable-windows-service.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $disableWindowsService = @((Get-Content -Path ('{0}\cloud-image-builder\config\disable-windows-service.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform)
@@ -141,7 +141,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $unattendGenerationAttemptCount = 0;
   do {
     $unattendGenerationAttemptCount += 1;
-    $commands = @($unattendCommands | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
+    $commands = @($unattendCommands | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
     try {
       $administratorPassword = (New-Password);
       New-UnattendFile `
@@ -155,7 +155,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
         -commands $commands `
-        -os $config.image.os;
+        -os $config.image.os `
+        -enableRDP $(if ($config.image.rdp) { $true } else { $false });
       Copy-Item -Path $unattendLocalPath -Destination ('{0}{1}unattend.xml' -f $workFolder, ([IO.Path]::DirectorySeparatorChar))
     } catch {
       Write-Output -InputObject ('exception creating unattend: {0}. retrying... {1}' -f $unattendLocalPath, $_.Exception.Message);
