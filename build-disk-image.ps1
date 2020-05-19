@@ -106,26 +106,26 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $driversLocalPath = ('{0}{1}{2}-drivers-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
   $packagesLocalPath = ('{0}{1}{2}-packages-{3}-{4}' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $revision.Substring(0, 7), $platform, $exportImageName.Replace('.', '-'));
   # https://docs.microsoft.com/en-us/windows-server/get-started/kmsclientkeys
-  $productKey = (Get-Content -Path ('config\product-keys.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
-  $drivers = @((Get-Content -Path ('config\drivers.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $productKey = (Get-Content -Path ('{0}\cloud-image-builder\config\product-keys.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml)."$($config.image.os)"."$($config.image.edition)";
+  $drivers = @((Get-Content -Path ('{0}\cloud-image-builder\config\drivers.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $unattendCommands = @((Get-Content -Path ('config\unattend-commands.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $unattendCommands = @((Get-Content -Path ('{0}\cloud-image-builder\config\unattend-commands.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $packages = @((Get-Content -Path ('config\packages.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $packages = @((Get-Content -Path ('{0}\cloud-image-builder\config\packages.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform) -and
     $_.target.gpu.Contains($config.image.gpu)
   });
-  $disableWindowsService = @((Get-Content -Path ('config\disable-windows-service.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
+  $disableWindowsService = @((Get-Content -Path ('{0}\cloud-image-builder\config\disable-windows-service.yaml' -f $workFolder) -Raw | ConvertFrom-Yaml) | ? {
     $_.target.os.Contains($config.image.os) -and
     $_.target.architecture.Contains($config.image.architecture) -and
     $_.target.cloud.Contains($platform)

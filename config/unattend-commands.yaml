@@ -1,234 +1,203 @@
 ---
-- unattend:
-    - description: enable remote desktop firewall exception
-      # yamllint disable-line rule:line-length
-      command: cmd /c netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes
-      target:
-        cloud:
-          - amazon
-          - azure
-          - google
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: disable set-network-location prompt
-      # yamllint disable-line rule:line-length
-      command: reg add "HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
-      target:
-        cloud:
-          - amazon
-          - azure
-          - google
-        os:
-          - Windows 7
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: set power configuration to high performance
-      command: cmd /c powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
-      target:
-        cloud:
-          - amazon
-          - azure
-          - google
-        os:
-          - Windows 7
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: turn off ac power saving timeout
-      command: cmd /c powercfg -change -monitor-timeout-ac 0
-      target:
-        cloud:
-          - amazon
-          - azure
-          - google
-        os:
-          - Windows 7
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: turn off dc power saving timeout
-      command: cmd /c powercfg -change -monitor-timeout-dc 0
-      target:
-        cloud:
-          - amazon
-          - azure
-          - google
-        os:
-          - Windows 7
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: remove winhttp proxy
-      command: cmd /c netsh.exe winhttp reset proxy
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: set power profile to high performance
-      command: cmd /c powercfg.exe /setactive SCHEME_MIN
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: >-
-          enable windows firewall for all profiles (domain, public, private)
-      command: cmd /c netsh.exe advfirewall set allprofiles state on
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: enable powershell remoting
-      command: cmd /c winrm.cmd quickconfig -quiet -transport:http -force
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: accept powershell remoting connections from all hosts
-      command: cmd /c winrm.cmd set winrm/config/client @{TrustedHosts="*"}
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: enable remote management firewall exception
-      # yamllint disable-line rule:line-length
-      command: cmd /c netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: >-
-        enable file and printer sharing firewall exception
-        (allows icmp response on azure vnet)
-      # yamllint disable-line rule:line-length
-      command: cmd /c netsh.exe advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes'
-      target:
-        cloud:
-          - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
+- description: enable remote desktop firewall exception
+  # yamllint disable-line rule:line-length
+  command: cmd /c netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: disable set-network-location prompt
+  # yamllint disable-line rule:line-length
+  command: reg add "HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: set power configuration to high performance
+  command: cmd /c powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: turn off ac power saving timeout
+  command: cmd /c powercfg -change -monitor-timeout-ac 0
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: turn off dc power saving timeout
+  command: cmd /c powercfg -change -monitor-timeout-dc 0
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: remove winhttp proxy
+  command: cmd /c netsh.exe winhttp reset proxy
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: set power profile to high performance
+  command: cmd /c powercfg.exe /setactive SCHEME_MIN
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: >-
+      enable windows firewall for all profiles (domain, public, private)
+  command: cmd /c netsh.exe advfirewall set allprofiles state on
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: enable powershell remoting
+  command: cmd /c winrm.cmd quickconfig -quiet -transport:http -force
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: accept powershell remoting connections from all hosts
+  command: cmd /c winrm.cmd set winrm/config/client @{TrustedHosts="*"}
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: enable remote management firewall exception
+  # yamllint disable-line rule:line-length
+  command: cmd /c netsh.exe advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: >-
+    enable file and printer sharing firewall exception
+    (allows icmp response on azure vnet)
+  # yamllint disable-line rule:line-length
+  command: cmd /c netsh.exe advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes'
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
