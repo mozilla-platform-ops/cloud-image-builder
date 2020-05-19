@@ -1132,46 +1132,50 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 } catch {
                   Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
                 }
-                try {
-                  $azVm = (Get-AzVm `
-                    -ResourceGroupName $target.group `
-                    -Name $instanceName `
-                    -Status `
-                    -ErrorAction SilentlyContinue);
-                  if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
-                    # create a snapshot
-                    # todo: move this functionality to posh-minions-managed
+                if ($enableSnapshotCopy) {
+                  try {
                     $azVm = (Get-AzVm `
                       -ResourceGroupName $target.group `
                       -Name $instanceName `
+                      -Status `
                       -ErrorAction SilentlyContinue);
-                    if ($azVm -and $azVm.StorageProfile.OsDisk.Name) {
-                      $azDisk = (Get-AzDisk `
+                    if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
+                      # create a snapshot
+                      # todo: move this functionality to posh-minions-managed
+                      $azVm = (Get-AzVm `
                         -ResourceGroupName $target.group `
-                        -DiskName $azVm.StorageProfile.OsDisk.Name);
-                      if ($azDisk -and $azDisk[0].Id) {
-                        $azSnapshotConfig = (New-AzSnapshotConfig `
-                          -SourceUri $azDisk[0].Id `
-                          -CreateOption 'Copy' `
-                          -Location $target.region.Replace(' ', '').ToLower());
-                        $azSnapshot = (New-AzSnapshot `
+                        -Name $instanceName `
+                        -ErrorAction SilentlyContinue);
+                      if ($azVm -and $azVm.StorageProfile.OsDisk.Name) {
+                        $azDisk = (Get-AzDisk `
                           -ResourceGroupName $target.group `
-                          -Snapshot $azSnapshotConfig `
-                          -SnapshotName $targetImageName);
+                          -DiskName $azVm.StorageProfile.OsDisk.Name);
+                        if ($azDisk -and $azDisk[0].Id) {
+                          $azSnapshotConfig = (New-AzSnapshotConfig `
+                            -SourceUri $azDisk[0].Id `
+                            -CreateOption 'Copy' `
+                            -Location $target.region.Replace(' ', '').ToLower());
+                          $azSnapshot = (New-AzSnapshot `
+                            -ResourceGroupName $target.group `
+                            -Snapshot $azSnapshotConfig `
+                            -SnapshotName $targetImageName);
+                        } else {
+                          Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk id' -f $targetImageName, $instanceName);
+                        }
                       } else {
-                        Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk id' -f $targetImageName, $instanceName);
+                        Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk name' -f $targetImageName, $instanceName);
                       }
+                      Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, has state: {2}' -f $targetImageName, $instanceName, $azSnapshot.ProvisioningState.ToLower());
                     } else {
-                      Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk name' -f $targetImageName, $instanceName);
+                      Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined vm state' -f $targetImageName, $instanceName);
                     }
-                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, has state: {2}' -f $targetImageName, $instanceName, $azSnapshot.ProvisioningState.ToLower());
-                  } else {
-                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined vm state' -f $targetImageName, $instanceName);
+                  } catch {
+                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
+                  } finally {
+                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
                   }
-                } catch {
-                  Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
-                } finally {
-                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
+                } else {
+                  Write-Output -InputObject ('snapshot creation skipped because enableSnapshotCopy is set to false');
                 }
               }
               Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
