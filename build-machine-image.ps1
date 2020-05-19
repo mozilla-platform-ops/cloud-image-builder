@@ -1072,7 +1072,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
               } else {
                 # if we reach here, we most likely hit an azure quota exception which we may recover from when some quota becomes available.
-                Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
+                Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
                 try {
                   $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_ROOT_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
                   [DateTime] $taskStart = $taskDefinition.created;
@@ -1172,7 +1172,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   } catch {
                     Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
                   } finally {
-                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group
+                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
                   }
                 } else {
                   Write-Output -InputObject ('snapshot creation skipped because enableSnapshotCopy is set to false');
@@ -1187,6 +1187,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             Write-Output -InputObject ('error: failure in image export: {0}, to region: {1}, in cloud platform: {2}. {3}' -f $exportImageName, $target.region, $target.platform, $_.Exception.Message);
             throw;
             exit 1;
+          } finally {
+            Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
           }
         }
       }
