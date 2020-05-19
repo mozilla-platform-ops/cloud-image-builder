@@ -275,6 +275,7 @@
       - true
       - false
 - description: firewall allow inbound winrm over http
+  # yamllint disable-line rule:line-length
   command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985
   target:
     cloud:
@@ -290,6 +291,7 @@
       - true
       - false
 - description: firewall allow inbound winrm over https
+  # yamllint disable-line rule:line-length
   command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985
   target:
     cloud:
