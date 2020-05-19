@@ -139,32 +139,228 @@
     gpu:
       - true
       - false
-- description: enable powershell remoting
-  command: winrm quickconfig -quiet -transport:http -force
+- description: winrm quickconfig -q
+  command: cmd /c winrm quickconfig -q
   target:
     cloud:
+      - amazon
       - azure
+      - google
     os:
       - Windows 7
-      - Windows 8.1
-      - Windows 10
-      - Windows Server 2012 R2
-      - Windows Server 2016
-      - Windows Server 2019
-      - Windows Server
     architecture:
       - x86
       - x86-64
     gpu:
       - true
       - false
-- description: accept powershell remoting connections from all hosts
-  command: winrm set winrm/config/client @{TrustedHosts="*"}
+- description: winrm quickconfig -transport:http
+  command: cmd /c winrm quickconfig -transport:http
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: winrm set winrm/config @{MaxTimeoutms="1800000"}
+  command: cmd /c winrm set winrm/config @{MaxTimeoutms="1800000"}
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"}
+  command: cmd /c winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"}
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: winrm set winrm/config/service @{AllowUnencrypted="true"}
+  command: cmd /c winrm set winrm/config/service @{AllowUnencrypted="true"}
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: winrm set winrm/config/service/auth @{Basic="true"}
+  command: cmd /c winrm set winrm/config/service/auth @{Basic="true"}
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: winrm set winrm/config/client/auth @{Basic="true"}
+  command: cmd /c winrm set winrm/config/client/auth @{Basic="true"}
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+# yamllint disable-line rule:line-length
+- description: winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"}
+  # yamllint disable-line rule:line-length
+  command: cmd /c winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"}
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: winrm set winrm/config/client @{TrustedHosts="*"}
+  command: cmd /c winrm set winrm/config/client @{TrustedHosts="*"}
   target:
     cloud:
       - azure
     os:
       - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: firewall allow inbound winrm over http
+  command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: firewall allow inbound winrm over https
+  command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: net stop winrm
+  command: cmd /c net stop winrm
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: sc config winrm start= auto
+  command: cmd /c sc config winrm start= auto
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: net start winrm
+  command: cmd /c net start winrm
+  target:
+    cloud:
+      - amazon
+      - azure
+      - google
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
+- description: enable powershell remoting
+  command: winrm quickconfig -quiet -transport:http -force
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
     architecture:
       - x86
       - x86-64
@@ -178,7 +374,12 @@
     cloud:
       - azure
     os:
-      - Windows 7
+      - Windows 8.1
+      - Windows 10
+      - Windows Server 2012 R2
+      - Windows Server 2016
+      - Windows Server 2019
+      - Windows Server
     architecture:
       - x86
       - x86-64
