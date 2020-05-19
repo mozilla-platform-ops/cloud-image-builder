@@ -1,5 +1,28 @@
 ---
 - unattend:
+    - description: enable remote desktop firewall exception
+      # yamllint disable-line rule:line-length
+      command: cmd /c netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes
+      target:
+        cloud:
+          - amazon
+          - azure
+          - google
+        os:
+          - Windows 7
+          - Windows 8.1
+          - Windows 10
+          - Windows Server 2012 R2
+          - Windows Server 2016
+          - Windows Server 2019
+          - Windows Server
+        architecture:
+          - x86
+          - x86-64
+        gpu:
+          - true
+          - false
+- unattend:
     - description: remove winhttp proxy
       command: cmd /c netsh.exe winhttp reset proxy
       target:
@@ -46,29 +69,6 @@
       target:
         cloud:
           - azure
-        os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-        architecture:
-          - x86
-          - x86-64
-        gpu:
-          - true
-          - false
-- unattend:
-    - description: enable remote desktop firewall exception
-      # yamllint disable-line rule:line-length
-      command: cmd /c netsh.exe advfirewall firewall set rule group="Remote Desktop" new enable=yes
-      target:
-        cloud:
-          - amazon
-          - azure
-          - google
         os:
           - Windows 7
           - Windows 8.1
