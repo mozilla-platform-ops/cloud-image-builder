@@ -9,7 +9,9 @@ param (
 
   [string] $group,
   [switch] $enableSnapshotCopy = $false,
-  [switch] $overwrite = $false
+  [switch] $overwrite = $false,
+
+  [switch] $disableCleanup = $false
 )
 
 function Invoke-OptionalSleep {
@@ -74,7 +76,8 @@ function Invoke-BootstrapExecution {
     [string] $groupName,
     [object] $execution,
     [object] $flow,
-    [int] $attemptNumber = 1
+    [int] $attemptNumber = 1,
+    [switch] $disableCleanup = $false
   )
   begin {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
@@ -106,7 +109,9 @@ function Invoke-BootstrapExecution {
         Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, threw exception evaluating tokenised command (format: "{8}", tokens: "{9}")' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $tokenisedCommandEvaluationError.format, [String]::Join(', ', $tokenisedCommandEvaluationError.tokens));
         Write-Output -InputObject ($tokenisedCommandEvaluationError.exception.Message);
       }
-      Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+      if (-not $disableCleanup) {
+        Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+      }
       exit 1;
     }
     $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
@@ -161,7 +166,7 @@ function Invoke-BootstrapExecution {
                       }
                       'retry' {
                         Invoke-OptionalSleep -command $execution.on.failure;
-                        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1)
+                        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1) -flow $flow -disableCleanup:$disableCleanup;
                       }
                       'retry-task' {
                         Invoke-OptionalSleep -command $execution.on.failure;
@@ -170,7 +175,9 @@ function Invoke-BootstrapExecution {
                       }
                       'fail' {
                         Invoke-OptionalSleep -command $execution.on.failure;
-                        Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                        if (-not $disableCleanup) {
+                          Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                        }
                         exit 1;
                       }
                       default {
@@ -305,7 +312,8 @@ function Invoke-BootstrapExecutions {
     [string] $instanceName,
     [string] $groupName,
     [object[]] $executions,
-    [object] $flow
+    [object] $flow,
+    [switch] $disableCleanup = $false
   )
   begin {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
@@ -315,7 +323,7 @@ function Invoke-BootstrapExecutions {
       $executionNumber = 1;
       Write-Output -InputObject ('{0} :: detected {1} bootstrap command execution configurations for: {2}/{3}' -f $($MyInvocation.MyCommand.Name), $executions.Length, $groupName, $instanceName);
       foreach ($execution in $executions) {
-        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution -flow $flow
+        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution -flow $flow -disableCleanup:$disableCleanup;
         $executionNumber += 1;
       }
       $successfulBootstrapDetected = $true;
@@ -1076,7 +1084,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
               } else {
                 # if we reach here, we most likely hit an azure quota exception which we may recover from when some quota becomes available.
-                Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                if (-not $disableCleanup) {
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                }
                 try {
                   $taskDefinition = (Invoke-WebRequest -Uri ('{0}/api/queue/v1/task/{1}' -f $env:TASKCLUSTER_ROOT_URL, $env:TASK_ID) -UseBasicParsing | ConvertFrom-Json);
                   [DateTime] $taskStart = $taskDefinition.created;
@@ -1098,7 +1108,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
-                Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions -flow $target.network.flow
+                Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions -flow $target.network.flow -disableCleanup:$disableCleanup;
                 # todo implement success check
                 $successfulBootstrapDetected = $true;
               } else {
@@ -1176,7 +1186,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   } catch {
                     Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
                   } finally {
-                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                    if (-not $disableCleanup) {
+                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                    }
                   }
                 } else {
                   Write-Output -InputObject ('snapshot creation skipped because enableSnapshotCopy is set to false');
@@ -1192,7 +1204,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             throw;
             exit 1;
           } finally {
-            Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+            if (-not $disableCleanup) {
+              Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+            }
           }
         }
       }

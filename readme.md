@@ -43,6 +43,7 @@ instructions are processed when they are included on their own new line within t
 - `no-taskcluster-ci`: skips all taskcluster ci tasks
 - `pool-deploy`: skips both disk-image and machine-image builds and only updates worker-manager with whatever images were most recently built
 - `overwrite-machine-image`: if an image already exists with a matching disk-image build sha and bootstrap sha as will be created, it will be deleted and recreated. this is useful when patching the cloud-image-builder repository with updates or fixes and new images should be rebuilt from the same bootstrap revision as their previous build
+- `disable-cleanup`: do not delete or purge cloud platform resources when finished or on build or deployment failures. this allows for manual debugging on provisioned resources
 - key filter-types (cloud-image-builder os configurations):
   - `include keys: win2012, win10-64-gpu`: build and deploy only images whose configuration is included in [config/win2012.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2012.yaml) or [config/win10-64-gpu.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win10-64-gpu.yaml)
   - `exclude keys: win7-32, win2019`: build and deploy **all** images **except** those whose configuration is included in [config/win7-32.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win7-32.yaml) or [config/win2019.yaml](https://github.com/mozilla-platform-ops/cloud-image-builder/blob/master/config/win2019.yaml)
