@@ -10,7 +10,7 @@ class CommitMessage extends React.Component {
           this.props.message.filter(line => (
             !line.match((new RegExp ('^(include|exclude) (environment|key|pool|region)s: .*$', 'i')))
             &&
-            !line.match((new RegExp ('^(pool-deploy|overwrite-machine-image|no-ci|no-taskcluster-ci|no-travis-ci)$', 'i')))
+            !line.match((new RegExp ('^(pool-deploy|overwrite-machine-image|disable-cleanup|no-ci|no-taskcluster-ci|no-travis-ci)$', 'i')))
           )).map(line => (
             <strong>
               {line}<br />
@@ -21,23 +21,13 @@ class CommitMessage extends React.Component {
           (this.props.message.some(line => (
             line.match(/^(include|exclude) (environment|key|pool|region)s: .*$/i)
             ||
-            line.match(/^(pool-deploy|overwrite-machine-image|no-ci|no-taskcluster-ci|no-travis-ci)$/i)
+            line.match(/^(pool-deploy|overwrite-machine-image|disable-cleanup|no-ci|no-taskcluster-ci|no-travis-ci)$/i)
           )))
             ? (
-                (this.props.message.filter(line => (line.match(/^(pool-deploy|overwrite-machine-image|no-ci|no-taskcluster-ci|no-travis-ci)$/i)))).map(instruction => (
+                (this.props.message.filter(line => (line.match(/^(pool-deploy|overwrite-machine-image|disable-cleanup|no-ci|no-taskcluster-ci|no-travis-ci)$/i)))).map(instruction => (
                   <Badge
                     style={{ marginRight: '0.7em' }}
-                    variant={(['pool-deploy', 'overwrite-machine-image'].includes(instruction)) ? 'primary' : 'dark'}>
-                    {
-                      (instruction === 'pool-deploy')
-                        ? ''
-                        : (
-                            <span>
-                              <DashCircleFill />
-                              &nbsp;
-                            </span>
-                          )
-                    }
+                    variant={(['pool-deploy', 'overwrite-machine-image', 'disable-cleanup'].includes(instruction)) ? 'primary' : 'dark'}>
                     {instruction}
                   </Badge>
                 ))
