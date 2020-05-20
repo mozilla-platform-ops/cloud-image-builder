@@ -254,12 +254,16 @@ function Invoke-BootstrapExecution {
         try {
           #Enable-PSRemoting -SkipNetworkProfileCheck -Force
           #Write-Output -InputObject 'powershell remoting enabled for session';
+
+          & winrm @('set', 'winrm/config/client', '@{{AllowUnencrypted="true"}}');
+          Write-Output -InputObject 'winrm-client allow-unencrypted set to: "true"';
+
           $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-          Write-Output -InputObject ('local wsman trusted hosts list detected as: "{0}"' -f $trustedHostsPreBootstrap);
+          Write-Output -InputObject ('winrm-client trusted-hosts detected as: "{0}"' -f $trustedHostsPreBootstrap);
           $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $publicIpAddress) } else { $publicIpAddress });
           #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
           & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
-          Write-Output -InputObject ('local wsman trusted hosts list updated to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+          Write-Output -InputObject ('winrm-client trusted-hosts set to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
         } catch {
           Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
           exit 1;
@@ -296,8 +300,10 @@ function Invoke-BootstrapExecution {
         }
 
         #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
-        & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap))
-        Write-Output -InputObject ('local wsman trusted hosts list reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+        & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap));
+        Write-Output -InputObject ('winrm-client trusted-hosts reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+        & winrm @('set', 'winrm/config/client', '@{{AllowUnencrypted="false"}}');
+        Write-Output -InputObject 'winrm-client allow-unencrypted reverted to: "false"';
       }
     }
     Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
