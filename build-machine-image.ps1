@@ -73,6 +73,7 @@ function Invoke-BootstrapExecution {
     [string] $instanceName,
     [string] $groupName,
     [object] $execution,
+    [object] $flow,
     [int] $attemptNumber = 1
   )
   begin {
@@ -188,17 +189,19 @@ function Invoke-BootstrapExecution {
       }
       # bootstrap over winrm for architectures that do not have an azure vm agent
       'winrm-powershell' {
-        $publicIpAddress = (Get-PublicIpAddress -platform $platform -group $target.group -resourceId $resourceId);
+        $publicIpAddress = (Get-PublicIpAddress -platform $platform -group $groupName -resourceId $resourceId);
         if (-not ($publicIpAddress)) {
-          Write-Debug -Message ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $target.group, $platform);
+          Write-Output -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $groupName, $platform);
           exit 1;
+        } else {
+          Write-Output -InputObject ('{0} :: public ip address: {1}, found for resource: {2}, in group: {3}, on platform: {4}' -f $($MyInvocation.MyCommand.Name), $publicIpAddress, $resourceId, $groupName, $platform);
         }
         $adminPassword = (Get-AdminPassword -platform $platform -imageKey $imageKey);
         if (-not ($adminPassword)) {
-          Write-Debug -Message ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
+          Write-Output -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
           exit 1;
         } else {
-          Write-Debug -Message ('{0} :: admin password for image: {1}, on platform: {2}, found with length: {3}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $adminPassword.Length);
+          Write-Output -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found with length: {3}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $adminPassword.Length);
         }
         $credential = (New-Object `
           -TypeName 'System.Management.Automation.PSCredential' `
@@ -207,7 +210,7 @@ function Invoke-BootstrapExecution {
         # modify security group of remote azure instance to allow winrm from public ip of local task instance
         try {
           $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
-          $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $target.network.flow.name);
+          $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $flow.name);
           $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
           if ($winrmAzNetworkSecurityRuleConfig) {
             $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
@@ -215,7 +218,7 @@ function Invoke-BootstrapExecution {
               -NetworkSecurityGroup $azNetworkSecurityGroup `
               -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
           } else {
-            $winrmRuleFromConfig = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
+            $winrmRuleFromConfig = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
             $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
               -Name $winrmRuleFromConfig.name `
               -Description $winrmRuleFromConfig.Description `
@@ -230,7 +233,7 @@ function Invoke-BootstrapExecution {
           }
           if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
             $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-            Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+            Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $flow.name, [String]::Join(', ', $updatedIps));
           } else {
             Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
             exit 1;
@@ -273,14 +276,14 @@ function Invoke-BootstrapExecution {
         }
 
         # modify azure security group to remove public ip of task instance from winrm exceptions
-        $allowedIps = @($target.network.flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
+        $allowedIps = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
         $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
           -Name 'allow-winrm' `
           -NetworkSecurityGroup $azNetworkSecurityGroup `
           -SourceAddressPrefix $allowedIps);
         if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
           $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-          Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $target.network.flow.name, [String]::Join(', ', $updatedIps));
+          Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $flow.name, [String]::Join(', ', $updatedIps));
         } else {
           Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
         }
@@ -301,7 +304,8 @@ function Invoke-BootstrapExecutions {
   param (
     [string] $instanceName,
     [string] $groupName,
-    [object[]] $executions
+    [object[]] $executions,
+    [object] $flow
   )
   begin {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
@@ -311,7 +315,7 @@ function Invoke-BootstrapExecutions {
       $executionNumber = 1;
       Write-Output -InputObject ('{0} :: detected {1} bootstrap command execution configurations for: {2}/{3}' -f $($MyInvocation.MyCommand.Name), $executions.Length, $groupName, $instanceName);
       foreach ($execution in $executions) {
-        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution
+        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution -flow $flow
         $executionNumber += 1;
       }
       $successfulBootstrapDetected = $true;
@@ -419,7 +423,7 @@ function Update-RequiredModules {
     [hashtable[]] $requiredModules = @(
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.75'
+        'version' = '0.0.77'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1094,7 +1098,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
-                Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions
+                Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions -flow $target.network.flow
                 # todo implement success check
                 $successfulBootstrapDetected = $true;
               } else {
