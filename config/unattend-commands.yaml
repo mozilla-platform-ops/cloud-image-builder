@@ -139,13 +139,25 @@
     gpu:
       - true
       - false
+- description: set network connection category
+  # yamllint disable-line rule:line-length
+  command: cmd /c powershell -NoProfile -Command "([Activator]::CreateInstance([Type]::GetTypeFromCLSID('DCB00C01-570F-4A9B-8D69-199FDBA5723B'))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }"
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
 - description: winrm quickconfig -q
   command: cmd /c winrm quickconfig -q
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -158,9 +170,7 @@
   command: cmd /c winrm quickconfig -transport:http
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -173,9 +183,7 @@
   command: cmd /c winrm set winrm/config @{MaxTimeoutms="1800000"}
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -188,9 +196,7 @@
   command: cmd /c winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"}
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -203,9 +209,7 @@
   command: cmd /c winrm set winrm/config/service @{AllowUnencrypted="true"}
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -218,9 +222,7 @@
   command: cmd /c winrm set winrm/config/service/auth @{Basic="true"}
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -233,9 +235,7 @@
   command: cmd /c winrm set winrm/config/client/auth @{Basic="true"}
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -250,9 +250,7 @@
   command: cmd /c winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"}
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -279,9 +277,7 @@
   command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -295,9 +291,7 @@
   command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -310,9 +304,7 @@
   command: cmd /c net stop winrm
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -325,9 +317,7 @@
   command: cmd /c sc config winrm start= auto
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:
@@ -340,9 +330,7 @@
   command: cmd /c net start winrm
   target:
     cloud:
-      - amazon
       - azure
-      - google
     os:
       - Windows 7
     architecture:

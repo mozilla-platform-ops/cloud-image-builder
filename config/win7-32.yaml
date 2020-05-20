@@ -34,6 +34,10 @@ manager:
               reregistration: 86400
           locations:
               - centralus
+              - northcentralus
+              - southcentralus
+              - eastus
+              - eastus2
           lifecycle: normal
           owner: grenade@mozilla.com
           provider: azure
