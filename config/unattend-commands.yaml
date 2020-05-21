@@ -29,7 +29,7 @@
       - azure
       - google
     os:
-      - Windows 7
+      #- Windows 7
       - Windows 8.1
       - Windows 10
       - Windows Server 2012 R2
@@ -165,7 +165,7 @@
     cloud:
       - azure
     os:
-      - Windows 7
+      #- Windows 7
       - Windows 8.1
       - Windows 10
       - Windows Server 2012 R2
@@ -335,34 +335,20 @@
     gpu:
       - true
       - false
-- description: firewall allow inbound winrm over http
-  # yamllint disable-line rule:line-length
-  command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
-  target:
-    cloud:
-      - azure
-    os:
-      - Windows 7
-    architecture:
-      - x86
-      - x86-64
-    gpu:
-      - true
-      - false
-- description: firewall allow inbound winrm over https
-  # yamllint disable-line rule:line-length
-  command: cmd /c netsh advfirewall firewall add rule group="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985 > C:\log\unattend-firewall-allow-inbound-winrm-over-https-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-https-stderr.log
-  target:
-    cloud:
-      - azure
-    os:
-      - Windows 7
-    architecture:
-      - x86
-      - x86-64
-    gpu:
-      - true
-      - false
+#- description: firewall allow inbound winrm over http
+#  # yamllint disable-line rule:line-length
+#  command: cmd /c netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
+#  target:
+#    cloud:
+#      - azure
+#    os:
+#      - Windows 7
+#    architecture:
+#      - x86
+#      - x86-64
+#    gpu:
+#      - true
+#      - false
 - description: net stop winrm
   command: cmd /c net stop winrm
   target:
@@ -408,6 +394,22 @@
     gpu:
       - true
       - false
+- description: disable firewall
+  command: >-
+      cmd /c netsh advfirewall set allprofiles state off >
+      C:\log\unattend-disable-firewall-stdout.log 2>
+      C:\log\unattend-disable-firewall-stderr.log
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
 - description: enable powershell remoting
   command: >-
       cmd /c winrm quickconfig -quiet -transport:http -force >
@@ -429,25 +431,25 @@
     gpu:
       - true
       - false
-- description: enable remote management firewall exception
-  # yamllint disable-line rule:line-length
-  command: cmd /c netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any > C:\log\unattend-enable-winrm-firewall-exception-stdout.log 2> C:\log\unattend-enable-winrm-firewall-exception-stderr.log
-  target:
-    cloud:
-      - azure
-    os:
-      - Windows 8.1
-      - Windows 10
-      - Windows Server 2012 R2
-      - Windows Server 2016
-      - Windows Server 2019
-      - Windows Server
-    architecture:
-      - x86
-      - x86-64
-    gpu:
-      - true
-      - false
+#- description: enable remote management firewall exception
+#  # yamllint disable-line rule:line-length
+#  command: cmd /c netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes remoteip=any > C:\log\unattend-enable-winrm-firewall-exception-stdout.log 2> C:\log\unattend-enable-winrm-firewall-exception-stderr.log
+#  target:
+#    cloud:
+#      - azure
+#    os:
+#      - Windows 8.1
+#      - Windows 10
+#      - Windows Server 2012 R2
+#      - Windows Server 2016
+#      - Windows Server 2019
+#      - Windows Server
+#    architecture:
+#      - x86
+#      - x86-64
+#    gpu:
+#      - true
+#      - false
 - description: >-
     enable file and printer sharing firewall exception
     (allows icmp response on azure vnet)
@@ -457,7 +459,7 @@
     cloud:
       - azure
     os:
-      - Windows 7
+      #- Windows 7
       - Windows 8.1
       - Windows 10
       - Windows Server 2012 R2
