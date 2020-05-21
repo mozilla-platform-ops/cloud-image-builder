@@ -22,7 +22,7 @@
       - false
 - description: enable remote desktop firewall exception
   # yamllint disable-line rule:line-length
-  command: cmd /c netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  command: netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes
   target:
     cloud:
       - amazon
@@ -44,7 +44,7 @@
       - false
 - description: disable set-network-location prompt
   # yamllint disable-line rule:line-length
-  command: reg add "HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff" > C:\log\unattend-disable-set-network-location-prompt-stdout.log 2> C:\log\unattend-disable-set-network-location-prompt-stderr.log
+  command: reg add "HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff"
   target:
     cloud:
       - amazon
@@ -59,10 +59,7 @@
       - true
       - false
 - description: set power profile to high performance
-  command: >-
-      cmd /c powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c >
-      C:\log\unattend-set-high-performance-power-profile-stdout.log 2>
-      C:\log\unattend-set-high-performance-power-profile-stderr.log
+  command: powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
   target:
     cloud:
       - amazon
@@ -77,10 +74,7 @@
       - true
       - false
 - description: turn off ac power saving timeout
-  command: >-
-      cmd /c powercfg -change -monitor-timeout-ac 0 >
-      C:\log\unattend-disable-ac-power-saving-stdout.log 2>
-      C:\log\unattend-disable-ac-power-saving-stderr.log
+  command: powercfg -change -monitor-timeout-ac 0
   target:
     cloud:
       - amazon
@@ -95,10 +89,7 @@
       - true
       - false
 - description: turn off dc power saving timeout
-  command: >-
-      cmd /c powercfg -change -monitor-timeout-dc 0 >
-      C:\log\unattend-disable-dc-power-saving-stdout.log 2>
-      C:\log\unattend-disable-dc-power-saving-stderr.log
+  command: powercfg -change -monitor-timeout-dc 0
   target:
     cloud:
       - amazon
@@ -113,10 +104,7 @@
       - true
       - false
 - description: remove winhttp proxy
-  command: >-
-      cmd /c netsh winhttp reset proxy >
-      C:\log\unattend-remove-winhttp-proxy-stdout.log 2>
-      C:\log\unattend-remove-winhttp-proxy-stderr.log
+  command: netsh winhttp reset proxy
   target:
     cloud:
       - azure
@@ -135,10 +123,7 @@
       - true
       - false
 - description: set power profile to high performance
-  command: >-
-      cmd /c powercfg /setactive SCHEME_MIN >
-      C:\log\unattend-set-high-performance-power-profile-stdout.log 2>
-      C:\log\unattend-set-high-performance-power-profile-stderr.log
+  command: powercfg /setactive SCHEME_MIN
   target:
     cloud:
       - azure
@@ -157,10 +142,7 @@
       - false
 - description: >-
       enable windows firewall for all profiles (domain, public, private)
-  command: >-
-      cmd /c netsh advfirewall set allprofiles state on >
-      C:\log\unattend-enable-all-firewall-profiles-stdout.log 2>
-      C:\log\unattend-enable-all-firewall-profiles-stderr.log
+  command: netsh advfirewall set allprofiles state on
   target:
     cloud:
       - azure
@@ -180,7 +162,7 @@
       - false
 - description: set network connection category
   # yamllint disable-line rule:line-length
-  command: cmd /c powershell -NoProfile -Command "([Activator]::CreateInstance([Type]::GetTypeFromCLSID('DCB00C01-570F-4A9B-8D69-199FDBA5723B'))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) } 2> C:\log\unattend-set-network-connection-category-stderr.log"
+  command: powershell -NoProfile -Command "([Activator]::CreateInstance([Type]::GetTypeFromCLSID('DCB00C01-570F-4A9B-8D69-199FDBA5723B'))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) } 2> C:\log\unattend-set-network-connection-category-stderr.log"
   target:
     cloud:
       - azure
@@ -193,10 +175,7 @@
       - true
       - false
 - description: winrm quickconfig -q
-  command: >-
-      cmd /c winrm quickconfig -q >
-      C:\log\unattend-winrm-quickconfig-stdout.log 2>
-      C:\log\unattend-winrm-quickconfig-stderr.log
+  command: winrm quickconfig -q
   target:
     cloud:
       - azure
@@ -209,10 +188,7 @@
       - true
       - false
 - description: winrm quickconfig -transport:http
-  command: >-
-      cmd /c winrm quickconfig -transport:http >
-      C:\log\unattend-winrm-quickconfig-transport-http-stdout.log 2>
-      C:\log\unattend-winrm-quickconfig-transport-http-stderr.log
+  command: winrm quickconfig -transport:http
   target:
     cloud:
       - azure
@@ -225,10 +201,7 @@
       - true
       - false
 - description: winrm set winrm/config @{MaxTimeoutms="1800000"}
-  command: >-
-      cmd /c winrm set winrm/config @{MaxTimeoutms="1800000"} >
-      C:\log\unattend-winrm-set-max-timeout-stdout.log 2>
-      C:\log\unattend-winrm-set-max-timeout-stderr.log
+  command: winrm set winrm/config @{MaxTimeoutms="1800000"}
   target:
     cloud:
       - azure
@@ -241,10 +214,7 @@
       - true
       - false
 - description: winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"}
-  command: >-
-      cmd /c winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"} >
-      C:\log\unattend-winrm-set-max-shell-memory-stdout.log 2>
-      C:\log\unattend-winrm-set-max-shell-memory-stderr.log
+  command: winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"}
   target:
     cloud:
       - azure
@@ -257,11 +227,7 @@
       - true
       - false
 - description: winrm set winrm/config/service @{AllowUnencrypted="true"}
-  command: >-
-      cmd /c winrm set winrm/config/service @{AllowUnencrypted="true"} >
-      C:\log\unattend-winrm-set-allow-unencrypted-stdout.log 2>
-      C:\log\unattend-winrm-set-allow-unencrypted-stderr.log
-  target:
+  command: winrm set winrm/config/service @{AllowUnencrypted="true"}
     cloud:
       - azure
     os:
@@ -273,10 +239,7 @@
       - true
       - false
 - description: winrm set winrm/config/service/auth @{Basic="true"}
-  command: >-
-      cmd /c winrm set winrm/config/service/auth @{Basic="true"} >
-      C:\log\unattend-winrm-set-service-basic-auth-stdout.log 2>
-      C:\log\unattend-winrm-set-service-basic-auth-stderr.log
+  command: winrm set winrm/config/service/auth @{Basic="true"}
   target:
     cloud:
       - azure
@@ -289,10 +252,7 @@
       - true
       - false
 - description: winrm set winrm/config/client/auth @{Basic="true"}
-  command: >-
-      cmd /c winrm set winrm/config/client/auth @{Basic="true"} >
-      C:\log\unattend-winrm-set-client-basic-auth-stdout.log 2>
-      C:\log\unattend-winrm-set-client-basic-auth-stderr.log
+  command: winrm set winrm/config/client/auth @{Basic="true"}
   target:
     cloud:
       - azure
@@ -307,7 +267,7 @@
 - description: >-
       winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"}
   # yamllint disable-line rule:line-length
-  command: cmd /c winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"} > C:\log\unattend-winrm-set-listener-port-stdout.log 2> C:\log\unattend-winrm-set-listener-port-stderr.log
+  command: winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"} > C:\log\unattend-winrm-set-listener-port-stdout.log 2> C:\log\unattend-winrm-set-listener-port-stderr.log
   target:
     cloud:
       - azure
@@ -320,10 +280,7 @@
       - true
       - false
 - description: winrm set winrm/config/client @{TrustedHosts="*"}
-  command: >-
-      cmd /c winrm set winrm/config/client @{TrustedHosts="*"} >
-      C:\log\unattend-winrm-set-trusted-hosts-stdout.log 2>
-      C:\log\unattend-winrm-set-trusted-hosts-stderr.log
+  command: winrm set winrm/config/client @{TrustedHosts="*"}
   target:
     cloud:
       - azure
@@ -363,10 +320,7 @@
       - true
       - false
 - description: sc config winrm start= auto
-  command: >-
-      cmd /c sc config winrm start= auto >
-      C:\log\unattend-sc-config-winrm-start-auto-stdout.log 2>
-      C:\log\unattend-sc-config-winrm-start-auto-stderr.log
+  command: sc config winrm start= auto
   target:
     cloud:
       - azure
@@ -379,10 +333,7 @@
       - true
       - false
 - description: net start winrm
-  command: >-
-      cmd /c net start winrm >
-      C:\log\unattend-net-start-winrm-stdout.log 2>
-      C:\log\unattend-net-start-winrm-stderr.log
+  command: cmd /c net start winrm
   target:
     cloud:
       - azure
@@ -394,11 +345,15 @@
     gpu:
       - true
       - false
+# disabling the windows 7 firewall below is a hack to get winrm working after
+# sysprep completes. it would be preferable to use a firewall exception for
+# inbound tcp on port 5985 (winrm http) on the firewall public profile, but for
+# some reason, that exception is not enough to allow inbound winrm connections.
+# the firewall should be re-enabled as part of the bootstrap process and in any
+# case, the azure security group firewalls remain in place, irrespective of
+# local system firewall state. 
 - description: disable firewall
-  command: >-
-      cmd /c netsh advfirewall set allprofiles state off >
-      C:\log\unattend-disable-firewall-stdout.log 2>
-      C:\log\unattend-disable-firewall-stderr.log
+  command: netsh advfirewall set allprofiles state off
   target:
     cloud:
       - azure
@@ -411,10 +366,7 @@
       - true
       - false
 - description: enable powershell remoting
-  command: >-
-      cmd /c winrm quickconfig -quiet -transport:http -force >
-      C:\log\unattend-enable-powershell-remoting-stdout.log 2>
-      C:\log\unattend-enable-powershell-remoting-stderr.log
+  command: winrm quickconfig -quiet -transport:http -force
   target:
     cloud:
       - azure
@@ -454,7 +406,7 @@
     enable file and printer sharing firewall exception
     (allows icmp response on azure vnet)
   # yamllint disable-line rule:line-length
-  command: cmd /c netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes > C:\log\unattend-enable-file-printer-sharing-firewall-exception-stdout.log 2> C:\log\unattend-enable-file-printer-sharing-firewall-exception-stderr.log
+  command: netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes > C:\log\unattend-enable-file-printer-sharing-firewall-exception-stdout.log 2> C:\log\unattend-enable-file-printer-sharing-firewall-exception-stderr.log
   target:
     cloud:
       - azure
