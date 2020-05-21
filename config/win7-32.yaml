@@ -90,7 +90,7 @@ target:
                     direction: Inbound
                     priority: 110
                     sourceAddressPrefix:
-                        - 185.189.196.0/22 # grenade
+                        - 185.189.196.0/22  # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389
@@ -106,7 +106,7 @@ target:
                     direction: Inbound
                     priority: 111
                     sourceAddressPrefix:
-                        - 185.189.196.0/22 # grenade
+                        - 185.189.196.0/22  # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 22
@@ -123,7 +123,7 @@ target:
                     direction: Inbound
                     priority: 112
                     sourceAddressPrefix:
-                        - 185.189.196.0/22 # grenade
+                        - 185.189.196.0/22  # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange:
