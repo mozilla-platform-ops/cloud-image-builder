@@ -255,7 +255,7 @@ function Invoke-BootstrapExecution {
           #Enable-PSRemoting -SkipNetworkProfileCheck -Force
           #Write-Output -InputObject 'powershell remoting enabled for session';
 
-          & winrm @('set', 'winrm/config/client', '@{{AllowUnencrypted="true"}}');
+          & winrm @('set', 'winrm/config/client', '@{AllowUnencrypted="true"}');
           Write-Output -InputObject 'winrm-client allow-unencrypted set to: "true"';
 
           $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
@@ -302,7 +302,7 @@ function Invoke-BootstrapExecution {
         #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
         & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap));
         Write-Output -InputObject ('winrm-client trusted-hosts reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-        & winrm @('set', 'winrm/config/client', '@{{AllowUnencrypted="false"}}');
+        & winrm @('set', 'winrm/config/client', '@{AllowUnencrypted="false"}');
         Write-Output -InputObject 'winrm-client allow-unencrypted reverted to: "false"';
       }
     }
