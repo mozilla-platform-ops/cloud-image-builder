@@ -28,7 +28,7 @@ manager:
           variant: win10-64-azure
           capacity:
               minimum: 0
-              maximum: 3
+              maximum: 0
           timeout:
               registration: 3600
               reregistration: 86400
