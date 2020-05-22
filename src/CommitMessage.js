@@ -11,10 +11,10 @@ class CommitMessage extends React.Component {
             !line.match((new RegExp ('^(include|exclude) (environment|key|pool|region)s: .*$', 'i')))
             &&
             !line.match((new RegExp ('^(pool-deploy|overwrite-machine-image|disable-cleanup|no-ci|no-taskcluster-ci|no-travis-ci)$', 'i')))
-          )).map(line => (
-            <strong>
-              {line}<br />
-            </strong>
+          )).map((line, lI) => (
+            (lI === 0)
+              ? <strong>{line}<br /></strong>
+              : <span>{line}<br /></span>
           ))
         }
         {

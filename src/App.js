@@ -144,6 +144,17 @@ class App extends React.Component {
                 }
               }
             />
+            <hr />
+            <p className="text-muted">
+              this page monitors <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/commits/master">commits</a> to the master branch
+              of the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder">mozilla-platform-ops/cloud-image-builder</a> repository and
+              the resulting travis-ci builds and taskcluster tasks which produce cloud machine images of the various windows operating system editions
+              and configurations used by firefox ci to build and test gecko products on the windows platform.
+            </p>
+            <p className="text-muted">
+              the source code for this page is hosted in the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/tree/react">react
+              branch</a> of the same repository.
+            </p>
           </Col>
         </Row>
       </Container>
