@@ -5,7 +5,7 @@ image:
     language: en-US
     architecture: x86
     timezone: UTC
-    hostname: '*'
+    hostname: 'cib-win7-32'
     gpu: false
     owner: Mozilla Release Operations
     organization: Mozilla Corporation
