@@ -184,7 +184,7 @@
           - false
 - description: set network profile to private
   # yamllint disable-line rule:line-length
-  command: powershell -NoProfile -Command "([Activator]::CreateInstance([Type]::GetTypeFromCLSID('DCB00C01-570F-4A9B-8D69-199FDBA5723B'))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) } 2> C:\log\unattend-set-network-connection-category-stderr.log"
+  command: powershell -ExecutionPolicy Bypass -NoProfile -Command "([Activator]::CreateInstance([Type]::GetTypeFromCLSID('DCB00C01-570F-4A9B-8D69-199FDBA5723B'))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) } 2> C:\log\unattend-set-network-connection-category-stderr.log"
   target:
       cloud:
           - azure

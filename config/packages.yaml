@@ -144,7 +144,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win7.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win7.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -170,7 +170,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win10.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -196,7 +196,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2012.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2012.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -222,7 +222,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2016.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2016.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -248,7 +248,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/azure/userdata/Configuration/nxlog/win2019.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2019.conf
 - name: EC2Install.zip
   savepath: Windows\Temp
   unattend:
@@ -403,7 +403,7 @@
         command: cmd /c move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
       - description: create occ scheduled task
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr "powershell -NoLogo -NoProfile -WindowStyle Hidden -File C:\dsc\rundsc.ps1 -ExecutionPolicy RemoteSigned -ConsoleOutputFile C:\dsc\rundsc-run.log" /f
+        command: schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr "powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1" /f
   target:
       cloud:
           - azure
