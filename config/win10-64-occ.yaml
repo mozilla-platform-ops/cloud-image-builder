@@ -5,7 +5,7 @@ image:
     language: en-US
     architecture: x86-64
     timezone: UTC
-    hostname: '*'
+    hostname: 'cib-win10-64-occ'
     gpu: false
     owner: Mozilla RelOps
     organization: Mozilla Corporation
@@ -88,8 +88,7 @@ target:
                     direction: Inbound
                     priority: 110
                     sourceAddressPrefix:
-                        # grenade - gnet, bulgaria
-                        - 185.189.196.0/22
+                        - 185.189.196.0/22 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389
@@ -105,8 +104,7 @@ target:
                     direction: Inbound
                     priority: 111
                     sourceAddressPrefix:
-                        # grenade - gnet, bulgaria
-                        - 185.189.196.0/22
+                        - 185.189.196.0/22 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 22
@@ -122,8 +120,7 @@ target:
                     direction: Inbound
                     priority: 112
                     sourceAddressPrefix:
-                        # grenade - gnet, bulgaria
-                        - 185.189.196.0/22
+                        - 185.189.196.0/22 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange:

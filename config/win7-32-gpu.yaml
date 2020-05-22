@@ -5,7 +5,7 @@ image:
     language: en-US
     architecture: x86
     timezone: UTC
-    hostname: '*'
+    hostname: 'cib-win7-32-gpu'
     gpu: true
     owner: Mozilla Release Operations
     organization: Mozilla Corporation
@@ -75,53 +75,38 @@ target:
               name: nsg-east-us-gecko-t
               rules:
                   - name: allow-rdp
-                    description: >-
-                        allow: inbound tcp connections,
-                        \ for: rdp,
-                        \ from: whitelist,
-                        \ to: any host,
-                        \ on port: 3389
+                    # yamllint disable-line rule:line-length
+                    description: 'allow: inbound tcp connections, for: rdp, from: whitelist, to: any host, on port: 3389'
                     access: Allow
                     protocol: Tcp
                     direction: Inbound
                     priority: 110
                     sourceAddressPrefix:
-                        # grenade - gnet, bulgaria
-                        - 185.189.196.0/22
+                        - 185.189.196.0/22 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389
                   - name: allow-ssh
-                    description: >-
-                        allow: inbound tcp connections,
-                        \ for: ssh,
-                        \ from: whitelist,
-                        \ to: any host,
-                        \ on port: 22
+                    # yamllint disable-line rule:line-length
+                    description: 'allow: inbound tcp connections, for: ssh, from: whitelist, to: any host, on port: 22'
                     access: Allow
                     protocol: Tcp
                     direction: Inbound
                     priority: 111
                     sourceAddressPrefix:
-                        # grenade - gnet, bulgaria
-                        - 185.189.196.0/22
+                        - 185.189.196.0/22 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 22
                   - name: allow-winrm
-                    description: >-
-                        allow: inbound tcp connections,
-                        \ for: winrm over http and https,
-                        \ from: whitelist,
-                        \ to: any host,
-                        \ on ports: 5985, 5986
+                    # yamllint disable-line rule:line-length
+                    description: 'allow: inbound tcp connections, for: winrm over http and https, from: whitelist, to: any host, on ports: 5985, 5986'
                     access: Allow
                     protocol: Tcp
                     direction: Inbound
                     priority: 112
                     sourceAddressPrefix:
-                        # grenade - gnet, bulgaria
-                        - 185.189.196.0/22
+                        - 185.189.196.0/22 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange:
