@@ -184,7 +184,7 @@
           - false
 - description: set network profile to private
   # yamllint disable-line rule:line-length
-  command: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command "& { Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles' | Set-ItemProperty -Name 'Category' -Value 1 }"
+  command: powershell -ExecutionPolicy Bypass -NoProfile -Command "& { Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles' | Select-Object Name | % { Set-ItemProperty -Path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -Name 'Category' -Value 1 } }"
   target:
       cloud:
           - azure
