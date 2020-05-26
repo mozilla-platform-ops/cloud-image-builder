@@ -291,7 +291,7 @@ for platform in ['amazon', 'azure']:
                         machineImageBuildDependencies = [ yamlLintTaskId ]
                         if platform == 'azure':
                             machineImageBuildDependencies.append(azurePurgeTaskIds[0])
-                            if platform == 'azure':
+                            if purgeTaskclusterResources and len(azurePurgeTaskIds) > 1:
                                 machineImageBuildDependencies.append(azurePurgeTaskIds[1])
                         if buildTaskId is not None:
                             machineImageBuildDependencies.append(buildTaskId)
