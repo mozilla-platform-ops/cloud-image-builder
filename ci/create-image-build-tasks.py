@@ -50,6 +50,7 @@ try:
     lines = commit['message'].splitlines()
     overwriteMachineImage = any(line.lower().strip() == 'overwrite-machine-image' for line in lines)
     disableCleanup = any(line.lower().strip() == 'disable-cleanup' for line in lines)
+    purgeTaskclusterResources = any(line.lower().strip() == 'purge-taskcluster-resources' for line in lines)
     noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
     if noCI:
         print('info: **no ci** commit syntax detected. skipping ci task creation')
@@ -127,7 +128,7 @@ createTask(
     taskGroupId = taskGroupId
 )
 
-azurePurgeTaskId = slugid.nice()
+azurePurgeTaskIds = [ slugid.nice(), slugid.nice() ] if purgeTaskclusterResources else [ slugid.nice() ]
 createTask(
     queue = queue,
     taskId = slugid.nice(),
@@ -156,7 +157,7 @@ createTask(
 createTask(
     queue = queue,
     image = 'python',
-    taskId = azurePurgeTaskId,
+    taskId = azurePurgeTaskIds[0],
     taskName = '00 :: purge deprecated azure resources - python (fast)',
     taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
     #dependencies = [ yamlLintTaskId ],
@@ -180,6 +181,34 @@ createTask(
     ],
     taskGroupId = taskGroupId
 )
+if purgeTaskclusterResources and len(azurePurgeTaskIds) > 1:
+    createTask(
+        queue = queue,
+        image = 'python',
+        taskId = azurePurgeTaskIds[1],
+        taskName = '00 :: purge deprecated azure resources - (taskcluster worker-manager resource groups)',
+        taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources in taskcluster worker-manager resource groups',
+        #dependencies = [ yamlLintTaskId ],
+        maxRunMinutes = 60,
+        retries = 5,
+        retriggerOnExitCodes = [ 123 ],
+        provisioner = 'relops',
+        workerType = 'decision',
+        priority = 'high',
+        features = {
+            'taskclusterProxy': True
+        },
+        commands = [
+            '/bin/bash',
+            '--login',
+            '-c',
+            'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install azure-mgmt-compute azure-mgmt-network azure-mgmt-resource cachetools taskcluster pyyaml | grep -v "^[[:space:]]*$" && python ci/purge-azure-resources.py taskcluster-staging-workers-us-central'.format(commitSha)
+        ],
+        scopes = [
+            'secrets:get:project/relops/image-builder/dev'
+        ],
+        taskGroupId = taskGroupId
+    )
 
 for platform in ['amazon', 'azure']:
     for key in includeKeys:
@@ -261,7 +290,9 @@ for platform in ['amazon', 'azure']:
                         bootstrapOrganisation = next(x for x in target['tag'] if x['name'] == 'sourceOrganisation')['value']
                         machineImageBuildDependencies = [ yamlLintTaskId ]
                         if platform == 'azure':
-                            machineImageBuildDependencies.append(azurePurgeTaskId)
+                            machineImageBuildDependencies.append(azurePurgeTaskIds[0])
+                            if platform == 'azure':
+                                machineImageBuildDependencies.append(azurePurgeTaskIds[1])
                         if buildTaskId is not None:
                             machineImageBuildDependencies.append(buildTaskId)
                         createTask(
