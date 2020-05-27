@@ -268,24 +268,36 @@ function Invoke-BootstrapExecution {
           Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
           exit 1;
         }
-
-        # run remote bootstrap scripts over winrm
-        try {
-          Invoke-Command -ComputerName $publicIpAddress -Credential $credential -ScriptBlock {
-
-            # todo:
-            # - set secrets in the instance registry
-            # - rename host
-            # - run bootstrap
-            # - halt system
-
-            $runCommandScriptContent            
+        $invocationResponse = $null;
+        $invocationAttempt = 0;
+        do {
+          $invocationAttempt += 1;
+          # run remote bootstrap scripts over winrm
+          try {
+            $invocationResponse = (Invoke-Command `
+              -ComputerName $publicIpAddress `
+              -Credential $credential `
+              -ScriptBlock { $runCommandScriptContent });
+          } catch {
+            Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm on attempt {0}. {1}' -f $invocationAttempt, $_.Exception.Message);
+            exit 1;
+          } finally {
+            if ($invocationResponse) {
+              Write-Output -InputObject $invocationResponse;
+              if ($invocationResponse -match 'WinRMOperationTimeout') {
+                Write-Output -InputObject 'awaiting manual intervention to correct the winrm connection issue';
+                Start-Sleep -Seconds 120
+              }
+            } else {
+              Write-Output -InputObject ('error: no response received during execution of bootstrap commands over winrm on attempt {0}' -f $invocationAttempt);
+            }
           }
-        } catch {
-          Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm. {0}' -f $_.Exception.Message);
-          exit 1;
-        }
-
+        } while (
+          # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
+          # intervention on the host instance to enable the winrm connection or connection issue debugging.
+          ($invocationResponse -eq $null) -or
+          ($invocationResponse -match 'WinRMOperationTimeout')
+        )
         # modify azure security group to remove public ip of task instance from winrm exceptions
         $allowedIps = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
         $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
