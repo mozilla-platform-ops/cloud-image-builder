@@ -43,11 +43,13 @@ includeEnvironments = [
     'staging'
 ]
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+overwriteDiskImage = False
 overwriteMachineImage = False
 
 try:
     commit = json.loads(urllib.request.urlopen(urllib.request.Request('https://api.github.com/repos/mozilla-platform-ops/cloud-image-builder/commits/{}'.format(commitSha), None, { 'User-Agent' : 'Mozilla/5.0' })).read().decode())['commit']
     lines = commit['message'].splitlines()
+    overwriteDiskImage = any(line.lower().strip() == 'overwrite-disk-image' for line in lines)
     overwriteMachineImage = any(line.lower().strip() == 'overwrite-machine-image' for line in lines)
     disableCleanup = any(line.lower().strip() == 'disable-cleanup' for line in lines)
     purgeRelopsResources = True
@@ -196,7 +198,7 @@ for platform in ['amazon', 'azure']:
         with open(configPath, 'r') as stream:
             config = yaml.safe_load(stream)
             isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
-            queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and diskImageManifestHasChanged(platform, key, commitSha)
+            queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
                 buildTaskId = slugid.nice()
                 createTask(

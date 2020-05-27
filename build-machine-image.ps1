@@ -208,7 +208,7 @@ function Invoke-BootstrapExecution {
           Write-Output -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
           exit 1;
         } else {
-          Write-Output -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found with length: {3}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $adminPassword.Length);
+          Write-Output -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found at: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
         }
         $credential = (New-Object `
           -TypeName 'System.Management.Automation.PSCredential' `
