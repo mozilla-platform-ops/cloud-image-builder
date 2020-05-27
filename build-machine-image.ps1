@@ -205,7 +205,7 @@ function Invoke-BootstrapExecution {
         }
         $adminPassword = (Get-AdminPassword -platform $platform -imageKey $imageKey);
         if (-not ($adminPassword)) {
-          Write-Output -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform);
+          Write-Output -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}, using: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
           exit 1;
         } else {
           Write-Output -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found at: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
@@ -894,7 +894,8 @@ function Get-AdminPassword {
       [xml]$imageUnattendFileXml = [xml]$streamReader.ReadToEnd();
       Write-Debug -Message ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
     } catch {
-      Write-Debug -Message ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      Write-Output -InputObject ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      throw;
     }
     if ($imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.PlainText.InnerText -eq 'false') {
       return [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText));
