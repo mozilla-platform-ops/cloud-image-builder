@@ -449,7 +449,7 @@ function Update-RequiredModules {
     [hashtable[]] $requiredModules = @(
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.78'
+        'version' = '0.0.79'
       },
       @{
         'module' = 'powershell-yaml';
@@ -895,6 +895,9 @@ function Get-AdminPassword {
       Write-Debug -Message ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
     } catch {
       Write-Debug -Message ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+    }
+    if ($imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.PlainText.InnerText -eq 'false') {
+      return [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText));
     }
     return $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
   }
