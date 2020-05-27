@@ -134,6 +134,7 @@ if purgeRelopsResources:
     azurePurgeTaskIds['relops'] = slugid.nice()
 if purgeTaskclusterResources:
     azurePurgeTaskIds['taskcluster-staging-workers-us-central'] = slugid.nice()
+    azurePurgeTaskIds['taskcluster-production-workers-us-central'] = slugid.nice()
 createTask(
     queue = queue,
     taskId = slugid.nice(),
