@@ -897,10 +897,11 @@ function Get-AdminPassword {
       Write-Output -InputObject ('{0} :: unattend file for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
       throw;
     }
-    if ($imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.PlainText.InnerText -eq 'false') {
-      return [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText));
+    $administratorPassword = (($imageUnattendFileXml.unattend.settings | ? { $_.pass -eq 'oobeSystem' }).component | ? { $_.name -eq 'Microsoft-Windows-Shell-Setup' }).UserAccounts.AdministratorPassword;
+    if ($administratorPassword.PlainText -eq 'false') {
+      return [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($administratorPassword.Value));
     }
-    return $imageUnattendFileXml.unattend.settings.component.UserAccounts.AdministratorPassword.Value.InnerText;
+    return $administratorPassword.Value;
   }
   end {
     Write-Debug -Message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
