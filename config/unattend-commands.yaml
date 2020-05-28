@@ -21,10 +21,8 @@
           - true
           - false
 - description: enable rdp firewall exception
-  command: >-
-      netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes
-      > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2>
-      C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  # yamllint disable-line rule:line-length
+  command: cmd /c netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
   target:
       cloud:
           - amazon
@@ -204,6 +202,20 @@
       gpu:
           - true
           - false
+- description: firewall allow inbound winrm over http
+# yamllint disable-line rule:line-length
+  command: netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
+  target:
+    cloud:
+      - azure
+    os:
+      - Windows 7
+    architecture:
+      - x86
+      - x86-64
+    gpu:
+      - true
+      - false
 - description: disable firewall for all network profiles
   command: >-
       netsh advfirewall set allprofiles state off >
@@ -234,20 +246,6 @@
       gpu:
           - true
           - false
-# - description: firewall allow inbound winrm over http
-# yamllint disable-line rule:line-length
-#   command: cmd /c netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
-#   target:
-#     cloud:
-#       - azure
-#     os:
-#       - Windows 7
-#     architecture:
-#       - x86
-#       - x86-64
-#     gpu:
-#       - true
-#       - false
 # - description: enable powershell remoting (winrm) over http
 #   command: >-
 #       winrm quickconfig -quiet -transport:http -force >
