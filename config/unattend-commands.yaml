@@ -204,6 +204,22 @@
       gpu:
           - true
           - false
+- description: disable firewall for all network profiles
+  command: >-
+      netsh advfirewall set allprofiles state off >
+      C:\log\unattend-disable-firewall-stdout.log 2>
+      C:\log\unattend-disable-firewall-stderr.log
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 7
+      architecture:
+          - x86
+          - x86-64
+      gpu:
+          - true
+          - false
 - description: enable winrm on windows 7
   # yamllint disable-line rule:line-length
   command: powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-Expression -Command (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/enable-winrm.ps1');" > C:\log\unattend-enable-winrm-stdout.log 2> C:\log\unattend-enable-winrm-stderr.log
