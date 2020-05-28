@@ -31,7 +31,7 @@
           - azure
           - google
       os:
-          # - Windows 7
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -169,7 +169,29 @@
       cloud:
           - azure
       os:
-          # - Windows 7
+          - Windows 7
+          - Windows 8.1
+          - Windows 10
+          - Windows Server 2012 R2
+          - Windows Server 2016
+          - Windows Server 2019
+          - Windows Server
+      architecture:
+          - x86
+          - x86-64
+      gpu:
+          - true
+          - false
+- description: >-
+    enable file and printer sharing firewall exception
+    (allows icmp response on azure vnet)
+  # yamllint disable-line rule:line-length
+  command: netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes > C:\log\unattend-enable-file-printer-sharing-firewall-exception-stdout.log 2> C:\log\unattend-enable-file-printer-sharing-firewall-exception-stderr.log
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -250,25 +272,3 @@
 #     gpu:
 #       - true
 #       - false
-- description: >-
-    enable file and printer sharing firewall exception
-    (allows icmp response on azure vnet)
-  # yamllint disable-line rule:line-length
-  command: netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes > C:\log\unattend-enable-file-printer-sharing-firewall-exception-stdout.log 2> C:\log\unattend-enable-file-printer-sharing-firewall-exception-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          # - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
