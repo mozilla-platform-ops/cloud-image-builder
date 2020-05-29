@@ -66,7 +66,7 @@ $commands = @(
     'stderr' = 'C:\log\unattend-winrm-set-service-auto-start-stderr.log'
   },
   @{
-    'executable' = 'C:\Windows\System32\netsh.exe';
+    'executable' = 'C:\Windows\System32\net.exe';
     'arguments' = @('start', 'winrm');
     'stdout' = 'C:\log\unattend-net-start-winrm-stdout.log';
     'stderr' = 'C:\log\unattend-net-start-winrm-stderr.log'
