@@ -270,6 +270,7 @@ function Invoke-BootstrapExecution {
         }
         $invocationResponse = $null;
         $invocationAttempt = 0;
+        $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
         do {
           $invocationAttempt += 1;
           # run remote bootstrap scripts over winrm
@@ -292,11 +293,14 @@ function Invoke-BootstrapExecution {
               Write-Output -InputObject ('error: no response received during execution of bootstrap commands over winrm on attempt {0}' -f $invocationAttempt);
             }
           }
+          $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
         } while (
-          # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
-          # intervention on the host instance to enable the winrm connection or connection issue debugging.
-          ($invocationResponse -eq $null) -or
-          ($invocationResponse -match 'WinRMOperationTimeout')
+          ($statuses[$statuses.Count - 1].Code -ne 'PowerState/stopped') -and (
+            # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
+            # intervention on the host instance to enable the winrm connection or connection issue debugging.
+            ($invocationResponse -eq $null) -or
+            ($invocationResponse -match 'WinRMOperationTimeout')
+          )
         )
         # modify azure security group to remove public ip of task instance from winrm exceptions
         $allowedIps = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
