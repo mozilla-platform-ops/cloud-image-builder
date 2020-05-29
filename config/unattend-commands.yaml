@@ -21,17 +21,15 @@
           - true
           - false
 - description: enable rdp firewall exception
-  command: >-
-      netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes
-      > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2>
-      C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  # yamllint disable-line rule:line-length
+  command: netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
   target:
       cloud:
           - amazon
           - azure
           - google
       os:
-          # - Windows 7
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -169,7 +167,7 @@
       cloud:
           - azure
       os:
-          # - Windows 7
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -182,224 +180,72 @@
       gpu:
           - true
           - false
-- description: set network profile to private
+- description: >-
+    enable file and printer sharing firewall exception
+    (allows icmp response on azure vnet)
   # yamllint disable-line rule:line-length
-  command: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -Command "& { Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles' | Set-ItemProperty -Name 'Category' -Value 1 }"
+  command: netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes > C:\log\unattend-enable-file-printer-sharing-firewall-exception-stdout.log 2> C:\log\unattend-enable-file-printer-sharing-firewall-exception-stderr.log
   target:
       cloud:
           - azure
       os:
           - Windows 7
+          - Windows 8.1
+          - Windows 10
+          - Windows Server 2012 R2
+          - Windows Server 2016
+          - Windows Server 2019
+          - Windows Server
       architecture:
           - x86
           - x86-64
       gpu:
           - true
           - false
-- description: winrm quickconfig quiet
-  command: >-
-      winrm quickconfig -q >
-      C:\log\unattend-winrm-quickconfig-quiet-stdout.log 2>
-      C:\log\unattend-winrm-quickconfig-quiet-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm quickconfig transport http
-  command: >-
-      winrm quickconfig -transport:http >
-      C:\log\unattend-winrm-quickconfig-transport-http-stdout.log 2>
-      C:\log\unattend-winrm-quickconfig-transport-http-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm set max timeout
-  command: >-
-      winrm set winrm/config @{MaxTimeoutms="1800000"} >
-      C:\log\unattend-winrm-set-max-timeout-stdout.log 2>
-      C:\log\unattend-winrm-set-max-timeout-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm set winrs shell memory
-  command: >-
-      winrm set winrm/config/winrs @{MaxMemoryPerShellMB="2048"} >
-      C:\log\unattend-winrm-set-winrs-shell-memory-stdout.log 2>
-      C:\log\unattend-winrm-set-winrs-shell-memory-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm set service allow unencrypted
-  command: >-
-      winrm set winrm/config/service @{AllowUnencrypted="true"} >
-      C:\log\unattend-winrm-set-service-allow-unencrypted-stdout.log 2>
-      C:\log\unattend-winrm-set-service-allow-unencrypted-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm set service auth basic
-  command: >-
-      winrm set winrm/config/service/auth @{Basic="true"} >
-      C:\log\unattend-winrm-set-service-auth-basic-stdout.log 2>
-      C:\log\unattend-winrm-set-service-auth-basic-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm set client auth basic
-  command: >-
-      winrm set winrm/config/client/auth @{Basic="true"} >
-      C:\log\unattend-winrm-set-client-auth-basic-stdout.log 2>
-      C:\log\unattend-winrm-set-client-auth-basic-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: winrm set client trusted hosts
-  command: >-
-      winrm set winrm/config/client @{TrustedHosts="*"} >
-      C:\log\unattend-winrm-set-client-trusted-hosts-stdout.log 2>
-      C:\log\unattend-winrm-set-client-trusted-hosts-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: stop winrm service
-  command: cmd /c net stop winrm
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: set winrm service auto start
-  command: sc config winrm start= auto
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-- description: start winrm service
-  command: cmd /c net start winrm
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-# disabling the windows 7 firewall below is a hack to get winrm working after
-# sysprep completes. it would be preferable to use a firewall exception for
-# inbound tcp on port 5985 (winrm http) on the firewall public profile, but for
-# some reason, that exception is not enough to allow inbound winrm connections.
-# the firewall should be re-enabled as part of the bootstrap process and in any
-# case, the azure security group firewalls remain in place, irrespective of
-# local system firewall state.
-- description: disable firewall for all network profiles
-  command: >-
-      netsh advfirewall set allprofiles state off >
-      C:\log\unattend-disable-firewall-stdout.log 2>
-      C:\log\unattend-disable-firewall-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 7
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
-# - description: firewall allow inbound winrm over http
+- description: firewall allow inbound winrm over http
 # yamllint disable-line rule:line-length
-#   command: cmd /c netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
+  command: netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 7
+      architecture:
+          - x86
+          - x86-64
+      gpu:
+          - true
+          - false
+# - description: disable firewall for all network profiles
+#   command: >-
+#       netsh advfirewall set allprofiles state off >
+#       C:\log\unattend-disable-firewall-stdout.log 2>
+#       C:\log\unattend-disable-firewall-stderr.log
 #   target:
-#     cloud:
-#       - azure
-#     os:
-#       - Windows 7
-#     architecture:
-#       - x86
-#       - x86-64
-#     gpu:
-#       - true
-#       - false
+#       cloud:
+#           - azure
+#       os:
+#           - Windows 7
+#       architecture:
+#           - x86
+#           - x86-64
+#       gpu:
+#           - true
+#           - false
+# - description: enable winrm on windows 7
+# yamllint disable-line rule:line-length
+#   command: powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-Expression -Command (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/enable-winrm.ps1');" > C:\log\unattend-enable-winrm-stdout.log 2> C:\log\unattend-enable-winrm-stderr.log
+#   target:
+#       cloud:
+#           - azure
+#       os:
+#           - Windows 7
+#       architecture:
+#           - x86
+#           - x86-64
+#       gpu:
+#           - true
+#           - false
 # - description: enable powershell remoting (winrm) over http
 #   command: >-
 #       winrm quickconfig -quiet -transport:http -force >
@@ -440,25 +286,3 @@
 #     gpu:
 #       - true
 #       - false
-- description: >-
-    enable file and printer sharing firewall exception
-    (allows icmp response on azure vnet)
-  # yamllint disable-line rule:line-length
-  command: netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes > C:\log\unattend-enable-file-printer-sharing-firewall-exception-stdout.log 2> C:\log\unattend-enable-file-printer-sharing-firewall-exception-stderr.log
-  target:
-      cloud:
-          - azure
-      os:
-          # - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false

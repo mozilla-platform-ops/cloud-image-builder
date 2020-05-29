@@ -449,7 +449,7 @@ function Update-RequiredModules {
     [hashtable[]] $requiredModules = @(
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.79'
+        'version' = '0.0.80'
       },
       @{
         'module' = 'powershell-yaml';
@@ -899,7 +899,7 @@ function Get-AdminPassword {
     }
     $administratorPassword = (($imageUnattendFileXml.unattend.settings | ? { $_.pass -eq 'oobeSystem' }).component | ? { $_.name -eq 'Microsoft-Windows-Shell-Setup' }).UserAccounts.AdministratorPassword;
     if ($administratorPassword.PlainText -eq 'false') {
-      return [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($administratorPassword.Value));
+      return (([System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($administratorPassword.Value))) -replace "`0", '').Replace('AdministratorPassword', '');
     }
     return $administratorPassword.Value;
   }
