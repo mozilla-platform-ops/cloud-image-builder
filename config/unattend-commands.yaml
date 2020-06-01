@@ -20,28 +20,6 @@
       gpu:
           - true
           - false
-- description: enable rdp firewall exception
-  # yamllint disable-line rule:line-length
-  command: netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
-  target:
-      cloud:
-          - amazon
-          - azure
-          - google
-      os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
 - description: disable network profile prompt
   command: >-
       reg add HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff
@@ -202,14 +180,50 @@
       gpu:
           - true
           - false
-- description: firewall allow inbound winrm over http
+- description: firewall create rule inbound winrm over http for public profile
 # yamllint disable-line rule:line-length
-  command: netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-allow-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-allow-inbound-winrm-over-http-stderr.log
+  command: netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public > C:\log\unattend-firewall-create-rule-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-create-rule-inbound-winrm-over-http-stderr.log
   target:
       cloud:
           - azure
       os:
           - Windows 7
+      architecture:
+          - x86
+          - x86-64
+      gpu:
+          - true
+          - false
+- description: firewall enable rule inbound winrm over http for all profiles
+# yamllint disable-line rule:line-length
+  command: netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes profile=any > C:\log\unattend-firewall-enable-rule-inbound-winrm-over-http-stdout.log 2> C:\log\unattend-firewall-enable-rule-inbound-winrm-over-http-stderr.log
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 7
+      architecture:
+          - x86
+          - x86-64
+      gpu:
+          - true
+          - false
+- description: enable rdp firewall exception
+  # yamllint disable-line rule:line-length
+  command: netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  target:
+      cloud:
+          - amazon
+          - azure
+          - google
+      os:
+          - Windows 7
+          - Windows 8.1
+          - Windows 10
+          - Windows Server 2012 R2
+          - Windows Server 2016
+          - Windows Server 2019
+          - Windows Server
       architecture:
           - x86
           - x86-64

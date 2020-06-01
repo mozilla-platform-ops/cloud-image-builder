@@ -418,3 +418,61 @@
       - platform: url
         # yamllint disable-line rule:line-length
         url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1
+- name: dotNetFx45_Full_setup.exe
+  savepath: Windows\Temp\dotNetFx45_Full_setup.exe
+  unattend:
+      - description: create dotNetFx45 log folder
+        command: cmd /c mkdir C:\log\dotNetFx45
+      - description: extract powershell 5.1 cab files
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
+  target:
+      cloud:
+          - amazon
+          - azure
+          - google
+      os:
+          - Windows 7
+      architecture:
+          - x86
+      gpu:
+          - true
+          - false
+  sources:
+      - platform: amazon
+        bucket: windows-ami-builder
+        key: package/dotNetFx45_Full_setup.exe
+- name: Win7-KB3191566-x86.msu
+  savepath: Windows\Temp\Win7-KB3191566-x86.msu
+  unattend:
+      - description: extract powershell 5.1 cab files
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait expand -F:* C:\Windows\Temp\Win7-KB3191566-x86.msu C:\Windows\Temp\wmf51
+      - description: install kb2872035
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /NoRestart
+      - description: install kb2872047
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /NoRestart
+      - description: install kb3033929
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /NoRestart
+      - description: install kb3191566
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /NoRestart
+  target:
+      cloud:
+          - amazon
+          - azure
+          - google
+      os:
+          - Windows 7
+      architecture:
+          - x86
+      gpu:
+          - true
+          - false
+  sources:
+      - platform: amazon
+        bucket: windows-ami-builder
+        key: package/Win7-KB3191566-x86.msu
