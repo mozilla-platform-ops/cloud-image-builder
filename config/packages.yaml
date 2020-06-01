@@ -445,21 +445,23 @@
 - name: Win7-KB3191566-x86.msu
   savepath: Windows\Temp\Win7-KB3191566-x86.msu
   unattend:
+      - description: create extraction folder
+        command: cmd /c mkdir C:\log\wmf51
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait expand -F:* C:\Windows\Temp\Win7-KB3191566-x86.msu C:\Windows\Temp\wmf51
       - description: install kb2872035
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /NoRestart
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb2872035-stdout.log
       - description: install kb2872047
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /NoRestart
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb2872047-stdout.log
       - description: install kb3033929
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /NoRestart
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3033929-stdout.log
       - description: install kb3191566
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /NoRestart
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3191566-stdout.log
   target:
       cloud:
           - amazon
