@@ -348,7 +348,6 @@
           - Windows Server 2019
           - Windows Server
       architecture:
-          - x86
           - x86-64
       gpu:
           - true
@@ -425,7 +424,7 @@
         command: cmd /c mkdir C:\log\dotNetFx45
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
+        command: cmd /c start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
   target:
       cloud:
           - amazon
