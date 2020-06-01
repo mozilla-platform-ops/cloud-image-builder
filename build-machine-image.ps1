@@ -271,6 +271,7 @@ function Invoke-BootstrapExecution {
         $invocationResponse = $null;
         $invocationAttempt = 0;
         $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
+        $lastStatus = $statuses[$statuses.Count - 1];
         do {
           $invocationAttempt += 1;
           # run remote bootstrap scripts over winrm
@@ -294,8 +295,10 @@ function Invoke-BootstrapExecution {
             }
           }
           $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
+          $lastStatus = $statuses[$statuses.Count - 1];
+          Write-Output -InputObject ('{0}/{1} has {2} status tags and last status: {3} ({4})' -f $groupName, $instanceName, $statuses.Count, $lastStatus.DisplayStatus, $lastStatus.Code);
         } while (
-          ($statuses[$statuses.Count - 1].Code -ne 'PowerState/stopped') -and (
+          ($lastStatus.Code -ne 'PowerState/stopped') -and (
             # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
             # intervention on the host instance to enable the winrm connection or connection issue debugging.
             ($invocationResponse -eq $null) -or
