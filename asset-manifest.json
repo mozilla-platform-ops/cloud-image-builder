@@ -1,25 +1,25 @@
 {
   "files": {
     "main.css": "/cloud-image-builder/static/css/main.5ecd60fb.chunk.css",
-    "main.js": "/cloud-image-builder/static/js/main.8d3fcf9b.chunk.js",
-    "main.js.map": "/cloud-image-builder/static/js/main.8d3fcf9b.chunk.js.map",
+    "main.js": "/cloud-image-builder/static/js/main.a606bab3.chunk.js",
+    "main.js.map": "/cloud-image-builder/static/js/main.a606bab3.chunk.js.map",
     "runtime-main.js": "/cloud-image-builder/static/js/runtime-main.17bb4560.js",
     "runtime-main.js.map": "/cloud-image-builder/static/js/runtime-main.17bb4560.js.map",
-    "static/css/2.de424728.chunk.css": "/cloud-image-builder/static/css/2.de424728.chunk.css",
-    "static/js/2.af092b88.chunk.js": "/cloud-image-builder/static/js/2.af092b88.chunk.js",
-    "static/js/2.af092b88.chunk.js.map": "/cloud-image-builder/static/js/2.af092b88.chunk.js.map",
+    "static/css/2.5bd18ad6.chunk.css": "/cloud-image-builder/static/css/2.5bd18ad6.chunk.css",
+    "static/js/2.0724bba4.chunk.js": "/cloud-image-builder/static/js/2.0724bba4.chunk.js",
+    "static/js/2.0724bba4.chunk.js.map": "/cloud-image-builder/static/js/2.0724bba4.chunk.js.map",
     "index.html": "/cloud-image-builder/index.html",
-    "precache-manifest.b8409307217d0506cfb85a6e96a76111.js": "/cloud-image-builder/precache-manifest.b8409307217d0506cfb85a6e96a76111.js",
+    "precache-manifest.01bf861752173eb272f9687c99a4a7ac.js": "/cloud-image-builder/precache-manifest.01bf861752173eb272f9687c99a4a7ac.js",
     "service-worker.js": "/cloud-image-builder/service-worker.js",
-    "static/css/2.de424728.chunk.css.map": "/cloud-image-builder/static/css/2.de424728.chunk.css.map",
+    "static/css/2.5bd18ad6.chunk.css.map": "/cloud-image-builder/static/css/2.5bd18ad6.chunk.css.map",
     "static/css/main.5ecd60fb.chunk.css.map": "/cloud-image-builder/static/css/main.5ecd60fb.chunk.css.map",
-    "static/js/2.af092b88.chunk.js.LICENSE.txt": "/cloud-image-builder/static/js/2.af092b88.chunk.js.LICENSE.txt"
+    "static/js/2.0724bba4.chunk.js.LICENSE.txt": "/cloud-image-builder/static/js/2.0724bba4.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.17bb4560.js",
-    "static/css/2.de424728.chunk.css",
-    "static/js/2.af092b88.chunk.js",
+    "static/css/2.5bd18ad6.chunk.css",
+    "static/js/2.0724bba4.chunk.js",
     "static/css/main.5ecd60fb.chunk.css",
-    "static/js/main.8d3fcf9b.chunk.js"
+    "static/js/main.a606bab3.chunk.js"
   ]
 }
