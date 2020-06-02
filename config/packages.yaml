@@ -6,7 +6,7 @@
         command: cmd /c if not exist C:\log mkdir C:\log
       - description: install stackdriver
         command: >-
-            start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
+            cmd /c start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
             ^> C:\log\unattend-install-stackdriver-stdout.log
             ^2^> C:\log\unattend-install-stackdriver-stderr.log
   target:
@@ -39,7 +39,7 @@
         command: cmd /c if not exist C:\log mkdir C:\log
       - description: install nxlog
         command: >-
-            start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
+            cmd /c start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
             ^> C:\log\unattend-install-nxlog-stdout.log
             ^2^> C:\log\unattend-install-nxlog-stderr.log
   target:
