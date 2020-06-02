@@ -23,7 +23,7 @@ class App extends React.Component {
     settings: {
       fluid: (this.cookies.get('fluid') === null) ? true : (this.cookies.get('fluid') === 'true'),
       showAllTasks: (this.cookies.get('showAllTasks') === null) ? false : (this.cookies.get('showAllTasks') === 'true'),
-      commitCount: (this.cookies.get('commitCount') === null) ? 5 : parseInt(this.cookies.get('commitCount'))
+      commitLimit: (this.cookies.get('commitLimit') === null) ? 5 : parseInt(this.cookies.get('commitLimit'))
     }
   };
   /*
@@ -43,8 +43,8 @@ class App extends React.Component {
     if (this.cookies.get('showAllTasks') === null) {
       this.cookies.set('showAllTasks', false, { path: '/', sameSite: 'strict' });
     }
-    if (this.cookies.get('commitCount') === null) {
-      this.cookies.set('commitCount', 5, { path: '/', sameSite: 'strict' });
+    if (this.cookies.get('commitLimit') === null) {
+      this.cookies.set('commitLimit', 5, { path: '/', sameSite: 'strict' });
     }
     this.getCommits();
 
@@ -56,7 +56,6 @@ class App extends React.Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
-    //this.cookies.set('commitCount', this.state.commitCount, { path: '/', sameSite: 'strict' });
   }
 
   getCommits() {
@@ -69,7 +68,7 @@ class App extends React.Component {
     .then((githubCommits) => {
       if (githubCommits.length) {
         this.setState(state => ({
-          commits: githubCommits.slice(0, (state.settings.commitCount)).map(c => ({
+          commits: githubCommits.slice(0, state.settings.commitLimit).map(c => ({
             sha: c.sha,
             url: c.html_url,
             author: {...c.commit.author, ...{ id: c.author.id, username: c.author.login, avatar: c.author.avatar_url }},
@@ -131,19 +130,18 @@ class App extends React.Component {
             </strong>
             <br  />
             <Slider
-              defaultValue={this.state.settings.commitCount}
+              defaultValue={this.state.settings.commitLimit}
               min={1}
               max={30}
               onChange={
-                (commitCount) => {
-                  //console.log('commit count changed to: ', commitCount);
-                  this.cookies.set('commitCount', commitCount, { path: '/', sameSite: 'strict' });
-                  this.setState(state => ({settings: { commitCount: commitCount, fluid: state.settings.fluid, showAllTasks: state.settings.showAllTasks }}));
+                (commitLimit) => {
+                  this.cookies.set('commitLimit', commitLimit, { path: '/', sameSite: 'strict' });
+                  this.setState(state => ({settings: { commitLimit: commitLimit, fluid: state.settings.fluid, showAllTasks: state.settings.showAllTasks }}));
                   this.getCommits();
                 }
               }
               style={{ marginTop: '20px' }} />
-            latest commits ({this.state.settings.commitCount})
+            limit commits ({this.state.settings.commitLimit})
             <br style={{ marginBottom: '20px' }} />
             <Form.Check 
               type="switch"
