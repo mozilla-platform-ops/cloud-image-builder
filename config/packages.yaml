@@ -471,7 +471,7 @@
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3033929-stdout.log
       - description: install kb3191566
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /LogPath:C:\log\dism-kb3191566-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3191566-stdout.log
   target:
       cloud:
           - amazon
