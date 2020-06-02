@@ -5,10 +5,7 @@
       - description: create log folder
         command: cmd /c if not exist C:\log mkdir C:\log
       - description: install stackdriver
-        command: >-
-            cmd /c start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
-            ^> C:\log\unattend-install-stackdriver-stdout.log
-            ^2^> C:\log\unattend-install-stackdriver-stderr.log
+        command: C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
   target:
       cloud:
           - amazon
@@ -38,10 +35,8 @@
       - description: create log folder
         command: cmd /c if not exist C:\log mkdir C:\log
       - description: install nxlog
-        command: >-
-            cmd /c start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
-            ^> C:\log\unattend-install-nxlog-stdout.log
-            ^2^> C:\log\unattend-install-nxlog-stderr.log
+        # yamllint disable-line rule:line-length
+        command: msiexec /i C:\Windows\Temp\nxlog-ce.msi /q /L*v C:\log\unattend-install-nxlog-stdout.log
   target:
       cloud:
           - amazon
