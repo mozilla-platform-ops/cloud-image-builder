@@ -18,7 +18,7 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.82' },
+  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.84' },
   @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
@@ -151,6 +151,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -productKey $productKey `
         -timeZone $(if ($config.image.timezone) { $config.image.timezone } else { 'UTC' }) `
         -administratorPassword $administratorPassword `
+        -obfuscatePassword:$(if ($config.image.obfuscate) { $true } else { $false }) `
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `

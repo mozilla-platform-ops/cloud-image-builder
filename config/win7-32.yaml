@@ -13,6 +13,7 @@ image:
     format: VHD
     type: Fixed
     rdp: true
+    obfuscate: true
     target:
         platform: amazon
         bucket: windows-ami-builder

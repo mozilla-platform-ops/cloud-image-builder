@@ -2,9 +2,13 @@
 - name: StackdriverLogging-v1-9.exe
   savepath: Windows\Temp\StackdriverLogging-v1-9.exe
   unattend:
+      - description: create log folder
+        command: cmd /c if not exist C:\log mkdir C:\log
       - description: install stackdriver
-        # yamllint disable-line rule:line-length
-        command: cmd /c start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
+        command: >-
+            start /wait C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
+            ^> C:\log\unattend-install-stackdriver-stdout.log
+            ^2^> C:\log\unattend-install-stackdriver-stderr.log
   target:
       cloud:
           - amazon
@@ -31,9 +35,13 @@
 - name: nxlog-ce.msi
   savepath: Windows\Temp\nxlog-ce.msi
   unattend:
+      - description: create log folder
+        command: cmd /c if not exist C:\log mkdir C:\log
       - description: install nxlog
-        # yamllint disable-line rule:line-length
-        command: cmd /c start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
+        command: >-
+            start /wait msiexec /i C:\Windows\Temp\nxlog-ce.msi /quiet
+            ^> C:\log\unattend-install-nxlog-stdout.log
+            ^2^> C:\log\unattend-install-nxlog-stderr.log
   target:
       cloud:
           - amazon
@@ -395,9 +403,9 @@
   savepath: Windows\Temp\rundsc.ps1
   unattend:
       - description: create log folder
-        command: cmd /c mkdir C:\log
+        command: cmd /c if not exist C:\log mkdir C:\log
       - description: create dsc folder
-        command: cmd /c mkdir C:\dsc
+        command: cmd /c if not exist C:\dsc mkdir C:\dsc
       - description: install occ trigger script
         command: cmd /c move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
       - description: create occ scheduled task
@@ -421,10 +429,10 @@
   savepath: Windows\Temp\dotNetFx45_Full_setup.exe
   unattend:
       - description: create dotNetFx45 log folder
-        command: cmd /c mkdir C:\log\dotNetFx45
+        command: cmd /c if not exist C:\log\dotNetFx45 mkdir C:\log\dotNetFx45
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
+        command: start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
   target:
       cloud:
           - amazon
@@ -445,7 +453,10 @@
   savepath: Windows\Temp\Win7-KB3191566-x86.msu
   unattend:
       - description: create extraction folder
-        command: cmd /c mkdir C:\Windows\Temp\wmf51
+        # yamllint disable-line rule:line-length
+        command: cmd /c if not exist C:\Windows\Temp\wmf51 mkdir C:\Windows\Temp\wmf51
+      - description: empty extraction folder
+        command: cmd /c del /q C:\Windows\Temp\wmf51\*
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait expand -F:* C:\Windows\Temp\Win7-KB3191566-x86.msu C:\Windows\Temp\wmf51
@@ -460,7 +471,7 @@
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3033929-stdout.log
       - description: install kb3191566
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3191566-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /LogPath:C:\log\dism-kb3191566-stdout.log
   target:
       cloud:
           - amazon
