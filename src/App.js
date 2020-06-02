@@ -10,6 +10,8 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Cookies from 'universal-cookie';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 class App extends React.Component {
 
@@ -19,8 +21,9 @@ class App extends React.Component {
   state = {
     commits: [],
     settings: {
-      fluid: this.cookies.get('fluid'),
-      showAllTasks: this.cookies.get('showAllTasks')
+      fluid: (this.cookies.get('fluid') === null) ? true : (this.cookies.get('fluid') === 'true'),
+      showAllTasks: (this.cookies.get('showAllTasks') === null) ? false : (this.cookies.get('showAllTasks') === 'true'),
+      commitCount: (this.cookies.get('commitCount') === null) ? 5 : parseInt(this.cookies.get('commitCount'))
     }
   };
   /*
@@ -35,7 +38,13 @@ class App extends React.Component {
 
   componentDidMount() {
     if (this.cookies.get('fluid') === null) {
-      this.cookies.set('fluid', true, { path: '/' });
+      this.cookies.set('fluid', true, { path: '/', sameSite: 'strict' });
+    }
+    if (this.cookies.get('showAllTasks') === null) {
+      this.cookies.set('showAllTasks', false, { path: '/', sameSite: 'strict' });
+    }
+    if (this.cookies.get('commitCount') === null) {
+      this.cookies.set('commitCount', 5, { path: '/', sameSite: 'strict' });
     }
     this.getCommits();
 
@@ -47,6 +56,7 @@ class App extends React.Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
+    //this.cookies.set('commitCount', this.state.commitCount, { path: '/', sameSite: 'strict' });
   }
 
   getCommits() {
@@ -59,7 +69,7 @@ class App extends React.Component {
     .then((githubCommits) => {
       if (githubCommits.length) {
         this.setState(state => ({
-          commits: githubCommits.map(c => ({
+          commits: githubCommits.slice(0, (state.settings.commitCount)).map(c => ({
             sha: c.sha,
             url: c.html_url,
             author: {...c.commit.author, ...{ id: c.author.id, username: c.author.login, avatar: c.author.avatar_url }},
@@ -70,7 +80,7 @@ class App extends React.Component {
           latest: githubCommits[0].sha
         }));
       } else {
-        console.log(githubCommits)
+        //console.log(githubCommits)
       }
     })
     .catch(console.log);
@@ -100,6 +110,7 @@ class App extends React.Component {
             {
               Object.keys(StatusBadgeVariantMap).map(status => (
                 <Badge
+                  key={status}
                   style={{ display: 'block', margin: '10px 20px' }}
                   variant={StatusBadgeVariantMap[status]}>
                   {status}
@@ -118,15 +129,30 @@ class App extends React.Component {
             <strong>
               display settings:
             </strong>
-            <br />
+            <br  />
+            <Slider
+              defaultValue={this.state.settings.commitCount}
+              min={1}
+              max={30}
+              onChange={
+                (commitCount) => {
+                  //console.log('commit count changed to: ', commitCount);
+                  this.cookies.set('commitCount', commitCount, { path: '/', sameSite: 'strict' });
+                  this.setState(state => ({settings: { commitCount: commitCount, fluid: state.settings.fluid, showAllTasks: state.settings.showAllTasks }}));
+                  this.getCommits();
+                }
+              }
+              style={{ marginTop: '20px' }} />
+            latest commits ({this.state.settings.commitCount})
+            <br style={{ marginBottom: '20px' }} />
             <Form.Check 
               type="switch"
               id="showAllTasks"
-              label="show all tasks"
+              label="all tasks"
               checked={this.state.settings.showAllTasks}
               onChange={
                 () => {
-                  this.cookies.set('showAllTasks', (!this.state.settings.showAllTasks), { path: '/' });
+                  this.cookies.set('showAllTasks', (!this.state.settings.showAllTasks), { path: '/', sameSite: 'strict' });
                   this.setState(state => ({settings: { showAllTasks: !state.settings.showAllTasks, fluid: state.settings.fluid }}));
                 }
               }
@@ -139,7 +165,7 @@ class App extends React.Component {
               checked={this.state.settings.fluid}
               onChange={
                 () => {
-                  this.cookies.set('fluid', (!this.state.settings.fluid), { path: '/' });
+                  this.cookies.set('fluid', (!this.state.settings.fluid), { path: '/', sameSite: 'strict' });
                   this.setState(state => ({settings: { fluid: !state.settings.fluid, showAllTasks: state.settings.showAllTasks }}));
                 }
               }

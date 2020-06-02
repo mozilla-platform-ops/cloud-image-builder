@@ -82,13 +82,13 @@ class Run extends React.Component {
                 }, {})
               });
             } else {
-              console.log(container);
+              //console.log(container);
             }
           })
           .catch(console.log);
         }
       } else {
-        console.log(container);
+        //console.log(container);
       }
     })
     .catch(console.log);

@@ -134,6 +134,7 @@ class Commit extends React.Component {
               ? (
                   Object.keys(this.state.summary.task).filter(k => Object.keys(this.state.summary.task[k]).length > 0).map(k => (
                     <Badge
+                      key={k}
                       style={{ marginLeft: '0.3em' }}
                       variant={StatusBadgeVariantMap[k]}>
                       {Object.keys(this.state.summary.task[k]).length}
@@ -166,6 +167,7 @@ class Commit extends React.Component {
                 {
                   Object.keys(this.state.summary.image).sort().map(pool => (
                     <Button
+                      key={pool}
                       style={{ marginLeft: '0.3em' }}
                       variant="outline-info"
                       size="sm">

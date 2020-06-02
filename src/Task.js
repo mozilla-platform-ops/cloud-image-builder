@@ -52,6 +52,7 @@ class Task extends React.Component {
         {
           Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
             <Badge
+              key={state}
               style={{ margin: '0 1px' }}
               variant={StatusBadgeVariantMap[state]}
               title={state + ': ' + this.props.task.status.runs.filter(r => r.state === state).length}>

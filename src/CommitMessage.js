@@ -13,8 +13,8 @@ class CommitMessage extends React.Component {
             !line.match((new RegExp ('^(pool-deploy|overwrite-disk-image|overwrite-machine-image|disable-cleanup|purge-taskcluster-resources|no-ci|no-taskcluster-ci|no-travis-ci)$', 'i')))
           )).map((line, lI) => (
             (lI === 0)
-              ? <strong>{line}<br /></strong>
-              : <span>{line}<br /></span>
+              ? <strong key={lI}>{line}<br /></strong>
+              : <span key={lI}>{line}<br /></span>
           ))
         }
         {
@@ -26,6 +26,7 @@ class CommitMessage extends React.Component {
             ? (
                 (this.props.message.filter(line => (line.match(/^(pool-deploy|overwrite-disk-image|overwrite-machine-image|disable-cleanup|purge-taskcluster-resources|no-ci|no-taskcluster-ci|no-travis-ci)$/i)))).map(instruction => (
                   <Badge
+                    key={instruction}
                     style={{ marginRight: '0.7em' }}
                     variant={(['pool-deploy', 'overwrite-disk-image', 'overwrite-machine-image', 'disable-cleanup', 'purge-taskcluster-resources'].includes(instruction)) ? 'primary' : 'dark'}>
                     {instruction}
@@ -42,12 +43,13 @@ class CommitMessage extends React.Component {
           ['include', 'exclude'].map(inex => (
             (this.props.message.some(line => line.match((new RegExp ('^' + inex + ' (environment|key|pool|region)s: .*$', 'i')))))
               ? (
-                  <span>
+                  <span key={inex}>
                     {
                       ['environments', 'integrations', 'keys', 'pools', 'regions'].map(type => (
-                        this.props.message.filter(line => line.startsWith(inex + ' ' + type + ': ')).map(line => (
+                        this.props.message.filter(line => line.startsWith(inex + ' ' + type + ': ')).map((line, lI) => (
                           line.replace(inex + ' ' + type + ': ', '').split(', ').map(item => (
                             <Badge
+                              key={lI}
                               style={{ marginRight: '0.7em' }}
                               variant={(inex === 'include') ? 'info' : 'dark'}
                               title={inex + ' ' + type.slice(0, -1) + ': ' + item}>

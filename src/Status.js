@@ -148,6 +148,7 @@ class Status extends React.Component {
             (this.state.tasks.filter(t => t.status.state === status).length)
               ? (
                   <Badge
+                    key={status}
                     style={{ margin: '0 1px' }}
                     variant={StatusBadgeVariantMap[status]}
                     title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
@@ -158,10 +159,11 @@ class Status extends React.Component {
           ))
         }
         {
-          [0, 1, null].map(result => (
+          [0, 1, null].map((result, rI) => (
             (this.state.builds.filter(b => b.result === result).length)
               ? (
                   <Badge
+                    key={rI}
                     style={{ margin: '0 1px' }}
                     variant={(result === null) ? 'info' : StatusBadgeVariantMap[this.travisBuildResults[result]]}
                     title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
