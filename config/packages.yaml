@@ -336,9 +336,11 @@
 - name: WindowsAzureVmAgent.msi
   savepath: Windows\Temp\WindowsAzureVmAgent.msi
   unattend:
+      - description: create log folder
+        command: cmd /c if not exist C:\log mkdir C:\log
       - description: install azure agent
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /quiet
+        command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /q /L*v C:\log\unattend-install-vmagent-stdout.log
   target:
       cloud:
           - azure
@@ -427,7 +429,7 @@
         command: cmd /c if not exist C:\log\dotNetFx45 mkdir C:\log\dotNetFx45
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
-        command: start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
+        command: cmd /c start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
   target:
       cloud:
           - amazon
@@ -457,16 +459,16 @@
         command: cmd /c start /wait expand -F:* C:\Windows\Temp\Win7-KB3191566-x86.msu C:\Windows\Temp\wmf51
       - description: install kb2872035
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb2872035-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb2872035-stdout.log /NoRestart
       - description: install kb2872047
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb2872047-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb2872047-stdout.log /NoRestart
       - description: install kb3033929
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3033929-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3033929-stdout.log /NoRestart
       - description: install kb3191566
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /NoRestart /LogPath:C:\log\dism-kb3191566-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3191566-stdout.log
   target:
       cloud:
           - amazon

@@ -321,48 +321,13 @@ for platform in ['amazon', 'azure']:
                     else:
                         print('info: skipped machine image build task for {} {} {}'.format(platform, target['group'], key))
 
-                    #taggingTaskId = slugid.nice()
-                    #taggingTaskIdsForPool.append(taggingTaskId)
-                    #createTask(
-                    #    queue = queue,
-                    #    image = 'python',
-                    #    taskId = taggingTaskId,
-                    #    taskName = '03 :: tag {} {} {} machine image'.format(platform, target['group'], key),
-                    #    taskDescription = 'apply tags to {} {} {} machine image'.format(platform, target['group'], key),
-                    #    maxRunMinutes = 180,
-                    #    retries = 4,
-                    #    retriggerOnExitCodes = [ 123 ],
-                    #    dependencies = [ machineImageBuildTaskId ] if queueMachineImageBuild else [],
-                    #    provisioner = 'relops',
-                    #    workerType = 'decision',
-                    #    priority = 'low',
-                    #    features = {
-                    #        'taskclusterProxy': True
-                    #    },
-                    #    env = {
-                    #        'platform': platform,
-                    #        'group': target['group'],
-                    #        'key': key
-                    #    },
-                    #    commands = [
-                    #        '/bin/bash',
-                    #        '--login',
-                    #        '-c',
-                    #        'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml requests slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/tag-machine-images.py'.format(commitSha)
-                    #    ],
-                    #    scopes = [
-                    #        'secrets:get:project/relops/image-builder/dev'
-                    #    ],
-                    #    taskGroupId = taskGroupId)
-
-                # todo: remove this hack which exists because non-azure builds don't yet work
                 queueWorkerPoolConfigurationTask = platform in platformClient
                 if queueWorkerPoolConfigurationTask:
                     createTask(
                         queue = queue,
                         image = 'python',
                         taskId = slugid.nice(),
-                        taskName = '04 :: generate {} {}/{} worker pool configuration'.format(platform, pool['domain'], pool['variant']),
+                        taskName = '03 :: generate {} {}/{} worker pool configuration'.format(platform, pool['domain'], pool['variant']),
                         taskDescription = 'create worker pool configuration for {} {}/{} which can be added to worker manager'.format(platform, pool['domain'], pool['variant']),
                         maxRunMinutes = 180,
                         retries = 1,

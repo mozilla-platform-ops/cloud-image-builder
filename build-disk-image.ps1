@@ -141,7 +141,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $unattendGenerationAttemptCount = 0;
   do {
     $unattendGenerationAttemptCount += 1;
-    $commands = @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($unattendCommands | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
+    $commands = @($unattendCommands | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
     try {
       $administratorPassword = (New-Password);
       New-UnattendFile `
