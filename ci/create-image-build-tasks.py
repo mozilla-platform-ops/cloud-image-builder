@@ -288,6 +288,13 @@ for platform in ['amazon', 'azure']:
                             provisioner = 'relops',
                             workerType = 'win2019',
                             priority = 'low',
+                            artifacts = [
+                                {
+                                    'type': 'directory',
+                                    'name': 'public/instance-logs',
+                                    'path': 'instance-logs'
+                                }
+                            ],
                             osGroups = [
                                 'Administrators'
                             ],

@@ -298,7 +298,10 @@ function Invoke-BootstrapExecution {
           $lastStatus = $statuses[$statuses.Count - 1];
           Write-Output -InputObject ('{0}/{1} has {2} status tags and last status: {3} ({4})' -f $groupName, $instanceName, $statuses.Count, $lastStatus.DisplayStatus, $lastStatus.Code);
         } while (
-          ($lastStatus.Code -ne 'PowerState/stopped') -and (
+          (
+            ($lastStatus.Code -ne 'PowerState/stopped') -and
+            ($lastStatus.Code -ne 'PowerState/deallocated')
+          ) -and (
             # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
             # intervention on the host instance to enable the winrm connection or connection issue debugging.
             ($invocationResponse -eq $null) -or
@@ -915,6 +918,162 @@ function Get-AdminPassword {
   }
 }
 
+function Install-Dependencies {
+  param (
+    [hashtable[]] $dependencies = @(
+      @{
+        'name' = 'ruby-devkit';
+        'download' = @{
+          'source' = 'https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-2.6.6-1/rubyinstaller-devkit-2.6.6-1-x64.exe';
+          'target' = 'C:\Windows\Temp\rubyinstaller-devkit-2.6.6-1-x64.exe'
+        };
+        'install' = @{
+          'executable' = 'C:\Windows\Temp\rubyinstaller-devkit-2.6.6-1-x64.exe';
+          'arguments' = @(
+            '/verysilent',
+            '/log=C:\log\install-ruby-stdout.log'
+          );
+          'stdout' = 'C:\log\install-ruby-devkit-stdout.log';
+          'stderr' = 'C:\log\install-ruby-devkit-stderr.log';
+          'wait' = @{
+            'interval' = 10;
+            'timeout' = 180;
+          };
+        };
+        'validate' = @{
+          'paths' = @(
+            'C:\Ruby26-x64\bin\ruby.exe',
+            'C:\Ruby26-x64\bin\gem.cmd',
+            'C:\Ruby26-x64\msys64\var\log\pacman.log' # last entry in installation log
+          )
+        }
+      };
+      @{
+        'name' = 'papertrail-cli';
+        'install' = @{
+          'executable' = 'C:\Ruby26-x64\bin\gem.cmd';
+          'arguments' = @(
+            'install',
+            'papertrail-cli'
+          );
+          'stdout' = 'C:\log\install-papertrail-cli-stdout.log';
+          'stderr' = 'C:\log\install-papertrail-cli-stderr.log';
+        };
+        'validate' = @{
+          'paths' = @(
+            'C:\Ruby26-x64\bin\papertrail',
+            'C:\Ruby26-x64\bin\papertrail.bat'
+          )
+        }
+      }
+    ),
+    [int] $defaultTimeout = 60
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    foreach ($dependency in $dependencies) {
+      if (@($dependency.validate.paths | ? { (-not (Test-Path -Path $_ -ErrorAction SilentlyContinue)) }).Length) {
+        if ($dependency.ContainsKey('download') -and $dependency.download.ContainsKey('target') -and (-not (Test-Path -Path $dependency.download.target -ErrorAction SilentlyContinue))) {
+          try {
+            (New-Object Net.WebClient).DownloadFile($dependency.download.source, $dependency.download.target);
+          } catch {
+            Write-Output -InputObject ('{0} :: download of: {1}, to: {2}, failed. {3}' -f $($MyInvocation.MyCommand.Name), $dependency.download.source, $dependency.download.target, $_.Exception.Message);
+            exit 123;
+          }
+          if (Test-Path -Path $dependency.download.target -ErrorAction SilentlyContinue) {
+            Write-Output -InputObject ('{0} :: download of: {1}, to: {2}, suceeded.' -f $($MyInvocation.MyCommand.Name), $dependency.download.source, $dependency.download.target);
+          } else {
+            Write-Output -InputObject ('{0} :: download of: {1}, to: {2}, failed.' -f $($MyInvocation.MyCommand.Name), $dependency.download.source, $dependency.download.target);
+            exit 123;
+          }
+        }
+        $stopwatch = [Diagnostics.Stopwatch]::StartNew();
+        try {
+          $process = (Start-Process -FilePath $dependency.install.executable -ArgumentList $dependency.install.arguments -NoNewWindow -RedirectStandardOutput $dependency.install.stdout -RedirectStandardError $dependency.install.stderr -PassThru);
+          Wait-Process -InputObject $process; # see: https://stackoverflow.com/a/43728914/68115
+          Write-Output -InputObject ('{0} :: {1} - (`{2} {3}`) command exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($dependency.install.executable), $dependency.install.executable, ([string[]]$dependency.install.arguments -join ' '), $(if ($process.ExitCode -or ($process.ExitCode -eq 0)) { $process.ExitCode } else { '-' }), $(if ($process.TotalProcessorTime -or ($process.TotalProcessorTime -eq 0)) { $process.TotalProcessorTime } else { '-' }));
+          while (
+            # await existence of all validation paths
+            (@($dependency.validate.paths | ? { (-not (Test-Path -Path $_ -ErrorAction SilentlyContinue)) }).Length -gt 0) -and
+            # stop waiting after configured timeout or default timeout ($defaultTimeout seconds)
+            ($stopwatch.Elapsed.TotalSeconds -lt $(if ($dependency.install.ContainsKey('wait') -and $dependency.install.wait.ContainsKey('timeout')) { $dependency.install.wait.timeout } else { $defaultTimeout }))
+          ) {
+            foreach ($path in $dependency.validate.paths) {
+              if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+                Write-Output -InputObject ('{0} :: installation of dependency: {1}, in progress. detected existence of validation path: {2}.' -f $($MyInvocation.MyCommand.Name), $dependency.name, $path);
+              } else {
+                Write-Output -InputObject ('{0} :: installation of dependency: {1}, in progress. awaiting creation of validation path: {2}.' -f $($MyInvocation.MyCommand.Name), $dependency.name, $path);
+              }
+            }
+          }
+        } catch {
+          Write-Output -InputObject ('{0} :: {1} - error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($dependency.install.executable), $dependency.install.executable, ([string[]]$dependency.install.arguments -join ' '), $_.Exception.Message);
+          exit 123;
+        } finally {
+          foreach ($stdStreamPath in @(@($dependency.install.stderr, $dependency.install.stdout) | ? { ((Test-Path $_ -PathType leaf -ErrorAction SilentlyContinue) -and ((Get-Item -Path $_ -ErrorAction SilentlyContinue).Length -le 0)) })) {
+            Remove-Item -Path $stdStreamPath -ErrorAction SilentlyContinue;
+          }
+          $stopwatch.Stop();
+        }
+        if (@($dependency.validate.paths | ? { (-not (Test-Path -Path $_ -ErrorAction SilentlyContinue)) }).Length) {
+          Write-Output -InputObject ('{0} :: installation of dependency: {1}, failed. not all validation paths exist after {2} seconds.' -f $($MyInvocation.MyCommand.Name), $dependency.name, $stopwatch.Elapsed.TotalSeconds);
+          exit 123;
+        }
+      } else {
+        Write-Output -InputObject ('{0} :: installation of dependency: {1}, skipped. all validation paths exist.' -f $($MyInvocation.MyCommand.Name), $dependency.name);
+      }
+    }
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Get-Logs {
+  param (
+    [string[]] $systems,
+    [string[]] $programs = @(
+      'dsc-run',
+      'OpenCloudConfig',
+      'user32'
+    ),
+    [DateTime] $minTime = (Get-Date).AddHours(-2),
+    [DateTime] $maxTime = (Get-Date),
+    [string] $workFolder,
+    [string] $papertrailCliPath = 'C:\Ruby26-x64\bin\papertrail.bat',
+    [string] $token
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    $env:PAPERTRAIL_API_TOKEN = $token;
+  }
+  process {
+    foreach ($system in $systems) {
+      foreach ($program in $programs) {
+        $logSavePath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+        $errorPath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}-fetch-error.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+        try {
+          $process = (Start-Process -FilePath $papertrailCliPath -ArgumentList @('--min-time', $minTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), '--max-time', $maxTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), ('"system:{0} program:{1}"' -f $system, $program)) -NoNewWindow -RedirectStandardOutput $logSavePath -RedirectStandardError $errorPath -PassThru);
+          Wait-Process -InputObject $process; # see: https://stackoverflow.com/a/43728914/68115
+          Write-Output -InputObject ('{0} :: {1} - (`{2} {3}`) command exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($papertrailCliPath), $papertrailCliPath, ([string[]]$dependency.install.arguments -join ' '), $(if ($process.ExitCode -or ($process.ExitCode -eq 0)) { $process.ExitCode } else { '-' }), $(if ($process.TotalProcessorTime -or ($process.TotalProcessorTime -eq 0)) { $process.TotalProcessorTime } else { '-' }));
+        } catch {
+          Write-Output -InputObject ('{0} :: {1} - error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($dependency.install.executable), $dependency.install.executable, ([string[]]$dependency.install.arguments -join ' '), $_.Exception.Message);
+        } finally {
+          foreach ($stdStreamPath in @(@($logSavePath, $errorPath) | ? { ((Test-Path $_ -PathType leaf -ErrorAction SilentlyContinue) -and ((Get-Item -Path $_ -ErrorAction SilentlyContinue).Length -le 0)) })) {
+            Remove-Item -Path $stdStreamPath -ErrorAction SilentlyContinue;
+          }
+        }
+      }
+    }
+  }
+  end {
+    Remove-Item -Path 'Env:\PAPERTRAIL_API_TOKEN';
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
 function Do-Stuff {
   param (
     [string] $arg1 = ''
@@ -938,12 +1097,13 @@ $revision = $(& git rev-parse HEAD);
 $revisionCommitDate = $(& git @('show', '-s', '--format=%ci', $revision));
 Write-Output -InputObject ('workFolder: {0}, revision: {1}, platform: {2}, imageKey: {3}' -f $workFolder, $revision, $platform, $imageKey);
 
-Update-RequiredModules
+Update-RequiredModules;
 
 $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
 
-Initialize-Platform -platform 'amazon' -secret $secret
-Initialize-Platform -platform $platform -secret $secret
+Initialize-Platform -platform 'amazon' -secret $secret;
+Initialize-Platform -platform $platform -secret $secret;
+Install-Dependencies;
 
 try {
   $config = (Get-Content -Path ('{0}\cloud-image-builder\config\{1}.yaml' -f $workFolder, $imageKey) -Raw | ConvertFrom-Yaml);
@@ -1144,6 +1304,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
               }
+              Get-Logs -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, @($target.tag | ? { $_.name -eq 'workerType' })[0].value, $target.region.Replace(' ', '').ToLower())) -workFolder $workFolder -token $secret.papertrail.token;
 
               # check (again) that another task hasn't already created the image
               $existingImage = (Get-AzImage `
