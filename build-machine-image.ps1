@@ -1050,6 +1050,7 @@ function Get-Logs {
     $env:PAPERTRAIL_API_TOKEN = $token;
   }
   process {
+    New-Item -ItemType 'Directory' -Force -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
     foreach ($system in $systems) {
       foreach ($program in $programs) {
         $logSavePath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
