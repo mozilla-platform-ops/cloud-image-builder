@@ -138,7 +138,7 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: 61a3545
+            value: 4302a08
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
