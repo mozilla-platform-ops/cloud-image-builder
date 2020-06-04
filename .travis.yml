@@ -62,7 +62,7 @@ notifications:
     on_failure: always
     template:
         - >-
-         "%{repository_slug} #%{build_number} 
+         "%{repository_slug} #%{build_number}
          (%{branch} - %{commit} - %{author})"
         - "Status: %{message}"
         - "Change view: %{compare_url}"
