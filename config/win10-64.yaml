@@ -138,7 +138,7 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: 4302a08
+            value: b52d151
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
@@ -167,7 +167,7 @@ target:
                 commands:
                     # yamllint disable-line rule:line-length
                     - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-              - name: verify-ronin-puppet
+              - name: invoke-ronin-puppet
                 shell: azure-powershell
                 commands:
                     # yamllint disable-line rule:line-length
@@ -179,6 +179,17 @@ target:
                 # yamllint disable-line rule:truthy
                 on:
                     failure: retry after 60 seconds
+               # remove the /mode:vm switch if creating images for different hardware profiles  
+               - name: ronin-sysprep-shutdown
+                 shell: azure-powershell
+                 commands:
+                    - & ('{0}\system32\sysprep\sysprep.exe' -f $env:WINDIR) @('/generalize', '/shutdown', '/oobe'. '/mode:vm')
+                test:
+                    std:
+                        out:
+                            match: null
+                on:
+                    failure: null
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
