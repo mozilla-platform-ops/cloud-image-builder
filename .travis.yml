@@ -60,12 +60,12 @@ notifications:
               yTkJf3ewi/QoIGmFc4VILyTM6kowKk44cZ2f04LbDVSKJuyvp6/bR66IwQU4Pr8nlJ
               9kY82b4Kvk1DC/8Wksywk9jS2TI8Zz6QCLsqyLobHZZ5X3Dw1yS9fCJH3Rw5oD+ZPi
               7v5sDjsqCnPMi6uFgqCfsVc=
-    on_success: always
-    on_failure: always
-    template:
-        - >-
-         "%{repository_slug} #%{build_number}
-         (%{branch} - %{commit} - %{author})"
-        - "Status: %{message}"
-        - "Change view: %{compare_url}"
-        - "Build details: %{build_url}"
+        on_success: always
+        on_failure: always
+        template:
+            - >
+              "%{repository_slug} #%{build_number}
+              (%{branch} - %{commit} - %{author})"
+            - "Status: %{message}"
+            - "Change view: %{compare_url}"
+            - "Build details: %{build_url}"
