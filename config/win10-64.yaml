@@ -168,7 +168,7 @@ target:
                 commands:
                     # yamllint disable-line rule:line-length
                     - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-              - name: invoke-ronin-puppet
+              - name: verify-ronin-puppet
                 shell: azure-powershell
                 commands:
                     # yamllint disable-line rule:line-length
