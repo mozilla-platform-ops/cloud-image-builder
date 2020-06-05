@@ -184,7 +184,7 @@ target:
               - name: ronin-sysprep-shutdown
                 shell: azure-powershell
                 commands:
-                    # yamllint disable-line rule:line-length
+                    # yamllint disable rule:line-length
                     - ('{0}\system32\sysprep\sysprep.exe' -f $env:WINDIR) @('/generalize', '/shutdown', '/oobe'. '/mode:vm')
                     # yamllint enable rule:line-length
     - platform: azure
