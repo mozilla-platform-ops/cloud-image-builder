@@ -5,7 +5,7 @@ image:
     language: en-US
     architecture: x86
     timezone: UTC
-    hostname: 'cib-win7-32-gpu'
+    hostname: 'cib-win7-32'
     gpu: true
     owner: Mozilla Release Operations
     organization: Mozilla Corporation
@@ -13,6 +13,7 @@ image:
     format: VHD
     type: Fixed
     rdp: true
+    obfuscate: true
     target:
         platform: amazon
         bucket: windows-ami-builder
