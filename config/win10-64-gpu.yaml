@@ -5,13 +5,14 @@ image:
     language: en-US
     architecture: x86-64
     timezone: UTC
-    hostname: 'cib-win10-64-gpu'
+    hostname: 'cib-win10-64'
     gpu: true
     owner: Mozilla RelOps
     organization: Mozilla Corporation
     partition: MBR
     format: VHD
     type: Fixed
+    obfuscate: true
     target:
         platform: amazon
         bucket: windows-ami-builder

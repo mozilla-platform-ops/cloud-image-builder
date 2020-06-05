@@ -12,6 +12,7 @@ image:
     partition: MBR
     format: VHD
     type: Fixed
+    obfuscate: true
     target:
         platform: amazon
         bucket: windows-ami-builder
@@ -157,11 +158,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 0c0eb24
+            value: 05b36a4
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 0c0eb24
+            value: 05b36a4
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
@@ -335,11 +336,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 0c0eb24
+            value: 05b36a4
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 0c0eb24
+            value: 05b36a4
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3

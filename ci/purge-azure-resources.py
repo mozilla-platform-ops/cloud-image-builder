@@ -6,7 +6,7 @@ from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
-
+from datetime import datetime, timedelta
 from cachetools import cached, TTLCache
 cache = TTLCache(maxsize=100, ttl=300)
 
@@ -80,7 +80,7 @@ resource_descriptors = {
         'filter-descriptor': 'orphaned',
         'list': computeClient.disks.list_by_resource_group,
         'purge': computeClient.disks.delete,
-        'filter': lambda disk, resource_group_name: disk.disk_state == 'Unattached'
+        'filter': lambda disk, resource_group_name: ((disk.disk_state == 'Unattached') or ((disk.disk_state == 'ReadyToUpload') and (disk.time_created < (datetime.now(disk.time_created.tzinfo) - timedelta(hours=6)))))
     }
     #,
     # commented out because this filter does not work for resource groups that have multiple worker types (eg: gecko-t). need to also filter on worker type.
