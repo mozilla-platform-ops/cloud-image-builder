@@ -180,17 +180,13 @@ target:
                 # yamllint disable-line rule:truthy
                 on:
                     failure: retry after 60 seconds
-               # remove the /mode:vm switch if creating images for different hardware profiles  
-               - name: ronin-sysprep-shutdown
-                 shell: azure-powershell
-                 commands:
+               # remove the /mode:vm switch if creating images for different hardware profiles
+              - name: ronin-sysprep-shutdown
+                shell: azure-powershell
+                commands:
+                    # yamllint disable-line rule:line-length
                     - & ('{0}\system32\sysprep\sysprep.exe' -f $env:WINDIR) @('/generalize', '/shutdown', '/oobe'. '/mode:vm')
-                test:
-                    std:
-                        out:
-                            match: null
-                on:
-                    failure: null
+					# yamllint enable rule:line-length
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
