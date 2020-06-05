@@ -7,6 +7,7 @@ install:
     - pip install urllib3 | grep -v "^[[:space:]]*$"
 if: 'type = push and branch = master'
 jobs:
+    # yamllint disable rule:line-length
     # - name: 'taskcluster/production: create or update pools'
     #   script:
     #       - python ./ci/relops-pool-deploy.py
@@ -25,6 +26,7 @@ jobs:
     #           AzrCIZMFZx8ttosbdssfh9Lcc86g37lew9DfS89Y/Fds/qKFceTJXmeuoy4fROI+C+
     #           6kagvs5EI+Ytmf1w4y2QAC9SxsXrZiTEnL3+f8/YL+yVNlX9M654GZd7KHSDozvb6R
     #           7FKuIfS1imMLh6YxdIAGGuk=
+    # yamllint enable rule:line-length
     - name: 'taskcluster/staging: create or update pools'
       script:
           - python ./ci/relops-pool-deploy.py
