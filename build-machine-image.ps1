@@ -469,6 +469,10 @@ function Update-RequiredModules {
   )
   begin {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+    Write-Output -InputObject ('{0} :: installed module version observations (before updates):' -f $($MyInvocation.MyCommand.Name));
+    foreach ($m in (Get-Module)) {
+      Write-Output -InputObject ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $m.Name, $m.Version);
+    }
   }
   process {
     if (@(Get-PSRepository -Name $repository)[0].InstallationPolicy -ne 'Trusted') {
@@ -510,6 +514,10 @@ function Update-RequiredModules {
     }
   }
   end {
+    Write-Output -InputObject ('{0} :: installed module version observations (after updates):' -f $($MyInvocation.MyCommand.Name));
+    foreach ($m in (Get-Module)) {
+      Write-Output -InputObject ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $m.Name, $m.Version);
+    }
     Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
