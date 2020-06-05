@@ -486,6 +486,22 @@ function Update-RequiredModules {
     [string] $repository = 'PSGallery',
     [hashtable[]] $requiredModules = @(
       @{
+        'module' = 'Az.Compute';
+        'version' = '3.1.0'
+      },
+      @{
+        'module' = 'Az.Network';
+        'version' = '2.1.0'
+      },
+      @{
+        'module' = 'Az.Resources';
+        'version' = '1.8.0'
+      },
+      @{
+        'module' = 'Az.Storage';
+        'version' = '1.9.0'
+      },
+      @{
         'module' = 'posh-minions-managed';
         'version' = '0.0.84'
       },
