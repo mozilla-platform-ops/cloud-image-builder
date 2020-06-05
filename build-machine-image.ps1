@@ -150,72 +150,83 @@ function Invoke-BootstrapExecution {
             -ScriptPath $runCommandScriptPath);
           Remove-Item -Path $runCommandScriptPath;
           Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $(if (($runCommandResult) -and ($runCommandResult.Status)) { $runCommandResult.Status.ToLower() } else { '-' }));
-          if ($runCommandResult.Value[0].Message) {
+          if (($runCommandResult.Value) -and ($runCommandResult.Value.Length -gt 0) -and ($runCommandResult.Value[0].Message)) {
             Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
             Write-Output -InputObject $runCommandResult.Value[0].Message;
           } else {
             Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std out stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
           }
-          if ($runCommandResult.Value[1].Message) {
+          if (($runCommandResult.Value) -and ($runCommandResult.Value.Length -gt 1) -and ($runCommandResult.Value[1].Message)) {
             Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
             Write-Output -InputObject $runCommandResult.Value[1].Message;
           } else {
             Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std err stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
           }
-          if ($execution.test) {
-            if ($execution.test.std) {
-              if ($execution.test.std.out) {
-                if ($execution.test.std.out.match) {
-                  if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
-                    if ($execution.on.success) {
-                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
-                      switch ($execution.on.success.Split(' ')[0]) {
-                        'reboot' {
-                          Invoke-OptionalSleep -command $execution.on.success;
-                          Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
-                        }
-                        default {
-                          Write-Output -InputObject ('{0} :: no implementation found for std out regex match success action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.success);
+          if (($runCommandResult.Value) -and ($runCommandResult.Value.Length -gt 0)) {
+            if ($execution.test) {
+              if ($execution.test.std) {
+                if ($execution.test.std.out) {
+                  if ($execution.test.std.out.match) {
+                    if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
+                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                      if ($execution.on.success) {
+                        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
+                        switch ($execution.on.success.Split(' ')[0]) {
+                          'reboot' {
+                            Invoke-OptionalSleep -command $execution.on.success;
+                            Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
+                          }
+                          default {
+                            Write-Output -InputObject ('{0} :: no implementation found for std out regex match success action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.success);
+                          }
                         }
                       }
-                    }
-                  } else {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
-                    if ($execution.on.failure) {
-                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
-                      switch ($execution.on.failure.Split(' ')[0]) {
-                        'reboot' {
-                          Invoke-OptionalSleep -command $execution.on.failure;
-                          Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
-                        }
-                        'retry' {
-                          Invoke-OptionalSleep -command $execution.on.failure;
-                          Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1) -flow $flow -disableCleanup:$disableCleanup;
-                        }
-                        'retry-task' {
-                          Invoke-OptionalSleep -command $execution.on.failure;
-                          Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
-                          exit 123;
-                        }
-                        'fail' {
-                          Invoke-OptionalSleep -command $execution.on.failure;
-                          if (-not $disableCleanup) {
-                            Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                    } else {
+                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                      if ($execution.on.failure) {
+                        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                        switch ($execution.on.failure.Split(' ')[0]) {
+                          'reboot' {
+                            Invoke-OptionalSleep -command $execution.on.failure;
+                            Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
                           }
-                          exit 1;
-                        }
-                        default {
-                          Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                          'retry' {
+                            Invoke-OptionalSleep -command $execution.on.failure;
+                            Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1) -flow $flow -disableCleanup:$disableCleanup;
+                          }
+                          'retry-task' {
+                            Invoke-OptionalSleep -command $execution.on.failure;
+                            Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                            exit 123;
+                          }
+                          'fail' {
+                            Invoke-OptionalSleep -command $execution.on.failure;
+                            if (-not $disableCleanup) {
+                              Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                            }
+                            exit 1;
+                          }
+                          default {
+                            Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                          }
                         }
                       }
                     }
                   }
                 }
+                if ($execution.test.std.err) {
+                  Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
+                }
               }
-              if ($execution.test.std.err) {
-                Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
-              }
+            }
+          } else {
+            $instanceStatus = (Get-InstanceStatus -instanceName $instanceName -groupName $groupName);
+            if (($instanceStatus) -and ($instanceStatus.Code -eq 'PowerState/stopped')) {
+              Write-Output -InputObject ('{0} :: instance shutdown detected during bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+            } elseif ($instanceStatus) {
+              Write-Output -InputObject ('{0} :: unhandled instance state {1} detected during bootstrap execution {2}/{3}, attempt {4}; {5}, using shell: {6}, on: {7}/{8}' -f $($MyInvocation.MyCommand.Name), $instanceStatus.Code, $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+            } else {
+              Write-Output -InputObject ('{0} :: missing instance state detected during bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
             }
           }
         }
