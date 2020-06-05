@@ -7,24 +7,24 @@ install:
     - pip install urllib3 | grep -v "^[[:space:]]*$"
 if: 'type = push and branch = master'
 jobs:
-    - name: 'taskcluster/production: create or update pools'
-      script:
-          - python ./ci/relops-pool-deploy.py
-      env:
-          - TASKCLUSTER_ROOT_URL=https://firefox-ci-tc.services.mozilla.com
-          - TASKCLUSTER_CLIENT_ID=project/relops/image-builder/dev
-          - secure: >-
-              o55Dx7f10PB0xG2EnaqCcJkAFzeeuSq2eHB4K7U0WGa3LPkUcUbCQKFvk1Vwc2mls1
-              iBlfRewR/SKvYn4BI4QnfJ621xkMZymZri8E5Tw9OyOR+x8W3poUyuJ2jrsYn/EuK7
-              5Q7HKCLu1uUbghmeQZGFYaMhtCfqxYNnZZwiz+4eN65WIKR88lbXX5+WXesDtPT3n3
-              7mL6JkQEv2QGtD+Ke7ow26ZobHHSn7QjZXsXBwELU+jMJYz/pOEMlJFOfiCwyoyGhD
-              GeSvYLOLoFV7tH/zH/Q2G1/kRV4+Tj2Hn9ECp2SBtGUhGShvjmnhXdupjji4C8Fk7g
-              1qutfQK1bfTQCWiEd/kycCJ+25DSSkeAiMrgAV8qe+I+MUg86ffxA3niukxlLeP/Qq
-              whZ2Ufge933lGgLrYgfrQQLr7Kl00xGeq+0k1LjRMANkYOvH8Z4KE4iEXKiUSBx4bT
-              CPPhqcpjzFrr9lUCz4mDz7DM4hWakZDw3ilyED7s6lyuFRIvvzoLBl2SnbXUX64lw+
-              AzrCIZMFZx8ttosbdssfh9Lcc86g37lew9DfS89Y/Fds/qKFceTJXmeuoy4fROI+C+
-              6kagvs5EI+Ytmf1w4y2QAC9SxsXrZiTEnL3+f8/YL+yVNlX9M654GZd7KHSDozvb6R
-              7FKuIfS1imMLh6YxdIAGGuk=
+    # - name: 'taskcluster/production: create or update pools'
+    #   script:
+    #       - python ./ci/relops-pool-deploy.py
+    #   env:
+    #       - TASKCLUSTER_ROOT_URL=https://firefox-ci-tc.services.mozilla.com
+    #       - TASKCLUSTER_CLIENT_ID=project/relops/image-builder/dev
+    #       - secure: >-
+    #           o55Dx7f10PB0xG2EnaqCcJkAFzeeuSq2eHB4K7U0WGa3LPkUcUbCQKFvk1Vwc2mls1
+    #           iBlfRewR/SKvYn4BI4QnfJ621xkMZymZri8E5Tw9OyOR+x8W3poUyuJ2jrsYn/EuK7
+    #           5Q7HKCLu1uUbghmeQZGFYaMhtCfqxYNnZZwiz+4eN65WIKR88lbXX5+WXesDtPT3n3
+    #           7mL6JkQEv2QGtD+Ke7ow26ZobHHSn7QjZXsXBwELU+jMJYz/pOEMlJFOfiCwyoyGhD
+    #           GeSvYLOLoFV7tH/zH/Q2G1/kRV4+Tj2Hn9ECp2SBtGUhGShvjmnhXdupjji4C8Fk7g
+    #           1qutfQK1bfTQCWiEd/kycCJ+25DSSkeAiMrgAV8qe+I+MUg86ffxA3niukxlLeP/Qq
+    #           whZ2Ufge933lGgLrYgfrQQLr7Kl00xGeq+0k1LjRMANkYOvH8Z4KE4iEXKiUSBx4bT
+    #           CPPhqcpjzFrr9lUCz4mDz7DM4hWakZDw3ilyED7s6lyuFRIvvzoLBl2SnbXUX64lw+
+    #           AzrCIZMFZx8ttosbdssfh9Lcc86g37lew9DfS89Y/Fds/qKFceTJXmeuoy4fROI+C+
+    #           6kagvs5EI+Ytmf1w4y2QAC9SxsXrZiTEnL3+f8/YL+yVNlX9M654GZd7KHSDozvb6R
+    #           7FKuIfS1imMLh6YxdIAGGuk=
     - name: 'taskcluster/staging: create or update pools'
       script:
           - python ./ci/relops-pool-deploy.py
