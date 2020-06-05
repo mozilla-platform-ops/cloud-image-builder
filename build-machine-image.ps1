@@ -68,6 +68,29 @@ function Invoke-OptionalSleep {
   }
 }
 
+function Get-InstanceStatus {
+  param (
+    [string] $instanceName,
+    [string] $groupName
+  )
+  begin {
+    Write-Debug -Message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    $lastStatus = $null;
+    try {
+      $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
+      $lastStatus = $statuses[$statuses.Count - 1];
+    } catch {
+      $lastStatus = $null;
+    }
+    return $lastStatus;
+  }
+  end {
+    Write-Debug -Message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
 function Invoke-BootstrapExecution {
   param (
     [int] $executionNumber,
@@ -83,252 +106,257 @@ function Invoke-BootstrapExecution {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
-    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been invoked' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
-    $tokenisedCommandEvaluationErrors = @();
-    $runCommandScriptContent = [String]::Join('; ', @(
-      $execution.commands | % {
-        # tokenised commands (usually commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
-        if ($_.format -and $_.tokens) {
-          $tokenisedCommand = $_;
-          try {
-            ($tokenisedCommand.format -f @($tokenisedCommand.tokens | % { (Invoke-Expression -Command $_) } ))
-          } catch {
-            $tokenisedCommandEvaluationErrors += @{
-              'format' = $tokenisedCommand.format;
-              'tokens' = $tokenisedCommand.tokens;
-              'exception' = $_.Exception
-            };
+    $instanceStatus = (Get-InstanceStatus -instanceName $instanceName -groupName $groupName);
+    if (($instanceStatus) -and ($instanceStatus.Code -eq 'PowerState/running')) {
+      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been invoked' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+      $tokenisedCommandEvaluationErrors = @();
+      $runCommandScriptContent = [String]::Join('; ', @(
+        $execution.commands | % {
+          # tokenised commands (usually commands containing secrets), need to have each of their token values evaluated (eg: to perform a secret lookup)
+          if ($_.format -and $_.tokens) {
+            $tokenisedCommand = $_;
+            try {
+              ($tokenisedCommand.format -f @($tokenisedCommand.tokens | % { (Invoke-Expression -Command $_) } ))
+            } catch {
+              $tokenisedCommandEvaluationErrors += @{
+                'format' = $tokenisedCommand.format;
+                'tokens' = $tokenisedCommand.tokens;
+                'exception' = $_.Exception
+              };
+            }
+          } else {
+            $_
           }
-        } else {
-          $_
         }
-      }
-    ));
-    if ($tokenisedCommandEvaluationErrors.Length) {
-      foreach ($tokenisedCommandEvaluationError in $tokenisedCommandEvaluationErrors) {
-        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, threw exception evaluating tokenised command (format: "{8}", tokens: "{9}")' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $tokenisedCommandEvaluationError.format, [String]::Join(', ', $tokenisedCommandEvaluationError.tokens));
-        Write-Output -InputObject ($tokenisedCommandEvaluationError.exception.Message);
-      }
-      if (-not $disableCleanup) {
-        Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
-      }
-      exit 1;
-    }
-    $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
-    Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
-    switch ($execution.shell) {
-      'azure-powershell' {
-        $runCommandResult = (Invoke-AzVMRunCommand `
-          -ResourceGroupName $groupName `
-          -VMName $instanceName `
-          -CommandId 'RunPowerShellScript' `
-          -ScriptPath $runCommandScriptPath);
-        Remove-Item -Path $runCommandScriptPath;
-        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $(if (($runCommandResult) -and ($runCommandResult.Status)) { $runCommandResult.Status.ToLower() } else { '-' }));
-        if ($runCommandResult.Value[0].Message) {
-          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
-          Write-Output -InputObject $runCommandResult.Value[0].Message;
-        } else {
-          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std out stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+      ));
+      if ($tokenisedCommandEvaluationErrors.Length) {
+        foreach ($tokenisedCommandEvaluationError in $tokenisedCommandEvaluationErrors) {
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, threw exception evaluating tokenised command (format: "{8}", tokens: "{9}")' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $tokenisedCommandEvaluationError.format, [String]::Join(', ', $tokenisedCommandEvaluationError.tokens));
+          Write-Output -InputObject ($tokenisedCommandEvaluationError.exception.Message);
         }
-        if ($runCommandResult.Value[1].Message) {
-          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
-          Write-Output -InputObject $runCommandResult.Value[1].Message;
-        } else {
-          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std err stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+        if (-not $disableCleanup) {
+          Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
         }
-        if ($execution.test) {
-          if ($execution.test.std) {
-            if ($execution.test.std.out) {
-              if ($execution.test.std.out.match) {
-                if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
-                  Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
-                  if ($execution.on.success) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
-                    switch ($execution.on.success.Split(' ')[0]) {
-                      'reboot' {
-                        Invoke-OptionalSleep -command $execution.on.success;
-                        Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
-                      }
-                      default {
-                        Write-Output -InputObject ('{0} :: no implementation found for std out regex match success action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.success);
+        exit 1;
+      }
+      $runCommandScriptPath = ('{0}\{1}.ps1' -f $env:Temp, $execution.name);
+      Set-Content -Path $runCommandScriptPath -Value $runCommandScriptContent;
+      switch ($execution.shell) {
+        'azure-powershell' {
+          $runCommandResult = (Invoke-AzVMRunCommand `
+            -ResourceGroupName $groupName `
+            -VMName $instanceName `
+            -CommandId 'RunPowerShellScript' `
+            -ScriptPath $runCommandScriptPath);
+          Remove-Item -Path $runCommandScriptPath;
+          Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has status: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $(if (($runCommandResult) -and ($runCommandResult.Status)) { $runCommandResult.Status.ToLower() } else { '-' }));
+          if ($runCommandResult.Value[0].Message) {
+            Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std out:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+            Write-Output -InputObject $runCommandResult.Value[0].Message;
+          } else {
+            Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std out stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+          }
+          if ($runCommandResult.Value[1].Message) {
+            Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has std err:' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+            Write-Output -InputObject $runCommandResult.Value[1].Message;
+          } else {
+            Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not produce output on std err stream' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+          }
+          if ($execution.test) {
+            if ($execution.test.std) {
+              if ($execution.test.std.out) {
+                if ($execution.test.std.out.match) {
+                  if ($runCommandResult.Value[0].Message -match $execution.test.std.out.match) {
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                    if ($execution.on.success) {
+                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered success action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.success);
+                      switch ($execution.on.success.Split(' ')[0]) {
+                        'reboot' {
+                          Invoke-OptionalSleep -command $execution.on.success;
+                          Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
+                        }
+                        default {
+                          Write-Output -InputObject ('{0} :: no implementation found for std out regex match success action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.success);
+                        }
                       }
                     }
-                  }
-                } else {
-                  Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
-                  if ($execution.on.failure) {
-                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
-                    switch ($execution.on.failure.Split(' ')[0]) {
-                      'reboot' {
-                        Invoke-OptionalSleep -command $execution.on.failure;
-                        Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
-                      }
-                      'retry' {
-                        Invoke-OptionalSleep -command $execution.on.failure;
-                        Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1) -flow $flow -disableCleanup:$disableCleanup;
-                      }
-                      'retry-task' {
-                        Invoke-OptionalSleep -command $execution.on.failure;
-                        Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
-                        exit 123;
-                      }
-                      'fail' {
-                        Invoke-OptionalSleep -command $execution.on.failure;
-                        if (-not $disableCleanup) {
-                          Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                  } else {
+                    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in std out' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                    if ($execution.on.failure) {
+                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                      switch ($execution.on.failure.Split(' ')[0]) {
+                        'reboot' {
+                          Invoke-OptionalSleep -command $execution.on.failure;
+                          Restart-AzVM -ResourceGroupName $groupName -Name $instanceName;
                         }
-                        exit 1;
-                      }
-                      default {
-                        Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                        'retry' {
+                          Invoke-OptionalSleep -command $execution.on.failure;
+                          Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executionCount -instanceName $instanceName -groupName $groupName -execution $execution -attemptNumber ($attemptNumber + 1) -flow $flow -disableCleanup:$disableCleanup;
+                        }
+                        'retry-task' {
+                          Invoke-OptionalSleep -command $execution.on.failure;
+                          Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                          exit 123;
+                        }
+                        'fail' {
+                          Invoke-OptionalSleep -command $execution.on.failure;
+                          if (-not $disableCleanup) {
+                            Remove-Resource -resourceId $instanceName.Replace('vm-', '') -resourceGroupName $groupName;
+                          }
+                          exit 1;
+                        }
+                        default {
+                          Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                        }
                       }
                     }
                   }
                 }
               }
-            }
-            if ($execution.test.std.err) {
-              Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
-            }
-          }
-        }
-      }
-      # bootstrap over winrm for architectures that do not have an azure vm agent
-      'winrm-powershell' {
-        $publicIpAddress = (Get-PublicIpAddress -platform $platform -group $groupName -resourceId $resourceId);
-        if (-not ($publicIpAddress)) {
-          Write-Output -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $groupName, $platform);
-          exit 1;
-        } else {
-          Write-Output -InputObject ('{0} :: public ip address: {1}, found for resource: {2}, in group: {3}, on platform: {4}' -f $($MyInvocation.MyCommand.Name), $publicIpAddress, $resourceId, $groupName, $platform);
-        }
-        $adminPassword = (Get-AdminPassword -platform $platform -imageKey $imageKey);
-        if (-not ($adminPassword)) {
-          Write-Output -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}, using: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
-          exit 1;
-        } else {
-          Write-Output -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found at: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
-        }
-        $credential = (New-Object `
-          -TypeName 'System.Management.Automation.PSCredential' `
-          -ArgumentList @('.\Administrator', (ConvertTo-SecureString $adminPassword -AsPlainText -Force)));
-
-        # modify security group of remote azure instance to allow winrm from public ip of local task instance
-        try {
-          $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
-          $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $flow.name);
-          $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
-          if ($winrmAzNetworkSecurityRuleConfig) {
-            $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-              -Name 'allow-winrm' `
-              -NetworkSecurityGroup $azNetworkSecurityGroup `
-              -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
-          } else {
-            $winrmRuleFromConfig = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
-            $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
-              -Name $winrmRuleFromConfig.name `
-              -Description $winrmRuleFromConfig.Description `
-              -Access $winrmRuleFromConfig.Access `
-              -Protocol $winrmRuleFromConfig.Protocol `
-              -Direction $winrmRuleFromConfig.Direction `
-              -Priority $winrmRuleFromConfig.Priority `
-              -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
-              -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
-              -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
-              -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
-          }
-          if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
-            $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-            Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $flow.name, [String]::Join(', ', $updatedIps));
-          } else {
-            Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
-            exit 1;
-          }
-        } catch {
-          Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-          exit 1;
-        }
-
-        # enable remoting and add remote azure instance to trusted host list
-        try {
-          #Enable-PSRemoting -SkipNetworkProfileCheck -Force
-          #Write-Output -InputObject 'powershell remoting enabled for session';
-
-          & winrm @('set', 'winrm/config/client', '@{AllowUnencrypted="true"}');
-          Write-Output -InputObject 'winrm-client allow-unencrypted set to: "true"';
-
-          $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
-          Write-Output -InputObject ('winrm-client trusted-hosts detected as: "{0}"' -f $trustedHostsPreBootstrap);
-          $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $publicIpAddress) } else { $publicIpAddress });
-          #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
-          & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
-          Write-Output -InputObject ('winrm-client trusted-hosts set to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-        } catch {
-          Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
-          exit 1;
-        }
-        $invocationResponse = $null;
-        $invocationAttempt = 0;
-        $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
-        $lastStatus = $statuses[$statuses.Count - 1];
-        do {
-          $invocationAttempt += 1;
-          # run remote bootstrap scripts over winrm
-          try {
-            $invocationResponse = (Invoke-Command `
-              -ComputerName $publicIpAddress `
-              -Credential $credential `
-              -ScriptBlock { $runCommandScriptContent });
-          } catch {
-            Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm on attempt {0}. {1}' -f $invocationAttempt, $_.Exception.Message);
-            exit 1;
-          } finally {
-            if ($invocationResponse) {
-              Write-Output -InputObject $invocationResponse;
-              if ($invocationResponse -match 'WinRMOperationTimeout') {
-                Write-Output -InputObject 'awaiting manual intervention to correct the winrm connection issue';
-                Start-Sleep -Seconds 120
+              if ($execution.test.std.err) {
+                Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
               }
-            } else {
-              Write-Output -InputObject ('error: no response received during execution of bootstrap commands over winrm on attempt {0}' -f $invocationAttempt);
             }
           }
+        }
+        # bootstrap over winrm for architectures that do not have an azure vm agent
+        'winrm-powershell' {
+          $publicIpAddress = (Get-PublicIpAddress -platform $platform -group $groupName -resourceId $resourceId);
+          if (-not ($publicIpAddress)) {
+            Write-Output -InputObject ('{0} :: failed to determine public ip address for resource: {1}, in group: {2}, on platform: {3}' -f $($MyInvocation.MyCommand.Name), $resourceId, $groupName, $platform);
+            exit 1;
+          } else {
+            Write-Output -InputObject ('{0} :: public ip address: {1}, found for resource: {2}, in group: {3}, on platform: {4}' -f $($MyInvocation.MyCommand.Name), $publicIpAddress, $resourceId, $groupName, $platform);
+          }
+          $adminPassword = (Get-AdminPassword -platform $platform -imageKey $imageKey);
+          if (-not ($adminPassword)) {
+            Write-Output -InputObject ('{0} :: failed to determine admin password for image: {1}, on platform: {2}, using: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
+            exit 1;
+          } else {
+            Write-Output -InputObject ('{0} :: admin password for image: {1}, on platform: {2}, found at: {3}/api/index/v1/task/project.relops.cloud-image-builder.{2}.{1}.latest/artifacts/public/unattend.xml' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $env:TASKCLUSTER_ROOT_URL);
+          }
+          $credential = (New-Object `
+            -TypeName 'System.Management.Automation.PSCredential' `
+            -ArgumentList @('.\Administrator', (ConvertTo-SecureString $adminPassword -AsPlainText -Force)));
+
+          # modify security group of remote azure instance to allow winrm from public ip of local task instance
+          try {
+            $taskRunnerIpAddress = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4');
+            $azNetworkSecurityGroup = (Get-AzNetworkSecurityGroup -Name $flow.name);
+            $winrmAzNetworkSecurityRuleConfig = (Get-AzNetworkSecurityRuleConfig -NetworkSecurityGroup $azNetworkSecurityGroup -Name 'allow-winrm' -ErrorAction SilentlyContinue);
+            if ($winrmAzNetworkSecurityRuleConfig) {
+              $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+                -Name 'allow-winrm' `
+                -NetworkSecurityGroup $azNetworkSecurityGroup `
+                -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmAzNetworkSecurityRuleConfig.SourceAddressPrefix));
+            } else {
+              $winrmRuleFromConfig = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0];
+              $setAzNetworkSecurityRuleConfigResult = (Add-AzNetworkSecurityRuleConfig `
+                -Name $winrmRuleFromConfig.name `
+                -Description $winrmRuleFromConfig.Description `
+                -Access $winrmRuleFromConfig.Access `
+                -Protocol $winrmRuleFromConfig.Protocol `
+                -Direction $winrmRuleFromConfig.Direction `
+                -Priority $winrmRuleFromConfig.Priority `
+                -SourceAddressPrefix @(@($taskRunnerIpAddress) + $winrmRuleFromConfig.SourceAddressPrefix) `
+                -SourcePortRange $winrmRuleFromConfig.SourcePortRange `
+                -DestinationAddressPrefix $winrmRuleFromConfig.DestinationAddressPrefix `
+                -DestinationPortRange $winrmRuleFromConfig.DestinationPortRange);
+            }
+            if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+              $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+              Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, modified to allow inbound from: {1}' -f $flow.name, [String]::Join(', ', $updatedIps));
+            } else {
+              Write-Output -InputObject ('error: failed to modify winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+              exit 1;
+            }
+          } catch {
+            Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+            exit 1;
+          }
+
+          # enable remoting and add remote azure instance to trusted host list
+          try {
+            #Enable-PSRemoting -SkipNetworkProfileCheck -Force
+            #Write-Output -InputObject 'powershell remoting enabled for session';
+
+            & winrm @('set', 'winrm/config/client', '@{AllowUnencrypted="true"}');
+            Write-Output -InputObject 'winrm-client allow-unencrypted set to: "true"';
+
+            $trustedHostsPreBootstrap = (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value;
+            Write-Output -InputObject ('winrm-client trusted-hosts detected as: "{0}"' -f $trustedHostsPreBootstrap);
+            $trustedHostsForBootstrap = $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { ('{0},{1}' -f $trustedHostsPreBootstrap, $publicIpAddress) } else { $publicIpAddress });
+            #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $trustedHostsForBootstrap -Force;
+            & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsForBootstrap));
+            Write-Output -InputObject ('winrm-client trusted-hosts set to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+          } catch {
+            Write-Output -InputObject ('error: failed to modify winrm firewall configuration. {0}' -f $_.Exception.Message);
+            exit 1;
+          }
+          $invocationResponse = $null;
+          $invocationAttempt = 0;
           $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
           $lastStatus = $statuses[$statuses.Count - 1];
-          Write-Output -InputObject ('{0}/{1} has {2} status tags and last status: {3} ({4})' -f $groupName, $instanceName, $statuses.Count, $lastStatus.DisplayStatus, $lastStatus.Code);
-        } while (
-          (
-            ($lastStatus.Code -ne 'PowerState/stopped') -and
-            ($lastStatus.Code -ne 'PowerState/deallocated')
-          ) -and (
-            # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
-            # intervention on the host instance to enable the winrm connection or connection issue debugging.
-            ($invocationResponse -eq $null) -or
-            ($invocationResponse -match 'WinRMOperationTimeout')
+          do {
+            $invocationAttempt += 1;
+            # run remote bootstrap scripts over winrm
+            try {
+              $invocationResponse = (Invoke-Command `
+                -ComputerName $publicIpAddress `
+                -Credential $credential `
+                -ScriptBlock { $runCommandScriptContent });
+            } catch {
+              Write-Output -InputObject ('error: failed to execute bootstrap commands over winrm on attempt {0}. {1}' -f $invocationAttempt, $_.Exception.Message);
+              exit 1;
+            } finally {
+              if ($invocationResponse) {
+                Write-Output -InputObject $invocationResponse;
+                if ($invocationResponse -match 'WinRMOperationTimeout') {
+                  Write-Output -InputObject 'awaiting manual intervention to correct the winrm connection issue';
+                  Start-Sleep -Seconds 120
+                }
+              } else {
+                Write-Output -InputObject ('error: no response received during execution of bootstrap commands over winrm on attempt {0}' -f $invocationAttempt);
+              }
+            }
+            $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
+            $lastStatus = $statuses[$statuses.Count - 1];
+            Write-Output -InputObject ('{0}/{1} has {2} status tags and last status: {3} ({4})' -f $groupName, $instanceName, $statuses.Count, $lastStatus.DisplayStatus, $lastStatus.Code);
+          } while (
+            (
+              ($lastStatus.Code -ne 'PowerState/stopped') -and
+              ($lastStatus.Code -ne 'PowerState/deallocated')
+            ) -and (
+              # repeat the winrm invocation until it works or the task exceeds its timeout, allowing for manual
+              # intervention on the host instance to enable the winrm connection or connection issue debugging.
+              ($invocationResponse -eq $null) -or
+              ($invocationResponse -match 'WinRMOperationTimeout')
+            )
           )
-        )
-        # modify azure security group to remove public ip of task instance from winrm exceptions
-        $allowedIps = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
-        $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
-          -Name 'allow-winrm' `
-          -NetworkSecurityGroup $azNetworkSecurityGroup `
-          -SourceAddressPrefix $allowedIps);
-        if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
-          $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
-          Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $flow.name, [String]::Join(', ', $updatedIps));
-        } else {
-          Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
-        }
+          # modify azure security group to remove public ip of task instance from winrm exceptions
+          $allowedIps = @($flow.rules | ? { $_.name -eq 'allow-winrm' })[0].sourceAddressPrefix
+          $setAzNetworkSecurityRuleConfigResult = (Set-AzNetworkSecurityRuleConfig `
+            -Name 'allow-winrm' `
+            -NetworkSecurityGroup $azNetworkSecurityGroup `
+            -SourceAddressPrefix $allowedIps);
+          if ($setAzNetworkSecurityRuleConfigResult.ProvisioningState -eq 'Succeeded') {
+            $updatedIps = @($setAzNetworkSecurityRuleConfigResult.SecurityRules | ? { $_.Name -eq 'allow-winrm' })[0].SourceAddressPrefix;
+            Write-Output -InputObject ('winrm firewall configuration at: {0}/allow-winrm, reverted to allow inbound from: {1}' -f $flow.name, [String]::Join(', ', $updatedIps));
+          } else {
+            Write-Output -InputObject ('error: failed to revert winrm firewall configuration. provisioning state: {0}' -f $setAzNetworkSecurityRuleConfigResult.ProvisioningState);
+          }
 
-        #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
-        & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap));
-        Write-Output -InputObject ('winrm-client trusted-hosts reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
-        & winrm @('set', 'winrm/config/client', '@{AllowUnencrypted="false"}');
-        Write-Output -InputObject 'winrm-client allow-unencrypted reverted to: "false"';
+          #Set-Item -Path 'WSMan:\localhost\Client\TrustedHosts' -Value $(if (($trustedHostsPreBootstrap) -and ($trustedHostsPreBootstrap.Length -gt 0)) { $trustedHostsPreBootstrap } else { '' }) -Force;
+          & winrm @('set', 'winrm/config/client', ('@{{TrustedHosts="{0}"}}' -f $trustedHostsPreBootstrap));
+          Write-Output -InputObject ('winrm-client trusted-hosts reverted to: "{0}"' -f (Get-Item -Path 'WSMan:\localhost\Client\TrustedHosts').Value);
+          & winrm @('set', 'winrm/config/client', '@{AllowUnencrypted="false"}');
+          Write-Output -InputObject 'winrm-client allow-unencrypted reverted to: "false"';
+        }
       }
+      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+    } else {
+      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been skipped. instance is not running.' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
     }
-    Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7} has been completed' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
   }
   end {
     Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
