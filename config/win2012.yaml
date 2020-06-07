@@ -122,7 +122,7 @@ target:
                     description: >-
                         allow: inbound tcp connections,
                         \ for: rdp,
-                        \ from: whitelist,
+                        \ from: allowlist,
                         \ to: any host,
                         \ on port: 3389
                     access: Allow
@@ -138,7 +138,7 @@ target:
                     description: >-
                         allow: inbound tcp connections,
                         \ for: ssh,
-                        \ from: whitelist,
+                        \ from: allowlist,
                         \ to: any host,
                         \ on port: 22
                     access: Allow

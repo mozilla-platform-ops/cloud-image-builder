@@ -83,7 +83,7 @@ target:
                     description: >-
                         allow: inbound tcp connections,
                         \ for: rdp,
-                        \ from: whitelist,
+                        \ from: allowlist,
                         \ to: any host,
                         \ on port: 3389
                     access: Allow
@@ -99,7 +99,7 @@ target:
                     description: >-
                         allow: inbound tcp connections,
                         \ for: ssh,
-                        \ from: whitelist,
+                        \ from: allowlist,
                         \ to: any host,
                         \ on port: 22
                     access: Allow
@@ -116,7 +116,7 @@ target:
                         allow: inbound tcp connections,
                         \ for: winrm
                         \ over: http and https,
-                        \ from: whitelist,
+                        \ from: allowlist,
                         \ to: any host,
                         \ on ports: 5985, 5986
                     access: Allow
