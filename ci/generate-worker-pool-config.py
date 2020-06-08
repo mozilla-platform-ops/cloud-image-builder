@@ -136,7 +136,10 @@ with open('../{}.json'.format(poolName.replace('/', '-')), 'w') as file:
 
 # update the worker manager with a complete worker pool config
 firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in poolConfig['locations'])
-occRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
+sourceOrganisation = next(x for x in firstTarget['tag'] if x['name'] == 'sourceOrganisation')['value']
+sourceRepository = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRepository')['value']
+sourceRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
+deploymentId = next(x for x in firstTarget['tag'] if x['name'] == 'deploymentId')['value']
 
 machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target'])))
 
@@ -146,7 +149,7 @@ machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['
 #    machineImageBuildDescriptions.append('    - {}'.format(x.name))
 #    machineImageBuildDescriptions.append('        - {}'.format(x.location, x.name))
 
-machineImageBuildsDescription = list(map(lambda x: '    - {}, disk: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}), machine: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{})'.format(x.name, x.tags['diskImageCommitSha'][0:7], x.tags['diskImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7]), machineImages))
+imageBuildsDescription = list(map(lambda x: '    - {}, disk: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}), machine: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{})'.format(x.name, x.tags['diskImageCommitSha'][0:7], x.tags['diskImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7]), machineImages))
 description = [
     '### experimental {}/{} taskcluster worker'.format(poolConfig['domain'], poolConfig['variant']),
     '#### provenance',
@@ -165,8 +168,8 @@ description = [
     #    '<task-id>',
     #    '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/'.format(os.getenv('TASKCLUSTER_ROOT_URL'), platform, key)),
     '- machine image builds:',
-    '\n'.join(machineImageBuildsDescription),
-    '- applied occ revision: [{}]({})'.format(occRevision[0:7], 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
+    '\n'.join(imageBuildsDescription),
+    '- bootstrap source: [{}/{}/{}]({}), deployment id: {}'.format(sourceOrganisation, sourceRepository, sourceRevision, 'https://github.com/{}/{}/commit/{}'.format(sourceOrganisation, sourceRepository, sourceRevision), deploymentId),
     '#### deployment',
     '- platform: **{} ({})**'.format(platform, ', '.join(poolConfig['locations'])),
     '- last worker pool update: {} [{}]({})'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' '), os.getenv('TASK_ID'), '{}/tasks/{}#artifacts'.format(os.getenv('TASKCLUSTER_ROOT_URL'), os.getenv('TASK_ID')))
