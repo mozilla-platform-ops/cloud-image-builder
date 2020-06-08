@@ -158,13 +158,18 @@ description = [
     '- language: **{}**'.format(config['image']['language']),
     '- system timezone: **{}**'.format(config['image']['timezone']),
     '#### integration',
-    '- disk image build: {} [{}]({})'.format('0000-00-00 00:00', '<task-id>', '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/').format(os.getenv('TASKCLUSTER_PROXY_URL'), platform, key),
+    '- disk image commit and build: [{}]({}) {} [{}]({})'.format(
+        x.tags['diskImageCommitSha'][0:7],
+        'https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}'.format(x.tags['diskImageCommitSha']),
+        x.tags['diskImageCommitTime'],
+        '<task-id>',
+        '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/'.format(os.getenv('TASKCLUSTER_ROOT_URL'), platform, key)),
     '- machine image builds:',
     '\n'.join(machineImageBuildsDescription),
     '- applied occ revision: [{}]({})'.format(occRevision[0:7], 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
     '#### deployment',
     '- platform: **{} ({})**'.format(platform, ', '.join(poolConfig['locations'])),
-    '- last worker pool update: {} [{}]({})'.format('{}'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' ')), os.getenv('TASK_ID'), '{}/tasks/{}#artifacts'.format(os.getenv('TASKCLUSTER_PROXY_URL'), os.getenv('TASK_ID')))
+    '- last worker pool update: {} [{}]({})'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' '), os.getenv('TASK_ID'), '{}/tasks/{}#artifacts'.format(os.getenv('TASKCLUSTER_ROOT_URL'), os.getenv('TASK_ID')))
 ]
 
 providerConfig = {
