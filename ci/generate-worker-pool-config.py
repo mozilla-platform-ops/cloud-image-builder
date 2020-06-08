@@ -146,7 +146,7 @@ machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['
 #    machineImageBuildDescriptions.append('    - {}'.format(x.name))
 #    machineImageBuildDescriptions.append('        - {}'.format(x.location, x.name))
 
-machineImageBuildsDescription = list(map(lambda x: '    - {} {}'.format(x.location, x.name), machineImages))
+machineImageBuildsDescription = list(map(lambda x: '    - {}, disk: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}), machine: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{})'.format(x.name, x.tags['diskImageCommitSha'][0:7], x.tags['diskImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7]), machineImages))
 description = [
     '### experimental {}/{} taskcluster worker'.format(poolConfig['domain'], poolConfig['variant']),
     '#### provenance',
@@ -158,12 +158,12 @@ description = [
     '- language: **{}**'.format(config['image']['language']),
     '- system timezone: **{}**'.format(config['image']['timezone']),
     '#### integration',
-    '- disk image commit and build: [{}]({}) {} [{}]({})'.format(
-        x.tags['diskImageCommitSha'][0:7],
-        'https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}'.format(x.tags['diskImageCommitSha']),
-        x.tags['diskImageCommitTime'],
-        '<task-id>',
-        '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/'.format(os.getenv('TASKCLUSTER_ROOT_URL'), platform, key)),
+    #'- disk image commit and build: [{}]({}) {} [{}]({})'.format(
+    #    x.tags['diskImageCommitSha'][0:7],
+    #    'https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}'.format(x.tags['diskImageCommitSha']),
+    #    x.tags['diskImageCommitTime'],
+    #    '<task-id>',
+    #    '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/'.format(os.getenv('TASKCLUSTER_ROOT_URL'), platform, key)),
     '- machine image builds:',
     '\n'.join(machineImageBuildsDescription),
     '- applied occ revision: [{}]({})'.format(occRevision[0:7], 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(occRevision)),
