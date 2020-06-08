@@ -1381,6 +1381,17 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               }
 
               if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
+                # detach data disks from vm before machine image capture
+                $dataDiskNames = @(Get-AzDisk -ResourceGroupName $target.group | ? { $_.Name -match ('^{0}-data-disk-[0-9]$' -f $instanceName) -and $_.OsType -eq $null } | % { $_.Name });
+                if ($dataDiskNames.Length) {
+                  try {
+                    Remove-AzVMDataDisk -VM $azVm -DataDiskNames $dataDiskNames;
+                    Update-AzVM -ResourceGroupName $target.group -VM $azVm;
+                    Write-Output -InputObject ('detached: {0} data disks ({1}) from {2}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName);
+                  } catch {
+                    Write-Output -InputObject ('failed to detach: {0} data disks ({1}) from {2}. {3}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName, $_.Exception.Message);
+                  }
+                }
                 New-CloudImageFromInstance `
                   -platform $target.platform `
                   -resourceGroupName $target.group `
