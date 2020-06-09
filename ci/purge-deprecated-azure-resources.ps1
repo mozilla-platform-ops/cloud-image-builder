@@ -15,8 +15,30 @@ if (@(Get-PSRepository -Name 'PSGallery')[0].InstallationPolicy -ne 'Trusted') {
   Set-PSRepository -Name 'PSGallery' -InstallationPolicy 'Trusted';
 }
 foreach ($rm in @(
-  @{ 'module' = 'posh-minions-managed'; 'version' = '0.0.84' },
-  @{ 'module' = 'powershell-yaml'; 'version' = '0.4.1' }
+  @{
+    'module' = 'Az.Compute';
+    'version' = '3.1.0'
+  },
+  @{
+    'module' = 'Az.Network';
+    'version' = '2.1.0'
+  },
+  @{
+    'module' = 'Az.Resources';
+    'version' = '1.8.0'
+  },
+  @{
+    'module' = 'Az.Storage';
+    'version' = '1.9.0'
+  },
+  @{
+    'module' = 'posh-minions-managed';
+    'version' = '0.0.84'
+  },
+  @{
+    'module' = 'powershell-yaml';
+    'version' = '0.4.1'
+  }
 )) {
   $module = (Get-Module -Name $rm.module -ErrorAction SilentlyContinue);
   if ($module) {
