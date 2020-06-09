@@ -71,18 +71,19 @@ function Invoke-OptionalSleep {
 function Get-InstanceStatus {
   param (
     [string] $instanceName,
-    [string] $groupName
+    [string] $groupName,
+    [string] $errorAction
   )
   begin {
     Write-Debug -Message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
-    $lastStatus = $null;
+    $lastStatus = $(if ($errorAction -eq 'SilentlyContinue') { @{ 'Code' = $null; 'Message' = $null; } } else { $null });
     try {
       $statuses = (Get-AzVm -Name $instanceName -ResourceGroupName $groupName -Status).Statuses;
       $lastStatus = $statuses[$statuses.Count - 1];
     } catch {
-      $lastStatus = $null;
+      $lastStatus = $(if ($errorAction -eq 'SilentlyContinue') { @{ 'Code' = $null; 'Message' = $null; } } else { $null });
     }
     return $lastStatus;
   }
@@ -216,6 +217,32 @@ function Invoke-BootstrapExecution {
                 }
                 if ($execution.test.std.err) {
                   Write-Output -InputObject (('{0} :: no implementation found for std err test action' -f $($MyInvocation.MyCommand.Name)));
+                }
+              }
+              if ($execution.test.status) {
+                if ($execution.test.status.code) {
+                  if ($execution.test.status.code.match) {
+                    if ((Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code -match $execution.test.status.code.match) {
+                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, matched: "{8}" in instance status code' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                    } else {
+                      Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, did not match: "{8}" in instance status code' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.test.std.out.match);
+                      # todo: implement results other than 'failure'
+                      if ($execution.on.failure) {
+                        Write-Output -InputObject ('{0} :: bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}, has triggered failure action: {8}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName, $execution.on.failure);
+                        switch ($execution.on.failure.Split(' ')[0]) {
+                          # todo: implement actions other than 'retest'
+                          'retest' {
+                            while ((Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code -notmatch $execution.test.status.code.match) {
+                              Invoke-OptionalSleep -command $execution.on.failure;
+                            }
+                          }
+                          default {
+                            Write-Output -InputObject (('{0} :: no implementation found for std out regex match failure action: {1}' -f $($MyInvocation.MyCommand.Name), $execution.on.failure));
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }

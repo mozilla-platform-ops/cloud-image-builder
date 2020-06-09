@@ -188,8 +188,15 @@ target:
                 commands:
                     # yamllint disable rule:line-length
                     # remove the /mode:vm switch if creating images for different hardware profiles
-                    - ('{0}\system32\sysprep\sysprep.exe' /generalize /shutdown /oobe /mode:vm -f $env:WINDIR)
+                    - C:\Windows\system32\sysprep\sysprep.exe /generalize /shutdown /oobe /mode:vm
                     # yamllint enable rule:line-length
+                test:
+                    status:
+                        code:
+                            match: PowerState/stopped
+                # yamllint disable-line rule:truthy
+                on:
+                    failure: retest after 5 seconds
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
