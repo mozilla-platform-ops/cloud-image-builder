@@ -160,11 +160,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: ce89047
+            value: 16dabf4
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: ce89047
+            value: 16dabf4
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
@@ -338,11 +338,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: ce89047
+            value: 16dabf4
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: ce89047
+            value: 16dabf4
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3
