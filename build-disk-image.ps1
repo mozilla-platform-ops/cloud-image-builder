@@ -155,6 +155,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
+        -networkLocation $(if ($config.image.network) { $config.image.network } else { 'Other' }) `
         -commands $commands `
         -os $config.image.os `
         -enableRDP $(if ($config.image.rdp) { $true } else { $false });
