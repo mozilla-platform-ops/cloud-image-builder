@@ -84,6 +84,7 @@ target:
                     priority: 110
                     sourceAddressPrefix:
                         - 185.189.196.0/22 # grenade
+                        - 185.236.154.128/26 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389
@@ -96,6 +97,7 @@ target:
                     priority: 111
                     sourceAddressPrefix:
                         - 185.189.196.0/22 # grenade
+                        - 185.236.154.128/26 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 22
@@ -108,6 +110,7 @@ target:
                     priority: 112
                     sourceAddressPrefix:
                         - 185.189.196.0/22 # grenade
+                        - 185.236.154.128/26 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange:
@@ -121,8 +124,8 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: f4596fd
+            value: e1ad1a1
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: f4596fd
+            value: e1ad1a1

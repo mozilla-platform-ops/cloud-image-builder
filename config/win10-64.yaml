@@ -90,6 +90,7 @@ target:
                     priority: 110
                     sourceAddressPrefix:
                         - 185.189.196.0/22  # grenade
+                        - 185.236.154.128/26 # grenade
                     sourcePortRange: '*'
                     destinationAddressPrefix: '*'
                     destinationPortRange: 3389

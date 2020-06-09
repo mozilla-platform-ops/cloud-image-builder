@@ -135,21 +135,7 @@ with open('../{}.json'.format(poolName.replace('/', '-')), 'w') as file:
     json.dump(workerPool, file, indent = 2, sort_keys = True)
 
 # update the worker manager with a complete worker pool config
-firstTarget = next(x for x in config['target'] if x['region'].lower().replace(' ', '') in poolConfig['locations'])
-sourceOrganisation = next(x for x in firstTarget['tag'] if x['name'] == 'sourceOrganisation')['value']
-sourceRepository = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRepository')['value']
-sourceRevision = next(x for x in firstTarget['tag'] if x['name'] == 'sourceRevision')['value']
-deploymentId = next(x for x in firstTarget['tag'] if x['name'] == 'deploymentId')['value']
-
 machineImages = filter(lambda x: x is not None, map(lambda x: getLatestImage(x['group'], key), filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target'])))
-
-# todo: get provenance of each machine build & disk build including task id and git sha
-#machineImageBuildDescriptions = []
-#for machineImage in machineImages:
-#    machineImageBuildDescriptions.append('    - {}'.format(x.name))
-#    machineImageBuildDescriptions.append('        - {}'.format(x.location, x.name))
-
-imageBuildsDescription = list(map(lambda x: '    - {}, disk: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}), machine: [{}](https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{})'.format(x.name, x.tags['diskImageCommitSha'][0:7], x.tags['diskImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7], x.tags['machineImageCommitSha'][0:7]), machineImages))
 description = [
     '### experimental {}/{} taskcluster worker'.format(poolConfig['domain'], poolConfig['variant']),
     '#### provenance',
@@ -161,15 +147,37 @@ description = [
     '- language: **{}**'.format(config['image']['language']),
     '- system timezone: **{}**'.format(config['image']['timezone']),
     '#### integration',
-    #'- disk image commit and build: [{}]({}) {} [{}]({})'.format(
-    #    x.tags['diskImageCommitSha'][0:7],
-    #    'https://github.com/mozilla-platform-ops/cloud-image-builder/commit/{}'.format(x.tags['diskImageCommitSha']),
-    #    x.tags['diskImageCommitTime'],
-    #    '<task-id>',
-    #    '{}/tasks/index/project.relops.cloud-image-builder.{}.{}/latest/'.format(os.getenv('TASKCLUSTER_ROOT_URL'), platform, key)),
-    '- machine image builds:',
-    '\n'.join(imageBuildsDescription),
-    '- bootstrap source: [{}/{}/{}]({}), deployment id: {}'.format(sourceOrganisation, sourceRepository, sourceRevision, 'https://github.com/{}/{}/commit/{}'.format(sourceOrganisation, sourceRepository, sourceRevision), deploymentId),
+    '- commits and build tasks:',
+    '\n'.join(list(map(lambda x: '  - {machineImageName}\n    - disk:\n      - commit: {diskImageCommitLink}\n      - build: {diskImageTaskLink}\n    - machine:\n      - commit: {machineImageCommitLink}\n      - build: {machineImageTaskLink}\n    - bootstrap: {bootstrapCommitLink}\n    - deployment: {deploymentCommitLink}'.format(
+        machineImageName=x.name,
+        diskImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
+            org='mozilla-platform-ops',
+            repo='cloud-image-builder',
+            ref=x.tags['diskImageCommitSha'],
+        ) if 'diskImageCommitSha' in x.tags else 'missing tag: diskImageCommitSha',
+        diskImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId})'.format(
+            rootUrl=os.getenv('TASKCLUSTER_ROOT_URL'),
+            taskId=x.tags['diskImageTaskId'],
+        ) if 'diskImageTaskId' in x.tags else 'missing tag: diskImageTaskId',
+        machineImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
+            org='mozilla-platform-ops',
+            repo='cloud-image-builder',
+            ref=x.tags['machineImageCommitSha'],
+        ) if 'machineImageCommitSha' in x.tags else 'missing tag: machineImageCommitSha',
+        machineImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId})'.format(
+            rootUrl=os.getenv('TASKCLUSTER_ROOT_URL'),
+            taskId=x.tags['machineImageTaskId'],
+        ) if 'machineImageTaskId' in x.tags else 'missing tag: machineImageTaskId',
+        bootstrapCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
+            org=x.tags['sourceOrganisation'],
+            repo=x.tags['sourceRepository'],
+            ref=x.tags['sourceRevision']
+        ) if 'sourceOrganisation' in x.tags and 'sourceRepository' in x.tags and 'sourceRevision' in x.tags else 'missing tags: sourceOrganisation, sourceRepository, sourceRevision',
+        deploymentCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
+            org=x.tags['sourceOrganisation'],
+            repo=x.tags['sourceRepository'],
+            ref=x.tags['deploymentId']
+        ) if 'sourceOrganisation' in x.tags and 'sourceRepository' in x.tags and 'deploymentId' in x.tags else 'missing tags: sourceOrganisation, sourceRepository, deploymentId'), machineImages))),
     '#### deployment',
     '- platform: **{} ({})**'.format(platform, ', '.join(poolConfig['locations'])),
     '- last worker pool update: {} [{}]({})'.format(datetime.utcnow().isoformat()[:-10].replace('T', ' '), os.getenv('TASK_ID'), '{}/tasks/{}#artifacts'.format(os.getenv('TASKCLUSTER_ROOT_URL'), os.getenv('TASK_ID')))
