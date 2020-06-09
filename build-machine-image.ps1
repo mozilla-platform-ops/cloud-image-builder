@@ -1435,6 +1435,10 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
                   } else {
                     Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+                    if (-not $disableCleanup) {
+                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                    }
+                    exit 1;
                   }
                 } catch {
                   Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
