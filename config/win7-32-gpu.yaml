@@ -124,8 +124,8 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: ce89047
+            value: 16dabf4
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: ce89047
+            value: 16dabf4
