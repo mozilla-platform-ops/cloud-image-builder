@@ -57,6 +57,7 @@ target:
           cpu: 2
           ram: 4
           format: Standard_F{0}s_v2
+      agent: disable
       disk: &disk
           - os: true
             source: windows7-professional-en-us-x86
@@ -211,6 +212,7 @@ target:
       region: East US
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-east-us-gecko-t
@@ -229,6 +231,7 @@ target:
       region: East US 2
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-east-us-2-gecko-t
@@ -247,6 +250,7 @@ target:
       region: North Central US
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-north-central-us-gecko-t
@@ -265,6 +269,7 @@ target:
       region: South Central US
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-south-central-us-gecko-t

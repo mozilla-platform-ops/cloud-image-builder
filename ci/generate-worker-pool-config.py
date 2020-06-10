@@ -76,6 +76,14 @@ workerPool = {
         'hardwareProfile': {
             'vmSize': x['machine']['format'].format(x['machine']['cpu'])
         },
+        'osProfile': {
+            'allowExtensionOperations': ('agent' not in x or x['agent'] != 'disable'),
+            'windowsConfiguration': {
+                'enableAutomaticUpdates': ('agent' not in x or x['agent'] != 'disable'),
+                'provisionVMAgent': ('agent' not in x or x['agent'] != 'disable'),
+                'timeZone': config['image']['timezone']
+            }
+        },
         'storageProfile': {
             'imageReference': {
                 'id': getLatestImageId(x['group'], key)
@@ -83,11 +91,18 @@ workerPool = {
             'osDisk': {
                 'caching': 'ReadWrite',
                 'createOption': 'FromImage',
+                'diskSizeGB': next(d for d in x['disk'] if d['os'])['size'],
                 'managedDisk': {
-                    'storageAccountType': 'StandardSSD_LRS' if x['disk'][0]['variant'] == 'ssd' else 'Standard_LRS'
+                    'storageAccountType': 'StandardSSD_LRS' if next(d for d in x['disk'] if d['os'])['variant'] == 'ssd' else 'Standard_LRS'
                 },
                 'osType': 'Windows'
-            }
+            },
+            'dataDisks': list(map(lambda dataDisk: {
+                'diskSizeGB': dataDisk['size'],
+                'managedDisk': {
+                    'storageAccountType': 'StandardSSD_LRS' if dataDisk['variant'] == 'ssd' else 'Standard_LRS'
+                }
+            }, filter(lambda disk: (not disk['os']), x['disk'])))
         },
         'tags': { t['name']: t['value'] for t in x['tag'] },
         'workerConfig': {
@@ -155,19 +170,21 @@ description = [
             repo='cloud-image-builder',
             ref=x.tags['diskImageCommitSha'],
         ) if 'diskImageCommitSha' in x.tags else 'missing tag: diskImageCommitSha',
-        diskImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId})'.format(
+        diskImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId}/runs/{run})'.format(
             rootUrl=os.getenv('TASKCLUSTER_ROOT_URL'),
-            taskId=x.tags['diskImageTaskId'],
-        ) if 'diskImageTaskId' in x.tags else 'missing tag: diskImageTaskId',
+            taskId=x.tags['diskImageTask'].split('/')[0],
+            run=x.tags['diskImageTask'].split('/')[1]
+        ) if 'diskImageTask' in x.tags else 'missing tag: diskImageTask',
         machineImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
             org='mozilla-platform-ops',
             repo='cloud-image-builder',
             ref=x.tags['machineImageCommitSha'],
         ) if 'machineImageCommitSha' in x.tags else 'missing tag: machineImageCommitSha',
-        machineImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId})'.format(
+        machineImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId}/runs/{run})'.format(
             rootUrl=os.getenv('TASKCLUSTER_ROOT_URL'),
-            taskId=x.tags['machineImageTaskId'],
-        ) if 'machineImageTaskId' in x.tags else 'missing tag: machineImageTaskId',
+            taskId=x.tags['machineImageTask'].split('/')[0],
+            run=x.tags['machineImageTask'].split('/')[1]
+        ) if 'machineImageTask' in x.tags else 'missing tag: machineImageTask',
         bootstrapCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
             org=x.tags['sourceOrganisation'],
             repo=x.tags['sourceRepository'],

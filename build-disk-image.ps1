@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.84'
+    'version' = '0.0.85'
   },
   @{
     'module' = 'powershell-yaml';
@@ -336,7 +336,11 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         'build' = @{
           'date' = (Get-Date -UFormat '+%Y-%m-%d');
           'time' = (Get-Date -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
-          'revision' = $revision
+          'revision' = $revision;
+          'task' = @{
+            'id' = $env:TASK_ID;
+            'run' = $env:RUN_ID;
+          }
         };
         'image' = @{
           'platform' = $config.image.target.platform;

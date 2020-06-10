@@ -541,7 +541,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.84'
+        'version' = '0.0.85'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1039,6 +1039,23 @@ function Install-Dependencies {
         }
       };
       @{
+        'name' = 'win32console';
+        'install' = @{
+          'executable' = 'C:\Ruby26-x64\bin\gem.cmd';
+          'arguments' = @(
+            'install',
+            'win32console'
+          );
+          'stdout' = 'C:\log\install-win32console-stdout.log';
+          'stderr' = 'C:\log\install-win32console-stderr.log';
+        };
+        'validate' = @{
+          'paths' = @(
+            'C:\Ruby26-x64\lib\ruby\gems\2.6.0\extensions\x64-mingw32\2.6.0\win32console-1.3.2\Console_ext.so'
+          )
+        }
+      };
+      @{
         'name' = 'papertrail-cli';
         'install' = @{
           'executable' = 'C:\Ruby26-x64\bin\gem.cmd';
@@ -1308,6 +1325,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               'diskImageCommitSha' = $imageArtifactDescriptor.build.revision;
               'machineImageCommitTime' = (Get-Date -Date $revisionCommitDate -UFormat '+%Y-%m-%dT%H:%M:%S%Z');
               'machineImageCommitSha' = $revision;
+              'machineImageTask' = ('{0}/{1}' -f $env:TASK_ID, $env:RUN_ID);
               'imageKey' = $imageKey;
               'resourceId' = $resourceId;
               'os' = $config.image.os;
@@ -1319,6 +1337,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             };
             foreach ($tag in $target.tag) {
               $tags[$tag.name] = $tag.value;
+            }
+            if ($imageArtifactDescriptor.task) {
+              $tags['diskImageTask'] = ('{0}/{1}' -f $imageArtifactDescriptor.task.id, $imageArtifactDescriptor.task.run);
             }
 
             # check (again) that another task hasn't already created the image
@@ -1352,7 +1373,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 -targetSubnetName $target.network.subnet.name `
                 -targetSubnetAddressPrefix $target.network.subnet.prefix `
                 -targetFirewallConfigurationName $target.network.flow.name `
-                -targetFirewallRules $target.network.flow.rules;
+                -targetFirewallRules $target.network.flow.rules `
+                -disablePlatformAgent:($target.agent -eq 'disabled') `
+                -disableBackgroundInfo:($target.agent -eq 'disabled');
 
               $newCloudInstanceInstantiationAttempts += 1;
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
