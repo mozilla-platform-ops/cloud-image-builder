@@ -541,7 +541,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.85'
+        'version' = '0.0.86'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1245,18 +1245,18 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
       if ($existingImage) {
         if ($overwrite) {
           try {
-            Write-Output -InputObject ('removing existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
+            Write-Output -InputObject ('removing existing machine image {0} / {1} / {2}, created {3}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
             if (Remove-AzImage `
               -ResourceGroupName $existingImage.ResourceGroupName `
               -Name $existingImage.Name `
               -AsJob `
               -Force) {
-              Write-Output -InputObject ('removed existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
+              Write-Output -InputObject ('removed existing machine image {0} / {1} / {2}, created {3}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
             } else {
-              Write-Output -InputObject ('failed to remove existing machine image {0} / {1} / {2}, created {3:s}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
+              Write-Output -InputObject ('failed to remove existing machine image {0} / {1} / {2}, created {3}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
             }
           } catch {
-            Write-Output -InputObject ('exception removing existing machine image {0} / {1} / {2}, created {3:s}. {4}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime, $_.Exception.Message);
+            Write-Output -InputObject ('exception removing existing machine image {0} / {1} / {2}, created {3}. {4}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime, $_.Exception.Message);
           }
         } else {
           Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
