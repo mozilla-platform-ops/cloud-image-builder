@@ -541,7 +541,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.86'
+        'version' = '0.0.87'
       },
       @{
         'module' = 'powershell-yaml';
