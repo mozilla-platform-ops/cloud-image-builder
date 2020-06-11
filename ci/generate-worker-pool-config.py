@@ -168,7 +168,7 @@ description = [
         diskImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
             org='mozilla-platform-ops',
             repo='cloud-image-builder',
-            ref=x.tags['diskImageCommitSha'],
+            ref=x.tags['diskImageCommitSha'][0:7],
         ) if 'diskImageCommitSha' in x.tags else 'missing tag: diskImageCommitSha',
         diskImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId}/runs/{run})'.format(
             rootUrl=os.getenv('TASKCLUSTER_ROOT_URL'),
@@ -178,7 +178,7 @@ description = [
         machineImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
             org='mozilla-platform-ops',
             repo='cloud-image-builder',
-            ref=x.tags['machineImageCommitSha'],
+            ref=x.tags['machineImageCommitSha'][0:7],
         ) if 'machineImageCommitSha' in x.tags else 'missing tag: machineImageCommitSha',
         machineImageTaskLink='[{taskId}]({rootUrl}/tasks/{taskId}/runs/{run})'.format(
             rootUrl=os.getenv('TASKCLUSTER_ROOT_URL'),
