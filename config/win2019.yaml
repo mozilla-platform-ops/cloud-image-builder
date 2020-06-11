@@ -180,24 +180,19 @@ target:
                 # yamllint disable-line rule:truthy
                 on:
                     failure: retry after 60 seconds
-              # trigger bootstrap script and await completion
+              # trigger bootstrap script and await sysprep shutdown
               - name: invoke-occ
                 shell: azure-powershell
                 commands:
                     # yamllint disable-line rule:line-length
                     - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-              - name: verify-occ
-                shell: azure-powershell
-                commands:
-                    # yamllint disable-line rule:line-length
-                    - if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) { Write-Output -InputObject ('ed25519 private key detected') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
                 test:
-                    std:
-                        out:
-                            match: ed25519 private key detected
+                    status:
+                        code:
+                            match: PowerState/stopped
                 # yamllint disable-line rule:truthy
                 on:
-                    failure: retry after 60 seconds
+                    failure: retest after 5 seconds
     - platform: azure
       group: rg-east-us-relops
       region: East US
