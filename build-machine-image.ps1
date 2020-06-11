@@ -1146,7 +1146,7 @@ function Get-Logs {
       'OpenCloudConfig',
       'user32'
     ),
-    [DateTime] $minTime = (Get-Date).AddHours(-2),
+    [DateTime] $minTime = (Get-Date).AddHours(-3),
     [DateTime] $maxTime = (Get-Date),
     [string] $workFolder,
     [string] $papertrailCliPath = 'C:\Ruby26-x64\bin\papertrail.bat',
@@ -1161,12 +1161,13 @@ function Get-Logs {
       foreach ($program in $programs) {
         $logSavePath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
         $errorPath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}-fetch-error.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+        $argsList = @('--min-time', $minTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), '--max-time', $maxTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), ('"system:{0} program:{1}"' -f $system, $program));
         try {
-          $process = (Start-Process -FilePath $papertrailCliPath -ArgumentList @('--min-time', $minTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), '--max-time', $maxTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), ('"system:{0} program:{1}"' -f $system, $program)) -NoNewWindow -RedirectStandardOutput $logSavePath -RedirectStandardError $errorPath -PassThru);
+          $process = (Start-Process -FilePath $papertrailCliPath -ArgumentList $argsList -NoNewWindow -RedirectStandardOutput $logSavePath -RedirectStandardError $errorPath -PassThru);
           Wait-Process -InputObject $process; # see: https://stackoverflow.com/a/43728914/68115
-          Write-Output -InputObject ('{0} :: {1} - (`{2} {3}`) command exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($papertrailCliPath), $papertrailCliPath, ([string[]]$dependency.install.arguments -join ' '), $(if ($process.ExitCode -or ($process.ExitCode -eq 0)) { $process.ExitCode } else { '-' }), $(if ($process.TotalProcessorTime -or ($process.TotalProcessorTime -eq 0)) { $process.TotalProcessorTime } else { '-' }));
+          Write-Output -InputObject ('{0} :: {1} - (`{2} {3}`) command exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($papertrailCliPath), $papertrailCliPath, ([string[]]$argsList -join ' '), $(if ($process.ExitCode -or ($process.ExitCode -eq 0)) { $process.ExitCode } else { '-' }), $(if ($process.TotalProcessorTime -or ($process.TotalProcessorTime -eq 0)) { $process.TotalProcessorTime } else { '-' }));
         } catch {
-          Write-Output -InputObject ('{0} :: {1} - error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($dependency.install.executable), $dependency.install.executable, ([string[]]$dependency.install.arguments -join ' '), $_.Exception.Message);
+          Write-Output -InputObject ('{0} :: {1} - error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($papertrailCliPath), $papertrailCliPath, ([string[]]$argsList -join ' '), $_.Exception.Message);
         } finally {
           foreach ($stdStreamPath in @(@($logSavePath, $errorPath) | ? { ((Test-Path $_ -PathType leaf -ErrorAction SilentlyContinue) -and ((Get-Item -Path $_ -ErrorAction SilentlyContinue).Length -le 0)) })) {
             Remove-Item -Path $stdStreamPath -ErrorAction SilentlyContinue;
