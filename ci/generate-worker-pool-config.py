@@ -100,7 +100,7 @@ workerPool = {
             'dataDisks': [
                 {
                     'lun': dataDiskIndex,
-                    'createOption': 'Attach',
+                    'createOption': 'Empty',
                     'diskSizeGB': dataDisk['size'],
                     'managedDisk': {
                         'storageAccountType': 'StandardSSD_LRS' if dataDisk['variant'] == 'ssd' else 'Standard_LRS'
