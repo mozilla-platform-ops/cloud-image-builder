@@ -97,12 +97,15 @@ workerPool = {
                 },
                 'osType': 'Windows'
             },
-            'dataDisks': list(map(lambda dataDisk: {
-                'diskSizeGB': dataDisk['size'],
-                'managedDisk': {
-                    'storageAccountType': 'StandardSSD_LRS' if dataDisk['variant'] == 'ssd' else 'Standard_LRS'
-                }
-            }, filter(lambda disk: (not disk['os']), x['disk'])))
+            'dataDisks': [
+                {
+                    'lun': dataDiskIndex,
+                    'diskSizeGB': dataDisk['size'],
+                    'managedDisk': {
+                        'storageAccountType': 'StandardSSD_LRS' if dataDisk['variant'] == 'ssd' else 'Standard_LRS'
+                    }
+                } for dataDiskIndex, dataDisk in enumeratefilter(lambda disk: (not disk['os']), x['disk']))
+            ]
         },
         'tags': { t['name']: t['value'] for t in x['tag'] },
         'workerConfig': {
