@@ -1338,8 +1338,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             foreach ($tag in $target.tag) {
               $tags[$tag.name] = $tag.value;
             }
-            if ($imageArtifactDescriptor.task) {
-              $tags['diskImageTask'] = ('{0}/{1}' -f $imageArtifactDescriptor.task.id, $imageArtifactDescriptor.task.run);
+            if ($imageArtifactDescriptor.build.task) {
+              $tags['diskImageTask'] = ('{0}/{1}' -f $imageArtifactDescriptor.build.task.id, $imageArtifactDescriptor.build.task.run);
             }
 
             # check (again) that another task hasn't already created the image
