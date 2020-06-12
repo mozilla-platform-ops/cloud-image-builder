@@ -120,7 +120,6 @@ workerPool = {
                     'downloadsDir': 'Z:\\downloads',
                     'ed25519SigningKeyLocation': 'C:\\generic-worker\\ed25519-private.key',
                     'livelogExecutable': 'C:\\generic-worker\\livelog.exe',
-                    'livelogPUTPort': 60022,
                     'numberOfTasksToRun': 0,
                     'provisionerId': poolConfig['domain'],
                     'runAfterUserCreation': 'C:\\generic-worker\\task-user-init.cmd',
