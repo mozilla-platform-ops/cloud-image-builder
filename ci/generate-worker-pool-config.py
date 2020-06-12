@@ -116,7 +116,7 @@ workerPool = {
                     'cachesDir': 'Z:\\caches',
                     'cleanUpTaskDirs': True,
                     'deploymentId': commitSha[0:7],
-                    'disableReboots': True,
+                    'disableReboots': False,
                     'downloadsDir': 'Z:\\downloads',
                     'ed25519SigningKeyLocation': 'C:\\generic-worker\\ed25519-private.key',
                     'livelogExecutable': 'C:\\generic-worker\\livelog.exe',
