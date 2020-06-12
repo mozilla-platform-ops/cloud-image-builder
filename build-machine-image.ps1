@@ -1411,6 +1411,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
+              try {
+                Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+              } catch {
+                Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
+              }
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
                 Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions -flow $target.network.flow -disableCleanup:$disableCleanup;
