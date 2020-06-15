@@ -142,7 +142,7 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: 646ad2a
+            value: 16b6252
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
@@ -183,21 +183,21 @@ target:
                 # yamllint disable-line rule:truthy
                 on:
                     failure: retry after 60 seconds
-              #- name: ronin-sysprep-shutdown
-                #shell: azure-powershell
-                #commands:
-                    # yamllint disable rule:line-length
-                    # remove the /mode:vm switch if creating images for different hardware profiles
-                    #- C:\Windows\system32\sysprep\sysprep.exe /generalize /shutdown /oobe /mode:vm
-                    #-
-                    # yamllint enable rule:line-length
-                #test:
-                    #status:
-                        #code:
-                            #match: PowerState/stopped
+              - name: ronin-sysprep-shutdown
+                shell: azure-powershell
+                commands:
+                     # yamllint disable rule:line-length
+                     # remove the /mode:vm switch if creating images for different hardware profiles
+                    - C:\Windows\system32\sysprep\sysprep.exe /generalize /shutdown /oobe /mode:vm
+                    -
+                     yamllint enable rule:line-length
+                test:
+                    status:
+                        code:
+                            match: PowerState/stopped
                 # yamllint disable-line rule:truthy
-                #on:
-                    #failure: retest after 5 seconds
+                on:
+                    failure: retest after 5 seconds
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
