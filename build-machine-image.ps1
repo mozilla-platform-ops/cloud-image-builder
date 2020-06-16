@@ -1143,6 +1143,7 @@ function Get-Logs {
     [string[]] $systems,
     [string[]] $programs = @(
       'dsc-run',
+      'MaintainSystem',
       'OpenCloudConfig',
       'user32'
     ),
@@ -1178,6 +1179,43 @@ function Get-Logs {
   }
   end {
     Remove-Item -Path 'Env:\PAPERTRAIL_API_TOKEN';
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Get-PublicKey {
+  param (
+    [string] $system,
+    [string] $workFolder
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    try {
+      $logPath = ('{0}{1}instance-logs{1}{2}-MaintainSystem-*.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system);
+      if (Test-Path -Path $logPath -ErrorAction SilentlyContinue) {
+        $literalPaths = @(Resolve-Path -Path $logPath);
+        if (($literalPaths) -and ($literalPaths.Length)) {
+          $publicKeys = @(Get-Content $literalPaths | Select-String -Pattern '-----BEGIN PGP PUBLIC KEY BLOCK-----.*-----END PGP PUBLIC KEY BLOCK-----' | % { $_.Matches.Value });
+          if (($publicKeys) -and ($publicKeys.Length)) {
+            $publicKeyFilePath = ('{0}{1}instance-logs{1}{2}-public.key' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system);
+            [System.IO.File]::WriteAllLines($publicKeyFilePath, $publicKeys[0].Split('  '), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false));
+            Write-Output -InputObject ('{0} :: public key detected in maintain system logs and saved to {1}' -f $($MyInvocation.MyCommand.Name), $publicKeyFilePath);
+          } else {
+            Write-Output -InputObject ('{0} :: no public key matches detected in maintain system logs' -f $($MyInvocation.MyCommand.Name));
+          }
+        } else {
+          Write-Output -InputObject ('{0} :: no maintain system logs resolved with wildcard search "{1}"' -f $($MyInvocation.MyCommand.Name), $logPath);
+        }
+      } else {
+        Write-Output -InputObject ('{0} :: no maintain system logs detected with wildcard search "{1}"' -f $($MyInvocation.MyCommand.Name), $logPath);
+      }
+    } catch {
+      Write-Output -InputObject ('{0} :: error parsing logs for public keys. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message);
+    }
+  }
+  end {
     Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
 }
@@ -1425,6 +1463,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
               }
               Get-Logs -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, @($target.tag | ? { $_.name -eq 'workerType' })[0].value, $target.region.Replace(' ', '').ToLower())) -workFolder $workFolder -token $secret.papertrail.token;
+              Get-PublicKey -system ('cib-{0}.reddog.microsoft.com' -f $imageKey) -workFolder $workFolder;
 
               # check (again) that another task hasn't already created the image
               $existingImage = (Get-AzImage `
