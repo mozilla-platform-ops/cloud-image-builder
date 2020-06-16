@@ -190,7 +190,7 @@ target:
                     # remove the /mode:vm switch if creating images for different hardware profiles
                     - C:\Windows\system32\sysprep\sysprep.exe /generalize /shutdown /oobe /mode:vm
                     -
-                     yamllint enable rule:line-length
+                    # yamllint enable rule:line-length
                 test:
                     status:
                         code:
