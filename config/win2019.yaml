@@ -25,7 +25,7 @@ iso:
 manager:
     pool:
         - domain: relops
-          variant: win2019
+          variant: win2019-azure
           capacity:
               minimum: 0
               maximum: 2
