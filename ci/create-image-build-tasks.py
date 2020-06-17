@@ -52,6 +52,7 @@ try:
     overwriteDiskImage = any(line.lower().strip() == 'overwrite-disk-image' for line in lines)
     overwriteMachineImage = any(line.lower().strip() == 'overwrite-machine-image' for line in lines)
     disableCleanup = any(line.lower().strip() == 'disable-cleanup' for line in lines)
+    enableSnapshotCopy = any(line.lower().strip() == 'enable-snapshot-copy' for line in lines)
     purgeRelopsResources = True
     purgeTaskclusterResources = any(line.lower().strip() == 'purge-taskcluster-resources' for line in lines)
     noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
@@ -306,13 +307,13 @@ for platform in ['amazon', 'azure']:
                                 'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
                                 'cd cloud-image-builder',
                                 'git reset --hard {}'.format(commitSha),
-                                'powershell .\\build-machine-image.ps1 {} {} {} -enableSnapshotCopy:${} -overwrite:${} -disableCleanup:${}'.format(
+                                'powershell .\\build-machine-image.ps1 -platform {} -imageKey {} -group {}{}{}{}'.format(
                                     platform,
                                     key,
                                     target['group'],
-                                    'false',
-                                    'true' if overwriteMachineImage else 'false',
-                                    'true' if disableCleanup else 'false'
+                                    (' -enableSnapshotCopy' if enableSnapshotCopy else ''),
+                                    (' -overwrite' if overwriteMachineImage else ''),
+                                    (' -disableCleanup' if disableCleanup else '')
                                 )
                             ],
                             scopes = [
