@@ -1200,8 +1200,8 @@ function Get-PublicKey {
           $publicKeys = @(Get-Content $literalPaths | Select-String -Pattern '-----BEGIN PGP PUBLIC KEY BLOCK-----.*-----END PGP PUBLIC KEY BLOCK-----' | % { $_.Matches.Value });
           if (($publicKeys) -and ($publicKeys.Length)) {
             $publicKeyFilePath = ('{0}{1}instance-logs{1}{2}-public.key' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system);
-            [System.IO.File]::WriteAllLines($publicKeyFilePath, $publicKeys[0].Split('  '), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false));
-            Write-Output -InputObject ('{0} :: public key detected in maintain system logs and saved to {1}' -f $($MyInvocation.MyCommand.Name), $publicKeyFilePath);
+            [System.IO.File]::WriteAllLines($publicKeyFilePath, ($publicKeys[0] -split '\s{2}'), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false));
+            Write-Output -InputObject ('{0} :: {1} public key(s) detected in maintain system logs. saved first to {2}' -f $($MyInvocation.MyCommand.Name), $publicKeys.Length, $publicKeyFilePath);
           } else {
             Write-Output -InputObject ('{0} :: no public key matches detected in maintain system logs' -f $($MyInvocation.MyCommand.Name));
           }
@@ -1213,6 +1213,34 @@ function Get-PublicKey {
       }
     } catch {
       Write-Output -InputObject ('{0} :: error parsing logs for public keys. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message);
+    }
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
+function Remove-Image {
+  param (
+    [object] $image
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    try {
+      Write-Output -InputObject ('{0} :: removing existing machine image {1} / {2} / {3}, created {4}' -f $($MyInvocation.MyCommand.Name), $image.Location, $image.ResourceGroupName, $image.Name, $image.Tags.machineImageCommitTime);
+      if (Remove-AzImage `
+        -ResourceGroupName $image.ResourceGroupName `
+        -Name $image.Name `
+        -AsJob `
+        -Force) {
+        Write-Output -InputObject ('{0} :: removed existing machine image {1} / {2} / {3}, created {4}' -f $($MyInvocation.MyCommand.Name), $image.Location, $image.ResourceGroupName, $image.Name, $image.Tags.machineImageCommitTime);
+      } else {
+        Write-Output -InputObject ('{0} :: failed to remove existing machine image {1} / {2} / {3}, created {4}' -f $($MyInvocation.MyCommand.Name), $image.Location, $image.ResourceGroupName, $image.Name, $image.Tags.machineImageCommitTime);
+      }
+    } catch {
+      Write-Output -InputObject ('{0} :: exception removing existing machine image {1} / {2} / {3}, created {4}. {5}' -f $($MyInvocation.MyCommand.Name), $image.Location, $image.ResourceGroupName, $image.Name, $image.Tags.machineImageCommitTime, $_.Exception.Message);
     }
   }
   end {
@@ -1283,20 +1311,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
         -ErrorAction SilentlyContinue);
       if ($existingImage) {
         if ($overwrite) {
-          try {
-            Write-Output -InputObject ('removing existing machine image {0} / {1} / {2}, created {3}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
-            if (Remove-AzImage `
-              -ResourceGroupName $existingImage.ResourceGroupName `
-              -Name $existingImage.Name `
-              -AsJob `
-              -Force) {
-              Write-Output -InputObject ('removed existing machine image {0} / {1} / {2}, created {3}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
-            } else {
-              Write-Output -InputObject ('failed to remove existing machine image {0} / {1} / {2}, created {3}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime);
-            }
-          } catch {
-            Write-Output -InputObject ('exception removing existing machine image {0} / {1} / {2}, created {3}. {4}' -f $existingImage.Location, $existingImage.ResourceGroupName, $existingImage.Name, $existingImage.Tags.MachineImageCommitTime, $_.Exception.Message);
-          }
+          Remove-Image -image $existingImage
         } else {
           Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
           exit;
@@ -1387,13 +1402,17 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               -ImageName $targetImageName `
               -ErrorAction SilentlyContinue);
             if ($existingImage) {
-              Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
-              exit;
+              if ($overwrite) {
+                Remove-Image -image $existingImage
+              } else {
+                Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
+                exit;
+              }
             }
 
             $newCloudInstanceInstantiationAttempts = 0;
             do {
-              # todo: get instance screenshots
+              $logMinTime = (Get-Date);
               New-CloudInstanceFromImageExport `
                 -platform $target.platform `
                 -localImagePath $vhdLocalPath `
@@ -1465,7 +1484,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               # system name will change three times during the course of bootstrapping, get system logs for all three
               $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
               $fqdnRegion = $target.region.Replace(' ', '').ToLower();
-              Get-Logs -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion)) -workFolder $workFolder -token $secret.papertrail.token;
+              Get-Logs -minTime $logMinTime -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion)) -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKey -system ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion) -workFolder $workFolder;
 
               # check (again) that another task hasn't already created the image
@@ -1474,8 +1493,12 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 -ImageName $targetImageName `
                 -ErrorAction SilentlyContinue);
               if ($existingImage) {
-                Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
-                exit;
+                if ($overwrite) {
+                  Remove-Image -image $existingImage
+                } else {
+                  Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
+                  exit;
+                }
               }
 
               if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
