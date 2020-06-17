@@ -1462,8 +1462,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
               }
-              Get-Logs -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, @($target.tag | ? { $_.name -eq 'workerType' })[0].value, $target.region.Replace(' ', '').ToLower())) -workFolder $workFolder -token $secret.papertrail.token;
-              Get-PublicKey -system ('cib-{0}.reddog.microsoft.com' -f $imageKey) -workFolder $workFolder;
+              # system name will change three times during the course of bootstrapping, get system logs for all three
+              $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
+              $fqdnRegion = $target.region.Replace(' ', '').ToLower();
+              Get-Logs -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion)) -workFolder $workFolder -token $secret.papertrail.token;
+              Get-PublicKey -system ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion) -workFolder $workFolder;
 
               # check (again) that another task hasn't already created the image
               $existingImage = (Get-AzImage `
