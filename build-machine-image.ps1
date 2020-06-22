@@ -100,6 +100,7 @@ function Invoke-BootstrapExecution {
     [string] $groupName,
     [object] $execution,
     [object] $flow,
+    [string] $workFolder,
     [int] $attemptNumber = 1,
     [switch] $disableCleanup = $false
   )
@@ -250,6 +251,22 @@ function Invoke-BootstrapExecution {
             $instanceStatus = (Get-InstanceStatus -instanceName $instanceName -groupName $groupName);
             if (($instanceStatus) -and ($instanceStatus.Code -eq 'PowerState/stopped')) {
               Write-Output -InputObject ('{0} :: instance shutdown detected during bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+            } elseif (($instanceStatus) -and ($instanceStatus.Code -eq 'PowerState/running')) {
+              Write-Output -InputObject ('{0} :: running instance state ({1}) detected during bootstrap execution {2}/{3}, attempt {4}; {5}, using shell: {6}, on: {7}/{8}' -f $($MyInvocation.MyCommand.Name), $instanceStatus.Code, $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
+              try {
+                $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+                Get-AzVMBootDiagnosticsData -ResourceGroupName $groupName -Name $instanceName -Windows -LocalPath $savePath;
+                foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
+                  $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+                  $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
+                  $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
+                  $image.Dispose();
+                  Remove-Item -Path $screenshot.FullName -Force;
+                }
+                Write-Output -InputObject ('{0} :: boot diagnostics data for {1}/{2}/{3}, saved to {4}' -f $($MyInvocation.MyCommand.Name), 'azure', $groupName, $instanceName, ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)));
+              } catch {
+                Write-Output -InputObject ('{0} :: failed to obtain boot diagnostics data for {1}/{2}/{3}. {4}' -f $($MyInvocation.MyCommand.Name), 'azure', $groupName, $instanceName, $_.Exception.Message);
+              }
             } elseif ($instanceStatus) {
               Write-Output -InputObject ('{0} :: unhandled instance state {1} detected during bootstrap execution {2}/{3}, attempt {4}; {5}, using shell: {6}, on: {7}/{8}' -f $($MyInvocation.MyCommand.Name), $instanceStatus.Code, $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
             } else {
@@ -458,8 +475,16 @@ function Remove-Resource {
           'virtual machine' {
             if (Get-AzVM -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
               try {
-                Remove-AzVm -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
-                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+                $operation = (Remove-AzVm `
+                  -ResourceGroupName $resourceGroupName `
+                  -Name $resourceName `
+                  -Force `
+                  -ErrorAction SilentlyContinue);
+                if ($operation.Status -eq 'Succeeded') {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+                } else {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal failed with status: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $operation.Status, $operation.Error));
+                }
               } catch {
                 Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $_.Exception.Message));
               }
@@ -470,8 +495,16 @@ function Remove-Resource {
           'network interface' {
             if (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
               try {
-                Remove-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
-                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+                $operation = (Remove-AzNetworkInterface `
+                  -ResourceGroupName $resourceGroupName `
+                  -Name $resourceName `
+                  -Force `
+                  -ErrorAction SilentlyContinue);
+                if ($operation.Status -eq 'Succeeded') {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+                } else {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal failed with status: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $operation.Status, $operation.Error));
+                }
               } catch {
                 Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $_.Exception.Message));
               }
@@ -482,8 +515,16 @@ function Remove-Resource {
           'public ip address' {
             if (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
               try {
-                Remove-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -Force;
-                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+                $operation = (Remove-AzPublicIpAddress `
+                  -ResourceGroupName $resourceGroupName `
+                  -Name $resourceName `
+                  -Force `
+                  -ErrorAction SilentlyContinue);
+                if ($operation.Status -eq 'Succeeded') {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName));
+                } else {
+                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal failed with status: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $operation.Status, $operation.Error));
+                }
               } catch {
                 Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resourceName, $_.Exception.Message));
               }
@@ -495,8 +536,16 @@ function Remove-Resource {
             if (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue) {
               foreach ($azDisk in @(Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue)) {
                 try {
-                  Remove-AzDisk -ResourceGroupName $resourceGroupName -DiskName $azDisk.Name -Force;
-                  Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name));
+                  $operation = (Remove-AzDisk `
+                    -ResourceGroupName $resourceGroupName `
+                    -DiskName $azDisk.Name `
+                    -Force `
+                    -ErrorAction SilentlyContinue);
+                  if ($operation.Status -eq 'Succeeded') {
+                    Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal appears successful' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name));
+                  } else {
+                    Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal failed with status: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name, $operation.Status, $operation.Error));
+                  }
                 } catch {
                   Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal threw exception. {4}' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name, $_.Exception.Message));
                 }
@@ -1469,7 +1518,15 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               try {
-                Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+                $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+                Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath;
+                foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
+                  $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+                  $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
+                  $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
+                  $image.Dispose();
+                  Remove-Item -Path $screenshot.FullName -Force;
+                }
               } catch {
                 Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
               }
