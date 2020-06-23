@@ -255,7 +255,7 @@ function Invoke-BootstrapExecution {
               Write-Output -InputObject ('{0} :: running instance state ({1}) detected during bootstrap execution {2}/{3}, attempt {4}; {5}, using shell: {6}, on: {7}/{8}' -f $($MyInvocation.MyCommand.Name), $instanceStatus.Code, $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
               try {
                 $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                Get-AzVMBootDiagnosticsData -ResourceGroupName $groupName -Name $instanceName -Windows -LocalPath $savePath;
+                Get-AzVMBootDiagnosticsData -ResourceGroupName $groupName -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
                 foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
                   $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
                   $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
@@ -1519,7 +1519,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               try {
                 $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath;
+                Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
                 foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
                   $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
                   $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
