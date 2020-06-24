@@ -14,6 +14,9 @@ image:
     type: Fixed
     rdp: true
     obfuscate: true
+    reseal:
+        mode: Audit
+        shutdown: true
     network: Home
     target:
         platform: amazon

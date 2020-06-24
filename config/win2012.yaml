@@ -13,6 +13,9 @@ image:
     format: VHD
     type: Fixed
     obfuscate: true
+    reseal:
+        mode: Audit
+        shutdown: true
     target:
         platform: amazon
         bucket: windows-ami-builder

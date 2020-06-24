@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.88'
+    'version' = '0.0.89'
   },
   @{
     'module' = 'powershell-yaml';
@@ -174,6 +174,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -timeZone $(if ($config.image.timezone) { $config.image.timezone } else { 'UTC' }) `
         -administratorPassword $administratorPassword `
         -obfuscatePassword:$(if ($config.image.obfuscate) { $true } else { $false }) `
+        -resealMode $(if (($config.image.reseal) -and ($config.image.reseal.mode)) { $config.image.reseal.mode } else { 'OOBE' }) `
+        -resealShutdown:$(if (($config.image.reseal) -and ($config.image.reseal.shutdown)) { $true } else { $false }) `
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
