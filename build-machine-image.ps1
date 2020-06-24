@@ -1192,6 +1192,7 @@ function Get-Logs {
     [string[]] $systems,
     [string[]] $programs = @(
       'dsc-run',
+      'ed25519-public-key',
       'MaintainSystem',
       'OpenCloudConfig',
       'user32'
@@ -1232,36 +1233,53 @@ function Get-Logs {
   }
 }
 
-function Get-PublicKey {
+function Get-PublicKeys {
   param (
-    [string] $system,
-    [string] $workFolder
+    [string[]] $systems,
+    [string[]] $programs,
+    [string] $workFolder,
+    [hashtable[]] $regexes = @(
+      @{
+        'algorithm' = 'gpg';
+        'pattern' = '-----BEGIN PGP PUBLIC KEY BLOCK-----.*-----END PGP PUBLIC KEY BLOCK-----'
+      },
+      @{
+        'algorithm' = 'ed25519';
+        'pattern' = '[A-Za-z0-9/+]{43}='
+      }
+    )
   )
   begin {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
   }
   process {
-    try {
-      $logPath = ('{0}{1}instance-logs{1}{2}-MaintainSystem-*.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system);
-      if (Test-Path -Path $logPath -ErrorAction SilentlyContinue) {
-        $literalPaths = @(Resolve-Path -Path $logPath);
-        if (($literalPaths) -and ($literalPaths.Length)) {
-          $publicKeys = @(Get-Content $literalPaths | Select-String -Pattern '-----BEGIN PGP PUBLIC KEY BLOCK-----.*-----END PGP PUBLIC KEY BLOCK-----' | % { $_.Matches.Value });
-          if (($publicKeys) -and ($publicKeys.Length)) {
-            $publicKeyFilePath = ('{0}{1}instance-logs{1}{2}-public.key' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system);
-            [System.IO.File]::WriteAllLines($publicKeyFilePath, ($publicKeys[0] -split '\s{2}'), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false));
-            Write-Output -InputObject ('{0} :: {1} public key(s) detected in maintain system logs. saved first to {2}' -f $($MyInvocation.MyCommand.Name), $publicKeys.Length, $publicKeyFilePath);
+    foreach ($system in $systems) {
+      foreach ($program in $programs) {
+        try {
+          $logPath = ('{0}{1}instance-logs{1}{2}-{3}-*.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program);
+          if (Test-Path -Path $logPath -ErrorAction SilentlyContinue) {
+            $literalPaths = @(Resolve-Path -Path $logPath);
+            if (($literalPaths) -and ($literalPaths.Length)) {
+              foreach ($regex in $regexes) {
+                $publicKeys = @(Get-Content $literalPaths | Select-String -Pattern '-----BEGIN PGP PUBLIC KEY BLOCK-----.*-----END PGP PUBLIC KEY BLOCK-----' | % { $_.Matches.Value });
+                if (($publicKeys) -and ($publicKeys.Length)) {
+                  $publicKeyFilePath = ('{0}{1}instance-logs{1}{2}-{3}-public.key' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $regex.algorithm);
+                  [System.IO.File]::WriteAllLines($publicKeyFilePath, @($publicKeys[0] -split '\s{2}'), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false));
+                  Write-Output -InputObject ('{0} :: {1} {2} public key(s) detected in {3}/{4} logs. saved first to {5}' -f $($MyInvocation.MyCommand.Name), $publicKeys.Length, $regex.algorithm, $system, $program, $publicKeyFilePath);
+                } else {
+                  Write-Output -InputObject ('{0} :: no {1} public key matches detected in {2}/{3} logs' -f $($MyInvocation.MyCommand.Name), $regex.algorithm, $system, $program);
+                }
+              }
+            } else {
+              Write-Output -InputObject ('{0} :: no {1}/{2} logs resolved with wildcard search "{3}"' -f $($MyInvocation.MyCommand.Name), $system, $program, $logPath);
+            }
           } else {
-            Write-Output -InputObject ('{0} :: no public key matches detected in maintain system logs' -f $($MyInvocation.MyCommand.Name));
+            Write-Output -InputObject ('{0} :: no {1}/{2} logs detected with wildcard search "{3}"' -f $($MyInvocation.MyCommand.Name), $system, $program, $logPath);
           }
-        } else {
-          Write-Output -InputObject ('{0} :: no maintain system logs resolved with wildcard search "{1}"' -f $($MyInvocation.MyCommand.Name), $logPath);
+        } catch {
+          Write-Output -InputObject ('{0} :: error parsing {1}/{2} logs for public keys. {3}' -f $($MyInvocation.MyCommand.Name), $system, $program, $_.Exception.Message);
         }
-      } else {
-        Write-Output -InputObject ('{0} :: no maintain system logs detected with wildcard search "{1}"' -f $($MyInvocation.MyCommand.Name), $logPath);
       }
-    } catch {
-      Write-Output -InputObject ('{0} :: error parsing logs for public keys. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message);
     }
   }
   end {
@@ -1541,8 +1559,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               # system name will change three times during the course of bootstrapping, get system logs for all three
               $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
               $fqdnRegion = $target.region.Replace(' ', '').ToLower();
-              Get-Logs -minTime $logMinTime -systems @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion)) -workFolder $workFolder -token $secret.papertrail.token;
-              Get-PublicKey -system ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion) -workFolder $workFolder;
+              $systems = @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion));
+              Get-Logs -minTime $logMinTime -systems  -workFolder $workFolder -token $secret.papertrail.token;
+              Get-PublicKeys -systems $systems -workFolder $workFolder;
 
               # check (again) that another task hasn't already created the image
               $existingImage = (Get-AzImage `
