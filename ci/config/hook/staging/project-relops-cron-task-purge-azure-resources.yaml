@@ -1,7 +1,12 @@
 ---
 metadata:
-    name: cron task - purge azure resources - taskcluster-staging-workers-us-central
-    description: run cron task to purge deprecated and orphaned azure resources within resource group taskcluster-staging-workers-us-central
+    name: >-
+        cron task
+        - purge azure resources
+        - taskcluster-staging-workers-us-central
+    description: >-
+        run cron task to purge deprecated and orphaned azure resources within
+        resource group taskcluster-staging-workers-us-central
     owner: grenade@mozilla.com
 task:
     provisionerId: relops
@@ -11,6 +16,7 @@ task:
             - /bin/bash
             - '--login'
             - '-c'
+            # yamllint disable rule:line-length
             - git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && pip install -r ci/purge-azure-resources-requirements.txt | grep -v "^[[:space:]]*$" && python ci/purge-azure-resources.py taskcluster-staging-workers-us-central
         image: python
         maxRunTime: 600
@@ -24,7 +30,9 @@ task:
             - secrets:get:project/relops/image-builder/dev
     metadata:
         name: purge azure resources - taskcluster-staging-workers-us-central
-        description: purge deprecated and orphaned azure resources within resource group taskcluster-staging-workers-us-central
+        description: >-
+            purge deprecated and orphaned azure resources within resource group
+            taskcluster-staging-workers-us-central
         owner: grenade@mozilla.com
         source: https://bugzilla.mozilla.org/show_bug.cgi?id=1631824
 schedule:
