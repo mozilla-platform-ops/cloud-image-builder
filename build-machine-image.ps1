@@ -1560,7 +1560,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
               $fqdnRegion = $target.region.Replace(' ', '').ToLower();
               $systems = @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion));
-              Get-Logs -minTime $logMinTime -systems  -workFolder $workFolder -token $secret.papertrail.token;
+              Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -workFolder $workFolder;
 
               # check (again) that another task hasn't already created the image
