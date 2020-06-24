@@ -1561,8 +1561,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               $fqdnRegion = $target.region.Replace(' ', '').ToLower();
               $systems = @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion));
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
-              Get-PublicKeys -systems $systems -workFolder $workFolder;
-
+              Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
               # check (again) that another task hasn't already created the image
               $existingImage = (Get-AzImage `
                 -ResourceGroupName $target.group `
