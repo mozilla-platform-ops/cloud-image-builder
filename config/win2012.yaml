@@ -15,7 +15,7 @@ image:
     obfuscate: true
     reseal:
         mode: Audit
-        shutdown: false
+        shutdown: true
     target:
         platform: amazon
         bucket: windows-ami-builder

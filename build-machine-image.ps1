@@ -1534,6 +1534,32 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             } until (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState)
             Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
+            if (($config.image.reseal.mode -eq 'Audit') -and ($config.image.reseal.shutdown)) {
+              # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
+              while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
+                Write-Output -InputObject ('awaiting shutdown. image configured for sysprep reseal audit mode with shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code);
+                try {
+                  $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+                  Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
+                  foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
+                    $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+                    $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
+                    $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
+                    $image.Dispose();
+                    Remove-Item -Path $screenshot.FullName -Force;
+                  }
+                } catch {
+                  Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
+                }
+                Start-Sleep -Seconds 60;
+              }
+              if ((Start-AzVM -ResourceGroupName $target.group -Name $instanceName -ErrorAction 'SilentlyContinue').IsSuccessStatusCode) {
+                Write-Output -InputObject ('instance restarted after sysprep reseal audit mode shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code);
+              } else {
+                Write-Output -InputObject ('instance restart failed after sysprep reseal audit mode shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code);
+              }
+              $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
+            }
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
               try {
                 $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));

@@ -14,7 +14,7 @@ image:
     type: Fixed
     obfuscate: true
     reseal:
-        mode: Audit
+        mode: OOBE
         shutdown: false
     target:
         platform: amazon
