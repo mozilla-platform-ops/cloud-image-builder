@@ -16,7 +16,7 @@ image:
     obfuscate: true
     reseal:
         mode: Audit
-        shutdown: true
+        shutdown: false
     network: Home
     target:
         platform: amazon
