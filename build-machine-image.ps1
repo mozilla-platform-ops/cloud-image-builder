@@ -1537,7 +1537,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             if (($config.image.reseal.mode -eq 'Audit') -and ($config.image.reseal.shutdown)) {
               # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
               while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
-                Write-Output -InputObject ('awaiting shutdown. image configured for sysprep reseal audit mode with shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code);
+                Write-Output -InputObject ('awaiting shutdown. image configured for sysprep reseal audit mode with shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
                 try {
                   $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
                   Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
@@ -1553,10 +1553,16 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 }
                 Start-Sleep -Seconds 60;
               }
-              if ((Start-AzVM -ResourceGroupName $target.group -Name $instanceName -ErrorAction 'SilentlyContinue').IsSuccessStatusCode) {
-                Write-Output -InputObject ('instance restarted after sysprep reseal audit mode shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code);
-              } else {
-                Write-Output -InputObject ('instance restart failed after sysprep reseal audit mode shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $groupName -ErrorAction 'SilentlyContinue').Code);
+              Write-Output -InputObject ('instance shutdown detected. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+              try {
+                Start-AzVM -ResourceGroupName $target.group -Name $instanceName;
+                Write-Output -InputObject ('instance restart triggered after sysprep reseal audit mode shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+              } catch {
+                Write-Output -InputObject ('instance restart failed after sysprep reseal audit mode shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+              }
+              while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -ne 'PowerState/running') {
+                Write-Output -InputObject ('awaiting instance running state after sysprep reseal audit mode shutdown and restart. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+                Start-Sleep -Seconds 30;
               }
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
             }
