@@ -145,7 +145,7 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: 4c163b7
+            value: e5850f7
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
@@ -168,11 +168,12 @@ target:
                 # yamllint disable-line rule:truthy
                 on:
                     success: reboot
+              # trigger bootstrap script and await completion
               - name: invoke-ronin-puppet
                 shell: azure-powershell
                 commands:
                     # yamllint disable-line rule:line-length
-                    - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))	
+                    - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
               - name: verify-ronin-puppet
                 shell: azure-powershell
                 commands:
@@ -185,16 +186,31 @@ target:
                 # yamllint disable-line rule:truthy
                 on:
                     failure: retry after 60 seconds
-              - name: wait-for-shutdown
-                shell: azure-powershell
-                commands:
+            - name: wait-for-shutdown
+              shell: azure-powershell
+              commands:
                     - ping 127.0.0.1
-                test:
+              test:
                   status:
                       code:
                           match: PowerState/stopped                    
                 on:
-                    failure: retry after 60 seconds					
+                    failure: retry after 60 seconds
+              #- name: ronin-sysprep-shutdown
+                #shell: azure-powershell
+                #commands:
+                    # yamllint disable rule:line-length
+                    ## remove the /mode:vm switch if creating images for different hardware profiles
+                    #- C:\Windows\system32\sysprep\sysprep.exe /generalize /shutdown
+                    #-
+                    # yamllint enable rule:line-length
+                #test:
+                    #status:
+                        #code:
+                            #match: PowerState/stopped
+                # yamllint disable-line rule:truthy
+                #on:
+                    #failure: retest after 5 seconds
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
