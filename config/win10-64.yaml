@@ -180,13 +180,19 @@ target:
                     # yamllint disable-line rule:line-length
                     - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\ronin_puppet' -Name 'bootstrap_stage').bootstrap_stage -like 'complete') { Write-Output -InputObject ('puppet bootstrap stage is complete') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
                 test:
-                    #std:
-                    status:
-                        #out:
-                        code:
-                            #match: puppet bootstrap stage is complete
-                            match: PowerState/stopped
+                    std:
+                        out:
+                            match: puppet bootstrap stage is complete
                 # yamllint disable-line rule:truthy
+                on:
+                    failure: retry after 60 seconds
+            - name: wait-for-shutdown
+              shell: azure-powershell
+              commands:
+                    - ping 127.0.0.1
+              test:
+                    status:
+                        match: PowerState/stopped
                 on:
                     failure: retry after 60 seconds
               #- name: ronin-sysprep-shutdown
