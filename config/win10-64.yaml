@@ -190,9 +190,9 @@ target:
                 commands:
                     - ping 127.0.0.1
                 test:
-                  status:
-                      code:
-                          match: PowerState/stopped                    
+                    status:
+                        code:
+                            match: PowerState/stopped
                 on:
                     failure: retry after 60 seconds
     - platform: azure
