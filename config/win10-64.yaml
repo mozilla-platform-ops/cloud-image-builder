@@ -194,7 +194,7 @@ target:
                       code:
                           match: PowerState/stopped                    
                 on:
-                    failure: retry after 60 seconds					
+                    failure: retry after 60 seconds
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
