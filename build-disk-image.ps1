@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.89'
+    'version' = '0.0.90'
   },
   @{
     'module' = 'powershell-yaml';
@@ -163,7 +163,23 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $unattendGenerationAttemptCount = 0;
   do {
     $unattendGenerationAttemptCount += 1;
-    $commands = @($unattendCommands | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } }) + @($packages | % { $_.unattend } | % { @{ 'Description' = $_.description; 'CommandLine' = $_.command } });
+    $commands = @($unattendCommands | Sort-Object -Property 'priority' | % {
+      @{
+        'Description'   = $_.description;
+        'CommandLine'   = $_.command;
+        'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
+        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' });
+        'WillReboot'    = $(if ($_.reboot) { $_.reboot } else { 'Never' })
+      } 
+    }) + @($packages | % { $_.unattend } | Sort-Object -Property 'priority' | % {
+      @{
+        'Description'   = $_.description;
+        'CommandLine'   = $_.command;
+        'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
+        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' });
+        'WillReboot'    = $(if ($_.reboot) { $_.reboot } else { 'Never' })
+      }
+    });
     try {
       $administratorPassword = (New-Password);
       New-UnattendFile `

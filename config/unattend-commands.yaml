@@ -1,28 +1,9 @@
 ---
-- description: create log folder
-  command: cmd /c if not exist C:\log mkdir C:\log
-  target:
-      cloud:
-          - amazon
-          - azure
-          - google
-      os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
 - description: disable network profile prompt
   # yamllint disable-line rule:line-length
   command: reg add HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - amazon
@@ -38,6 +19,8 @@
           - false
 - description: remove proxy
   command: cmd /c start /wait netsh winhttp reset proxy 0
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - azure
@@ -57,6 +40,8 @@
           - false
 - description: activate high performance power profile
   command: cmd /c start /wait powercfg -setactive SCHEME_MIN
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - azure
@@ -76,6 +61,8 @@
           - false
 - description: disable ac power saving
   command: cmd /c start /wait powercfg -change -monitor-timeout-ac 0
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - amazon
@@ -97,6 +84,8 @@
           - false
 - description: disable dc power saving
   command: cmd /c start /wait powercfg -change -monitor-timeout-dc 0
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - amazon
@@ -119,6 +108,8 @@
 - description: >-
       enable windows firewall for all profiles (domain, public, private)
   command: cmd /c start /wait netsh advfirewall set allprofiles state on
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - azure
@@ -141,6 +132,8 @@
     (allows icmp response on azure vnet)
   # yamllint disable-line rule:line-length
   command: cmd /c start /wait netsh advfirewall firewall set rule name="File and Printer Sharing (Echo Request - ICMPv4-In)" new enable=yes
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - azure
@@ -161,6 +154,8 @@
 - description: firewall create rule inbound winrm over http for public profile
 # yamllint disable-line rule:line-length
   command: cmd /c start /wait netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - azure
@@ -175,6 +170,8 @@
 - description: firewall enable rule inbound winrm over http for all profiles
 # yamllint disable-line rule:line-length
   command: cmd /c start /wait netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes profile=any
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - azure
@@ -189,6 +186,8 @@
 - description: enable rdp firewall exception
   # yamllint disable-line rule:line-length
   command: cmd /c start /wait netsh advfirewall firewall set rule group="Remote Desktop" new enable=yes > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  pass: auditUser
+  synchronicity: asynchronous
   target:
       cloud:
           - amazon

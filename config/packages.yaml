@@ -4,8 +4,14 @@
   unattend:
       - description: create log folder
         command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 600
       - description: install stackdriver
         command: C:\Windows\Temp\StackdriverLogging-v1-9.exe /S
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 601
   target:
       cloud:
           - amazon
@@ -34,9 +40,15 @@
   unattend:
       - description: create log folder
         command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 0
       - description: install nxlog
         # yamllint disable-line rule:line-length
         command: msiexec /i C:\Windows\Temp\nxlog-ce.msi /q /L*v C:\log\unattend-install-nxlog-stdout.log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 100
   target:
       cloud:
           - amazon
@@ -78,6 +90,9 @@
       - description: install papertrail certificate
         # yamllint disable-line rule:line-length
         command: cmd /c move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files\nxlog\cert\papertrail-bundle.pem"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 101
   target:
       cloud:
           - amazon
@@ -100,6 +115,9 @@
       - description: install papertrail certificate
         # yamllint disable-line rule:line-length
         command: cmd /c move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 101
   target:
       cloud:
           - amazon
@@ -127,11 +145,20 @@
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 102
       - description: install nxlog configuration
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 103
       - description: start nxlog service
         command: cmd /c net start nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 104
   target:
       cloud:
           - amazon
@@ -153,11 +180,20 @@
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 102
       - description: install nxlog configuration
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 103
       - description: start nxlog service
         command: cmd /c net start nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 104
   target:
       cloud:
           - amazon
@@ -179,11 +215,20 @@
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 102
       - description: install nxlog configuration
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 103
       - description: start nxlog service
         command: cmd /c net start nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 104
   target:
       cloud:
           - amazon
@@ -205,11 +250,20 @@
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 102
       - description: install nxlog configuration
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 103
       - description: start nxlog service
         command: cmd /c net start nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 104
   target:
       cloud:
           - amazon
@@ -231,11 +285,20 @@
   unattend:
       - description: stop nxlog service
         command: cmd /c net stop nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 102
       - description: install nxlog configuration
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 103
       - description: start nxlog service
         command: cmd /c net start nxlog
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 104
   target:
       cloud:
           - amazon
@@ -257,6 +320,9 @@
   unattend:
       - description: install ec2config
         command: cmd /c start /wait C:\Windows\Temp\Ec2Install.exe /quiet
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 501
   extract: true
   target:
       cloud:
@@ -285,6 +351,9 @@
       - description: install ec2config configuration
         # yamllint disable-line rule:line-length
         command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\config.xml"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 502
   target:
       cloud:
           - amazon
@@ -312,6 +381,9 @@
       - description: install ec2 wallpaper configuration
         # yamllint disable-line rule:line-length
         command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\WallpaperSettings.xml"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 503
   target:
       cloud:
           - amazon
@@ -338,9 +410,15 @@
   unattend:
       - description: create log folder
         command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 500
       - description: install azure agent
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /q /L*v C:\log\unattend-install-vmagent-stdout.log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 501
   target:
       cloud:
           - azure
@@ -401,13 +479,27 @@
   unattend:
       - description: create log folder
         command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 900
       - description: create dsc folder
         command: cmd /c if not exist C:\dsc mkdir C:\dsc
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 900
       - description: install occ trigger script
-        command: cmd /c move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
+        # yamllint disable-line rule:line-length
+        command: cmd /c if exist C:\Windows\Temp\rundsc.ps1 move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 901
       - description: create occ scheduled task
         # yamllint disable-line rule:line-length
-        command: schtasks /create /tn RunDesiredStateConfigurationAtStartup /sc onstart /ru SYSTEM /rl HIGHEST /tr "powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1" /f
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1 > C:\log\rundsc-stdout.log 2> C:\log\rundsc-stderr.log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 902
+        reboot: OnRequest
   target:
       cloud:
           - azure
@@ -427,9 +519,17 @@
   unattend:
       - description: create dotNetFx45 log folder
         command: cmd /c if not exist C:\log\dotNetFx45 mkdir C:\log\dotNetFx45
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 500
+        reboot: Never
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 501
+        reboot: Never
   target:
       cloud:
           - amazon
@@ -452,23 +552,51 @@
       - description: create extraction folder
         # yamllint disable-line rule:line-length
         command: cmd /c if not exist C:\Windows\Temp\wmf51 mkdir C:\Windows\Temp\wmf51
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 500
+        reboot: Never
       - description: empty extraction folder
         command: cmd /c del /q C:\Windows\Temp\wmf51\*
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 501
+        reboot: Never
       - description: extract powershell 5.1 cab files
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait expand -F:* C:\Windows\Temp\Win7-KB3191566-x86.msu C:\Windows\Temp\wmf51
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 502
+        reboot: Never
       - description: install kb2872035
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb2872035-stdout.log /NoRestart
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 503
+        reboot: Never
       - description: install kb2872047
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb2872047-stdout.log /NoRestart
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 504
+        reboot: Never
       - description: install kb3033929
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3033929-stdout.log /NoRestart
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 505
+        reboot: Never
       - description: install kb3191566
         # yamllint disable-line rule:line-length
-        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3191566-stdout.log
+        command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3191566-stdout.log /NoRestart
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 506
+        reboot: Always
   target:
       cloud:
           - amazon
