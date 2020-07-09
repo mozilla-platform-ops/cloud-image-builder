@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.90'
+    'version' = '0.0.91'
   },
   @{
     'module' = 'powershell-yaml';
@@ -190,8 +190,14 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -timeZone $(if ($config.image.timezone) { $config.image.timezone } else { 'UTC' }) `
         -administratorPassword $administratorPassword `
         -obfuscatePassword:$(if ($config.image.obfuscate) { $true } else { $false }) `
-        -resealMode $(if (($config.image.reseal) -and ($config.image.reseal.mode)) { $config.image.reseal.mode } else { 'OOBE' }) `
-        -resealShutdown:$(if (($config.image.reseal) -and ($config.image.reseal.shutdown)) { $true } else { $false }) `
+        -oobeSystemResealMode $(if (($config.image.reseal) -and ($config.image.reseal.mode)) { $config.image.reseal.mode } else { 'OOBE' }) `
+        -oobeSystemResealShutdown:$(if (($config.image.reseal) -and ($config.image.reseal.shutdown)) { $true } else { $false }) `
+        -oobeSystemResealOmit $(if ((-not ($config.image.reseal)) -or $config.image.reseal.omit) { $true } else { $false }) `
+        -generalizeMode $(if (($config.image.generalize) -and ($config.image.generalize.mode)) { $config.image.generalize.mode } else { 'OOBE' }) `
+        -generalizeShutdown:$(if (($config.image.generalize) -and ($config.image.generalize.shutdown)) { $true } else { $false }) `
+        -generalizeOmit $(if ((-not ($config.image.generalize)) -or $config.image.generalize.omit) { $true } else { $false }) `
+        -auditSystemResealOmit $true `
+        -auditUserResealOmit $true `
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `

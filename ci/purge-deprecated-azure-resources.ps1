@@ -33,7 +33,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.90'
+    'version' = '0.0.91'
   },
   @{
     'module' = 'powershell-yaml';

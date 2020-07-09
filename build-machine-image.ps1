@@ -590,7 +590,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.90'
+        'version' = '0.0.91'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1619,7 +1619,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               }
 
               # await final shutdown after audit mode completion
-              if (($config.image.reseal.mode -eq 'Audit') -and ($config.image.reseal.shutdown)) {
+              if ($config.image.generalize.shutdown) {
                 # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
                 while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
                   Write-Output -InputObject ('awaiting final shutdown after sysprep audit mode has completed. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
