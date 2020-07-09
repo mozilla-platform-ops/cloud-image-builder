@@ -1534,6 +1534,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
             } until (@('Succeeded', 'Failed') -contains $azVm.ProvisioningState)
             Write-Output -InputObject ('end image export: {0} to: {1} cloud platform' -f $exportImageName, $target.platform);
 
+            # await first shutdown by sysprep reseal trigger.
             if (($config.image.reseal.mode -eq 'Audit') -and ($config.image.reseal.shutdown)) {
               # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
               while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
@@ -1554,6 +1555,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 Start-Sleep -Seconds 60;
               }
               Write-Output -InputObject ('instance shutdown detected. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+              # start instance in audit mode for bootstrapping.
               try {
                 $instanceStartOperation = (Start-AzVM -ResourceGroupName $target.group -Name $instanceName);
                 if ($instanceStartOperation.Status -eq 'Succeeded') {
@@ -1614,6 +1616,29 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
                   exit;
                 }
+              }
+
+              # await final shutdown after audit mode completion
+              if (($config.image.reseal.mode -eq 'Audit') -and ($config.image.reseal.shutdown)) {
+                # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
+                while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
+                  Write-Output -InputObject ('awaiting final shutdown after sysprep audit mode has completed. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+                  try {
+                    $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
+                    Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
+                    foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
+                      $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+                      $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
+                      $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
+                      $image.Dispose();
+                      Remove-Item -Path $screenshot.FullName -Force;
+                    }
+                  } catch {
+                    Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
+                  }
+                  Start-Sleep -Seconds 60;
+                }
+                Write-Output -InputObject ('final instance shutdown detected. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
               }
 
               if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
