@@ -145,7 +145,7 @@
           - true
           - false
 - description: firewall create rule inbound winrm over http for public profile
-# yamllint disable-line rule:line-length
+  # yamllint disable-line rule:line-length
   command: cmd /c start /wait netsh advfirewall firewall add rule name="Windows Remote Management (HTTP-In)" dir=in action=allow protocol=TCP localport=5985 profile=public
   pass: auditUser
   synchronicity: asynchronous
@@ -160,7 +160,7 @@
           - true
           - false
 - description: firewall enable rule inbound winrm over http for all profiles
-# yamllint disable-line rule:line-length
+  # yamllint disable-line rule:line-length
   command: cmd /c start /wait netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes profile=any
   pass: auditUser
   synchronicity: asynchronous
@@ -184,7 +184,7 @@
           - amazon
           - azure
           - google
-      os: []
+      os:
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
