@@ -9,7 +9,8 @@
           - amazon
           - azure
           - google
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
           - x86-64
