@@ -253,20 +253,7 @@ function Invoke-BootstrapExecution {
               Write-Output -InputObject ('{0} :: instance shutdown detected during bootstrap execution {1}/{2}, attempt {3}; {4}, using shell: {5}, on: {6}/{7}' -f $($MyInvocation.MyCommand.Name), $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
             } elseif (($instanceStatus) -and ($instanceStatus.Code -eq 'PowerState/running')) {
               Write-Output -InputObject ('{0} :: running instance state ({1}) detected during bootstrap execution {2}/{3}, attempt {4}; {5}, using shell: {6}, on: {7}/{8}' -f $($MyInvocation.MyCommand.Name), $instanceStatus.Code, $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
-              try {
-                $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                Get-AzVMBootDiagnosticsData -ResourceGroupName $groupName -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
-                foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
-                  $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
-                  $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
-                  $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
-                  $image.Dispose();
-                  Remove-Item -Path $screenshot.FullName -Force;
-                }
-                Write-Output -InputObject ('{0} :: boot diagnostics data for {1}/{2}/{3}, saved to {4}' -f $($MyInvocation.MyCommand.Name), 'azure', $groupName, $instanceName, ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)));
-              } catch {
-                Write-Output -InputObject ('{0} :: failed to obtain boot diagnostics data for {1}/{2}/{3}. {4}' -f $($MyInvocation.MyCommand.Name), 'azure', $groupName, $instanceName, $_.Exception.Message);
-              }
+              Publish-Screenshot -instanceName $instanceName -groupName $groupName -platform 'azure' -workFolder $workFolder;
             } elseif ($instanceStatus) {
               Write-Output -InputObject ('{0} :: unhandled instance state {1} detected during bootstrap execution {2}/{3}, attempt {4}; {5}, using shell: {6}, on: {7}/{8}' -f $($MyInvocation.MyCommand.Name), $instanceStatus.Code, $executionNumber, $executionCount, $attemptNumber, $execution.name, $execution.shell, $groupName, $instanceName);
             } else {
@@ -1315,6 +1302,46 @@ function Remove-Image {
   }
 }
 
+function Publish-Screenshot {
+  param (
+    [string] $instanceName,
+    [string] $groupName,
+    [string] $platform,
+    [string] $workFolder,
+    [string] $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar))
+  )
+  begin {
+    Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+  process {
+    try {
+      Get-AzVMBootDiagnosticsData -ResourceGroupName $groupName -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
+      foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
+        try {
+          $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+          $bmpPath = $($screenshot.FullName);
+          $image = [System.Drawing.Image]::FromFile($bmpPath);
+          $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
+          $image.Dispose();
+          if (Test-Path -Path $pngPath -ErrorAction SilentlyContinue) {
+            Write-Output -InputObject ('{0} :: screenshot converted from {1} to {2}' -f $($MyInvocation.MyCommand.Name), $bmpPath, $pngPath);
+          } else {
+            Write-Output -InputObject ('{0} :: failed to convert screenshot from {1} to {2}' -f $($MyInvocation.MyCommand.Name), $bmpPath, $pngPath);
+          }
+          Remove-Item -Path $bmpPath -Force;
+        } catch {
+          Write-Output -InputObject ('{0} :: failed to convert screenshot from {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $bmpPath, $pngPath, $_.Exception.Message);
+        }
+      }
+    } catch {
+      Write-Output -InputObject ('{0} :: failed to obtain boot diagnostics data for {1}/{2}/{3}. {4}' -f $($MyInvocation.MyCommand.Name), $platform, $groupName, $instanceName, $_.Exception.Message);
+    }
+  }
+  end {
+    Write-Output -InputObject ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
+  }
+}
+
 function Do-Stuff {
   param (
     [string] $arg1 = ''
@@ -1539,19 +1566,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
               while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
                 Write-Output -InputObject ('awaiting shutdown. image configured for sysprep reseal audit mode with shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
-                try {
-                  $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                  Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
-                  foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
-                    $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
-                    $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
-                    $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
-                    $image.Dispose();
-                    Remove-Item -Path $screenshot.FullName -Force;
-                  }
-                } catch {
-                  Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
-                }
+                Publish-Screenshot -instanceName $instanceName -groupName $target.group -platform $target.platform -workFolder $workFolder;
                 Start-Sleep -Seconds 60;
               }
               Write-Output -InputObject ('instance shutdown detected. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
@@ -1577,19 +1592,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
             }
             if ($azVm -and ($azVm.ProvisioningState -eq 'Succeeded')) {
-              try {
-                $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
-                foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
-                  $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
-                  $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
-                  $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
-                  $image.Dispose();
-                  Remove-Item -Path $screenshot.FullName -Force;
-                }
-              } catch {
-                Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
-              }
+              Publish-Screenshot -instanceName $instanceName -groupName $target.group -platform $target.platform -workFolder $workFolder;
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
                 Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions -flow $target.network.flow -disableCleanup:$disableCleanup;
@@ -1620,25 +1623,19 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
               # await final shutdown after audit mode completion
               if ($config.image.generalize.shutdown) {
-                # image is configured for sysprep audit mode and must be started after its first sysprep shutdown
-                while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -notmatch 'PowerState/stopped') {
-                  Write-Output -InputObject ('awaiting final shutdown after sysprep audit mode has completed. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
-                  try {
-                    $savePath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                    Get-AzVMBootDiagnosticsData -ResourceGroupName $target.group -Name $instanceName -Windows -LocalPath $savePath -ErrorAction SilentlyContinue;
-                    foreach ($screenshot in (Get-ChildItem -Path $savePath -Filter '*.bmp')) {
-                      $pngPath = ('{0}{1}{2}-{3}.png' -f $savePath, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
-                      $image = [System.Drawing.Image]::FromFile($($screenshot.FullName));
-                      $image.Save($pngPath, [System.Drawing.Imaging.ImageFormat]::Png);
-                      $image.Dispose();
-                      Remove-Item -Path $screenshot.FullName -Force;
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to obtain boot diagnostics data for {0}/{1}/{2}. {3}' -f $target.platform, $target.group, $instanceName, $_.Exception.Message);
-                  }
-                  Start-Sleep -Seconds 60;
+                $requiredEndurance = 60;
+                $requiredState = 'PowerState/stopped';
+                $controlState = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code;
+                Start-Sleep -Seconds $requiredEndurance;
+                $currentState = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code;
+                while (($controlState -ne $requiredState) -or ($currentState -ne $requiredState)) {
+                  Write-Output -InputObject ('awaiting final shutdown after sysprep audit mode has completed. previous state: {0} ({1} seconds ago), current state: {2}' -f $controlState, $requiredEndurance, $currentState);
+                  Publish-Screenshot -instanceName $instanceName -groupName $target.group -platform $target.platform -workFolder $workFolder;
+                  $controlState = $currentState;
+                  Start-Sleep -Seconds $requiredEndurance;
+                  $currentState = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code;
                 }
-                Write-Output -InputObject ('final instance shutdown detected. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+                Write-Output -InputObject ('final instance shutdown detected. previous state: {0} ({1} seconds ago), current state: {2}' -f $controlState, $requiredEndurance, $currentState);
               }
 
               if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
