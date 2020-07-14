@@ -160,7 +160,7 @@
           - amazon
           - azure
           - google
-      os:
+      os: []
       architecture:
           - x86
       gpu:
