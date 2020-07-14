@@ -164,22 +164,58 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   do {
     $unattendGenerationAttemptCount += 1;
     $commands = @($unattendCommands | Sort-Object -Property 'priority' | % {
-      @{
+      $command = @{
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
         'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
-        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' });
-        'WillReboot'    = $(if ($_.reboot) { $_.reboot } else { 'Never' })
-      } 
-    }) + @($packages | % { $_.unattend } | Sort-Object -Property 'priority' | % {
-      @{
-        'Description'   = $_.description;
-        'CommandLine'   = $_.command;
-        'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
-        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' });
-        'WillReboot'    = $(if ($_.reboot) { $_.reboot } else { 'Never' })
+        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' })
+      };
+      if ($command.Synchronicity -eq 'synchronous') {
+        switch ($command.Pass) {
+          'auditUser' {
+            $command += @{
+              'WillReboot' = $(if ($_.reboot) { $_.reboot } else { 'Never' })
+            }
+            break;
+          }
+          'oobeSystem' {
+            $command += @{
+              'RequiresUserInput' = $(if ($_.input) { $_.input } else { 'false' })
+            }
+            break;
+          }
+        }
       }
+      return $command;
+    }) + @($packages | % { $_.unattend } | Sort-Object -Property 'priority' | % {
+      $command = @{
+        'Description'   = $_.description;
+        'CommandLine'   = $_.command;
+        'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
+        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' })
+      };
+      if ($command.Synchronicity -eq 'synchronous') {
+        switch ($command.Pass) {
+          'auditUser' {
+            $command += @{
+              'WillReboot' = $(if ($_.reboot) { $_.reboot } else { 'Never' })
+            };
+            break;
+          }
+          'oobeSystem' {
+            $command += @{
+              'RequiresUserInput' = $(if ($_.input) { $_.input } else { 'false' })
+            };
+            break;
+          }
+        }
+      }
+      return $command;
     });
+    Write-Output -InputObject ('detected {0} unattend commands for platform: {1}, os: {2}, arch: {3}, {4} gpu' -f $commands.Length, $platform, $config.image.os, $config.image.architecture, $(if ($config.image.gpu) { 'with' } else { 'without' }));
+    foreach ($command in $commands) {
+      Write-Output -InputObject ('{0} pass, {1} command: {2}' -f $command.Pass, $command.Synchronicity, $command.Description);
+    }
     try {
       $administratorPassword = (New-Password);
       New-UnattendFile `
