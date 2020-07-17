@@ -492,7 +492,7 @@
         pass: auditUser
         synchronicity: synchronous
         priority: 901
-      - description: create occ scheduled task
+      - description: run bootstrap script (occ)
         # yamllint disable-line rule:line-length
         command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1 > C:\log\rundsc-stdout.log 2> C:\log\rundsc-stderr.log
         pass: auditUser
