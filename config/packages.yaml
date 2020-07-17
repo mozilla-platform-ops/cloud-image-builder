@@ -54,6 +54,7 @@
           - azure
           - google
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -96,7 +97,8 @@
           - amazon
           - azure
           - google
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
       gpu:
@@ -121,6 +123,7 @@
           - azure
           - google
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -160,7 +163,8 @@
           - amazon
           - azure
           - google
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
       gpu:
@@ -323,6 +327,7 @@
       cloud:
           - amazon
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -352,6 +357,7 @@
       cloud:
           - amazon
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -381,6 +387,7 @@
       cloud:
           - amazon
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -495,7 +502,8 @@
   target:
       cloud:
           - azure
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
       gpu:
@@ -526,7 +534,8 @@
           - amazon
           - azure
           - google
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
       gpu:
@@ -592,7 +601,8 @@
           - amazon
           - azure
           - google
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
       gpu:

@@ -25,6 +25,7 @@
       cloud:
           - azure
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -45,6 +46,7 @@
       cloud:
           - azure
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -67,6 +69,7 @@
           - azure
           - google
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -89,6 +92,7 @@
           - azure
           - google
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -110,6 +114,7 @@
       cloud:
           - azure
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -133,6 +138,7 @@
       cloud:
           - azure
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
@@ -153,7 +159,8 @@
   target:
       cloud:
           - azure
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
           - x86-64
@@ -168,7 +175,8 @@
   target:
       cloud:
           - azure
-      os: []
+      os:
+          - Windows 7
       architecture:
           - x86
           - x86-64
@@ -186,6 +194,7 @@
           - azure
           - google
       os:
+          - Windows 7
           - Windows 8.1
           - Windows 10
           - Windows Server 2012 R2
