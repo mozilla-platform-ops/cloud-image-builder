@@ -1623,19 +1623,27 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
               # await final shutdown after audit mode completion
               if ($config.image.generalize.shutdown) {
-                $requiredEndurance = 60;
-                $requiredState = 'PowerState/stopped';
-                $controlState = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code;
-                Start-Sleep -Seconds $requiredEndurance;
-                $currentState = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code;
-                while (($controlState -ne $requiredState) -or ($currentState -ne $requiredState)) {
-                  Write-Output -InputObject ('awaiting final shutdown after sysprep audit mode has completed. previous state: {0} ({1} seconds ago), current state: {2}' -f $controlState, $requiredEndurance, $currentState);
+                $instanceStatusObservations = @{};
+                # make regular instance status observations, wait until instance has remained in the stopped state for 60 seconds
+                $stopwatch = [Diagnostics.Stopwatch]::StartNew();
+                #$stopwatchStartTime = (Get-Date).ToUniversalTime().AddTicks(-($stopwatch.ElapsedTicks));
+                Write-Output -InputObject 'awaiting final shutdown (determined by instance remaining in stopped state for 60 seconds) after sysprep audit mode has completed.';
+                while (
+                  # make instance status observations for at least 60 seconds
+                  ($stopwatch.Elapsed.TotalSeconds -lt 60) -or
+                  # require that all state observations in the preceeding 60 seconds show a stopped state
+                  (@($instanceStatusObservations.Keys | ? { $_ -gt ((Get-Date).ToUniversalTime().AddSeconds(-60).ToString('yyyyMMddHHmmss')) } | % { $instanceStatusObservations[$_] } | ? { $_ -ne 'PowerState/stopped' }).Length)
+                ) {
+                  # make an instance status observation
+                  $instanceStatusObservationTime = (Get-Date).ToUniversalTime();
+                  $instanceStatus = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue');
+                  $instanceStatusObservations.Add($instanceStatusObservationTime.ToString('yyyyMMddHHmmss'), $instanceStatus.Code);
+                  Write-Output -InputObject ('instance status observed as: {0}, at: {1} utc' -f $instanceStatus.Code, $instanceStatusObservationTime.ToString('HH:mm:ss'));
                   Publish-Screenshot -instanceName $instanceName -groupName $target.group -platform $target.platform -workFolder $workFolder;
-                  $controlState = $currentState;
-                  Start-Sleep -Seconds $requiredEndurance;
-                  $currentState = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code;
+                  Start-Sleep -Seconds 1;
                 }
-                Write-Output -InputObject ('final instance shutdown detected. previous state: {0} ({1} seconds ago), current state: {2}' -f $controlState, $requiredEndurance, $currentState);
+                $stopwatch.Stop();
+                Write-Output -InputObject 'final shutdown detected';
               }
 
               if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
