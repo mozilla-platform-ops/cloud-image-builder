@@ -113,7 +113,7 @@
   unattend:
       - description: install papertrail certificate
         # yamllint disable-line rule:line-length
-        command: cmd /c move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
+        command: cmd /c if exist C:\Windows\Temp\papertrail-bundle.pem move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
         pass: auditUser
         synchronicity: synchronous
         priority: 101
@@ -149,7 +149,7 @@
         priority: 102
       - description: install nxlog configuration
         # yamllint disable-line rule:line-length
-        command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
+        command: cmd /c if exist C:\Windows\Temp\nxlog.conf set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
         pass: auditUser
         synchronicity: synchronous
         priority: 103
