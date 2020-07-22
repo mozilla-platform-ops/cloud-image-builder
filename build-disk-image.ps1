@@ -168,7 +168,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
         'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
-        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' })
+        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' });
+        'Priority'      = $(if ($_.priority) { $_.priority } else { 500 })
       };
       if ($command.Synchronicity -eq 'synchronous') {
         switch ($command.Pass) {
@@ -192,7 +193,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
         'Synchronicity' = $(if ($_.synchronicity) { $_.synchronicity } else { 'synchronous' });
-        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' })
+        'Pass'          = $(if ($_.pass) { $_.pass } else { 'oobeSystem' });
+        'Priority'      = $(if ($_.priority) { $_.priority } else { 500 })
       };
       if ($command.Synchronicity -eq 'synchronous') {
         switch ($command.Pass) {
@@ -214,7 +216,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     });
     Write-Output -InputObject ('detected {0} unattend commands for platform: {1}, os: {2}, arch: {3}, {4} gpu' -f $commands.Length, $platform, $config.image.os, $config.image.architecture, $(if ($config.image.gpu) { 'with' } else { 'without' }));
     foreach ($command in $commands) {
-      Write-Output -InputObject ('{0} pass, {1} command: {2}' -f $command.Pass, $command.Synchronicity, $command.Description);
+      Write-Output -InputObject ('{0} pass, {1} command (priority: {2}): {3}' -f $command.Pass, $command.Synchronicity, $command.Priority, $command.Description);
     }
     try {
       $administratorPassword = (New-Password);
