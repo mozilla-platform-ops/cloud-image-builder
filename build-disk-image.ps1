@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.99'
+    'version' = '0.0.100'
   },
   @{
     'module' = 'powershell-yaml';
@@ -163,7 +163,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   $unattendGenerationAttemptCount = 0;
   do {
     $unattendGenerationAttemptCount += 1;
-    $commands = @($unattendCommands | Sort-Object -Property 'priority' | % {
+    $commands = @($unattendCommands | % {
       $command = @{
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
@@ -188,7 +188,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         }
       }
       return $command;
-    }) + @($packages | % { $_.unattend } | Sort-Object -Property 'priority' | % {
+    }) + @($packages | % { $_.unattend } | % {
       $command = @{
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
