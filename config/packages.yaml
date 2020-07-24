@@ -37,12 +37,12 @@
 - name: nxlog-ce.msi
   savepath: Windows\Temp\nxlog-ce.msi
   unattend:
-      - description: nxlog :: create log folder
+      - description: 'nxlog :: create log folder'
         command: cmd /c if not exist C:\log mkdir C:\log
         pass: auditUser
         synchronicity: synchronous
         priority: 300
-      - description: nxlog :: install nxlog-ce.msi
+      - description: 'nxlog :: install nxlog-ce.msi'
         # yamllint disable-line rule:line-length
         command: msiexec /i C:\Windows\Temp\nxlog-ce.msi /q /L*v C:\log\unattend-install-nxlog-stdout.log
         pass: auditUser
@@ -86,7 +86,7 @@
 - name: papertrail-bundle.pem
   savepath: Windows\Temp\papertrail-bundle.pem
   unattend:
-      - description: nxlog :: install papertrail certificate
+      - description: 'nxlog :: install papertrail certificate'
         # yamllint disable-line rule:line-length
         command: cmd /c if exist C:\Windows\Temp\papertrail-bundle.pem move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files\nxlog\cert\papertrail-bundle.pem"
         pass: auditUser
@@ -111,7 +111,7 @@
 - name: papertrail-bundle.pem
   savepath: Windows\Temp\papertrail-bundle.pem
   unattend:
-      - description: nxlog :: install papertrail certificate
+      - description: 'nxlog :: install papertrail certificate'
         # yamllint disable-line rule:line-length
         command: cmd /c if exist C:\Windows\Temp\papertrail-bundle.pem move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
         pass: auditUser
@@ -142,18 +142,18 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
-      - description: nxlog :: stop nxlog service
+      - description: 'nxlog :: stop nxlog service'
         command: cmd /c net stop nxlog
         pass: auditUser
         synchronicity: synchronous
         priority: 303
-      - description: nxlog :: install nxlog configuration
+      - description: 'nxlog :: install nxlog configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c if exist C:\Windows\Temp\nxlog.conf set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files\nxlog\conf\nxlog.conf"
         pass: auditUser
         synchronicity: synchronous
         priority: 304
-      - description: nxlog :: start nxlog service
+      - description: 'nxlog :: start nxlog service'
         command: cmd /c net start nxlog
         pass: auditUser
         synchronicity: synchronous
@@ -177,18 +177,18 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
-      - description: nxlog :: stop nxlog service
+      - description: 'nxlog :: stop nxlog service'
         command: cmd /c net stop nxlog
         pass: auditUser
         synchronicity: synchronous
         priority: 303
-      - description: nxlog :: install nxlog configuration
+      - description: 'nxlog :: install nxlog configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
         pass: auditUser
         synchronicity: synchronous
         priority: 304
-      - description: nxlog :: start nxlog service
+      - description: 'nxlog :: start nxlog service'
         command: cmd /c net start nxlog
         pass: auditUser
         synchronicity: synchronous
@@ -212,18 +212,18 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
-      - description: nxlog :: stop nxlog service
+      - description: 'nxlog :: stop nxlog service'
         command: cmd /c net stop nxlog
         pass: auditUser
         synchronicity: synchronous
         priority: 303
-      - description: nxlog :: install nxlog configuration
+      - description: 'nxlog :: install nxlog configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
         pass: auditUser
         synchronicity: synchronous
         priority: 304
-      - description: nxlog :: start nxlog service
+      - description: 'nxlog :: start nxlog service'
         command: cmd /c net start nxlog
         pass: auditUser
         synchronicity: synchronous
@@ -247,18 +247,18 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
-      - description: nxlog :: stop nxlog service
+      - description: 'nxlog :: stop nxlog service'
         command: cmd /c net stop nxlog
         pass: auditUser
         synchronicity: synchronous
         priority: 303
-      - description: nxlog :: install nxlog configuration
+      - description: 'nxlog :: install nxlog configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
         pass: auditUser
         synchronicity: synchronous
         priority: 304
-      - description: nxlog :: start nxlog service
+      - description: 'nxlog :: start nxlog service'
         command: cmd /c net start nxlog
         pass: auditUser
         synchronicity: synchronous
@@ -282,18 +282,18 @@
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
-      - description: nxlog :: stop nxlog service
+      - description: 'nxlog :: stop nxlog service'
         command: cmd /c net stop nxlog
         pass: auditUser
         synchronicity: synchronous
         priority: 303
-      - description: nxlog :: install nxlog configuration
+      - description: 'nxlog :: install nxlog configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c set COPYCMD=/Y && move /y C:\Windows\Temp\nxlog.conf "C:\Program Files (x86)\nxlog\conf\nxlog.conf"
         pass: auditUser
         synchronicity: synchronous
         priority: 304
-      - description: nxlog :: start nxlog service
+      - description: 'nxlog :: start nxlog service'
         command: cmd /c net start nxlog
         pass: auditUser
         synchronicity: synchronous
@@ -317,7 +317,7 @@
 - name: EC2Install.zip
   savepath: Windows\Temp
   unattend:
-      - description: ec2config :: install ec2config
+      - description: 'ec2config :: install ec2config'
         command: cmd /c start /wait C:\Windows\Temp\Ec2Install.exe /quiet
         pass: auditUser
         synchronicity: synchronous
@@ -347,7 +347,7 @@
 - name: Ec2ConfigurationSettings.xml
   savepath: Windows\Temp\Ec2ConfigurationSettings.xml
   unattend:
-      - description: ec2config :: install ec2config configuration
+      - description: 'ec2config :: install ec2config configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\config.xml"
         pass: auditUser
@@ -377,7 +377,7 @@
 - name: WallpaperSettings.xml
   savepath: Windows\Temp\WallpaperSettings.xml
   unattend:
-      - description: ec2config :: install ec2 wallpaper configuration
+      - description: 'ec2config :: install ec2 wallpaper configuration'
         # yamllint disable-line rule:line-length
         command: cmd /c move /y C:\Windows\Temp\Ec2ConfigurationSettings.xml "C:\Program Files\Amazon\Ec2ConfigService\Settings\WallpaperSettings.xml"
         pass: auditUser
@@ -407,12 +407,12 @@
 - name: WindowsAzureVmAgent.msi
   savepath: Windows\Temp\WindowsAzureVmAgent.msi
   unattend:
-      - description: vmagent :: create log folder
+      - description: 'vmagent :: create log folder'
         command: cmd /c if not exist C:\log mkdir C:\log
         pass: auditUser
         synchronicity: synchronous
         priority: 500
-      - description: vmagent :: install azure agent
+      - description: 'vmagent :: install azure agent'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait msiexec /i C:\Windows\Temp\WindowsAzureVmAgent.msi /q /L*v C:\log\unattend-install-vmagent-stdout.log
         pass: auditUser
@@ -476,23 +476,23 @@
 - name: OpenCloudConfig
   savepath: Windows\Temp\rundsc.ps1
   unattend:
-      - description: bootstrap :: create log folder
+      - description: 'bootstrap :: create log folder'
         command: cmd /c if not exist C:\log mkdir C:\log
         pass: auditUser
         synchronicity: synchronous
         priority: 900
-      - description: bootstrap :: create dsc folder
+      - description: 'bootstrap :: create dsc folder'
         command: cmd /c if not exist C:\dsc mkdir C:\dsc
         pass: auditUser
         synchronicity: synchronous
         priority: 900
-      - description: bootstrap :: install bootstrap script (occ)
+      - description: 'bootstrap :: install bootstrap script (occ)'
         # yamllint disable-line rule:line-length
         command: cmd /c if exist C:\Windows\Temp\rundsc.ps1 move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 901
-      - description: bootstrap :: run bootstrap script (occ)
+      - description: 'bootstrap :: run bootstrap script (occ)'
         # yamllint disable-line rule:line-length
         command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1 > C:\log\rundsc-stdout.log 2> C:\log\rundsc-stderr.log
         pass: auditUser
@@ -516,13 +516,13 @@
 - name: dotNetFx45_Full_setup.exe
   savepath: Windows\Temp\dotNetFx45_Full_setup.exe
   unattend:
-      - description: netfx45 :: create dotNetFx45 log folder
+      - description: 'netfx45 :: create dotNetFx45 log folder'
         command: cmd /c if not exist C:\log\dotNetFx45 mkdir C:\log\dotNetFx45
         pass: auditUser
         synchronicity: synchronous
         priority: 100
         reboot: Never
-      - description: netfx45 :: install .net 4.5
+      - description: 'netfx45 :: install .net 4.5'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait C:\Windows\Temp\dotNetFx45_Full_setup.exe /q /norestart /x86 /log C:\log\dotNetFx45
         pass: auditUser
@@ -548,48 +548,48 @@
 - name: Win7-KB3191566-x86.msu
   savepath: Windows\Temp\Win7-KB3191566-x86.msu
   unattend:
-      - description: wmf51 :: create extraction folder
+      - description: 'wmf51 :: create extraction folder'
         # yamllint disable-line rule:line-length
         command: cmd /c if not exist C:\Windows\Temp\wmf51 mkdir C:\Windows\Temp\wmf51
         pass: auditUser
         synchronicity: synchronous
         priority: 200
         reboot: Never
-      - description: wmf51 :: empty extraction folder
+      - description: 'wmf51 :: empty extraction folder'
         command: cmd /c del /q C:\Windows\Temp\wmf51\*
         pass: auditUser
         synchronicity: synchronous
         priority: 201
         reboot: Never
-      - description: wmf51 :: extract wmf 5.1 cab files
+      - description: 'wmf51 :: extract wmf 5.1 cab files'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait expand -F:* C:\Windows\Temp\Win7-KB3191566-x86.msu C:\Windows\Temp\wmf51
         pass: auditUser
         synchronicity: synchronous
         priority: 202
         reboot: Never
-      - description: wmf51 :: install kb2872035
+      - description: 'wmf51 :: install kb2872035'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872035-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb2872035-stdout.log /NoRestart
         pass: auditUser
         synchronicity: synchronous
         priority: 203
         reboot: Never
-      - description: wmf51 :: install kb2872047
+      - description: 'wmf51 :: install kb2872047'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB2872047-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb2872047-stdout.log /NoRestart
         pass: auditUser
         synchronicity: synchronous
         priority: 204
         reboot: Never
-      - description: wmf51 :: install kb3033929
+      - description: 'wmf51 :: install kb3033929'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3033929-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3033929-stdout.log /NoRestart
         pass: auditUser
         synchronicity: synchronous
         priority: 205
         reboot: Never
-      - description: wmf51 :: install kb3191566
+      - description: 'wmf51 :: install kb3191566'
         # yamllint disable-line rule:line-length
         command: cmd /c start /wait dism /Online /Add-Package /PackagePath:C:\Windows\Temp\wmf51\Windows6.1-KB3191566-x86.cab /Quiet /LogPath:C:\log\unattend-dism-kb3191566-stdout.log /NoRestart
         pass: auditUser
