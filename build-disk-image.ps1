@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.101'
+    'version' = '0.0.102'
   },
   @{
     'module' = 'powershell-yaml';
@@ -216,7 +216,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
     });
     Write-Output -InputObject ('detected {0} unattend commands for platform: {1}, os: {2}, arch: {3}, {4} gpu' -f $commands.Length, $platform, $config.image.os, $config.image.architecture, $(if ($config.image.gpu) { 'with' } else { 'without' }));
     foreach ($command in $commands) {
-      Write-Output -InputObject ('{0} pass, {1} command (priority: {2}): {3}' -f $command.Pass, $command.Synchronicity, $command.Priority, $command.Description);
+      Write-Output -InputObject ('{0} pass, {1} command (priority: {2}, reboot: {3}): {4}' -f $command.Pass, $command.Synchronicity, $command.Priority, $(if ($command.WillReboot) { $command.WillReboot } else { 'n/a' }), $command.Description);
     }
     try {
       $administratorPassword = (New-Password);
