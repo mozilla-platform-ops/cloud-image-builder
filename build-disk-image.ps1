@@ -164,6 +164,8 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
   do {
     $unattendGenerationAttemptCount += 1;
     $commands = @($unattendCommands | % {
+      $willReboot = $(if ($_.reboot) { $_.reboot } else { 'Never' });
+      $requiresUserInput = $(if ($_.input) { $_.input } else { 'false' });
       $command = @{
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
@@ -174,21 +176,19 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       if ($command.Synchronicity -eq 'synchronous') {
         switch ($command.Pass) {
           'auditUser' {
-            $command += @{
-              'WillReboot' = $(if ($_.reboot) { $_.reboot } else { 'Never' })
-            }
+            $command += @{ 'WillReboot' = $willReboot };
             break;
           }
           'oobeSystem' {
-            $command += @{
-              'RequiresUserInput' = $(if ($_.input) { $_.input } else { 'false' })
-            }
+            $command += @{ 'RequiresUserInput' = $requiresUserInput };
             break;
           }
         }
       }
       return $command;
     }) + @($packages | % { $_.unattend } | % {
+      $willReboot = $(if ($_.reboot) { $_.reboot } else { 'Never' });
+      $requiresUserInput = $(if ($_.input) { $_.input } else { 'false' });
       $command = @{
         'Description'   = $_.description;
         'CommandLine'   = $_.command;
@@ -199,15 +199,11 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       if ($command.Synchronicity -eq 'synchronous') {
         switch ($command.Pass) {
           'auditUser' {
-            $command += @{
-              'WillReboot' = $(if ($_.reboot) { $_.reboot } else { 'Never' })
-            };
+            $command += @{ 'WillReboot' = $willReboot };
             break;
           }
           'oobeSystem' {
-            $command += @{
-              'RequiresUserInput' = $(if ($_.input) { $_.input } else { 'false' })
-            };
+            $command += @{ 'RequiresUserInput' = $requiresUserInput };
             break;
           }
         }
