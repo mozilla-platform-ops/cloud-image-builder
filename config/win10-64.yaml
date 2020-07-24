@@ -25,6 +25,7 @@ iso:
         bucket: windows-ami-builder
         # yamllint disable-line rule:line-length
         # key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
+        # yamllint disable-line rule:line-length
         key: SW_DVD9_Win_Pro_10_1903_64BIT_English_Pro_Ent_EDU_N_MLF_X22-02890.ISO
     wimindex: 5
 manager:
