@@ -232,6 +232,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -generalizeOmit $(if ((-not ($config.image.generalize)) -or $config.image.generalize.omit) { $true } else { $false }) `
         -auditSystemResealOmit $true `
         -auditUserResealOmit $true `
+        -autoLogonCount $(if ($config.image.reboot) { $config.image.reboot } else { 2 }) `
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `

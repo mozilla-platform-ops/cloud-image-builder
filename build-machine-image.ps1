@@ -1204,6 +1204,11 @@ function Get-Logs {
           $process = (Start-Process -FilePath $papertrailCliPath -ArgumentList $argsList -NoNewWindow -RedirectStandardOutput $logSavePath -RedirectStandardError $errorPath -PassThru);
           Wait-Process -InputObject $process; # see: https://stackoverflow.com/a/43728914/68115
           Write-Output -InputObject ('{0} :: {1} - (`{2} {3}`) command exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($papertrailCliPath), $papertrailCliPath, ([string[]]$argsList -join ' '), $(if ($process.ExitCode -or ($process.ExitCode -eq 0)) { $process.ExitCode } else { '-' }), $(if ($process.TotalProcessorTime -or ($process.TotalProcessorTime -eq 0)) { $process.TotalProcessorTime } else { '-' }));
+          Write-Output -InputObject ('{0} :: {1} log messages retrieved for system: {2}, program: {3}' -f $($MyInvocation.MyCommand.Name), @(Get-Content -Path $logSavePath).Length, $system, $program);
+          $standardErrorFile = (Get-Item -Path $errorPath -ErrorAction SilentlyContinue);
+          if (($standardErrorFile) -and $standardErrorFile.Length) {
+            Write-Output -InputObject ('{0} :: papertrail cli error: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $errorPath -Raw));
+          }
         } catch {
           Write-Output -InputObject ('{0} :: {1} - error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), [IO.Path]::GetFileNameWithoutExtension($papertrailCliPath), $papertrailCliPath, ([string[]]$argsList -join ' '), $_.Exception.Message);
         } finally {
