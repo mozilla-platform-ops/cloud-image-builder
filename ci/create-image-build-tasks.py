@@ -294,6 +294,16 @@ for platform in ['amazon', 'azure']:
                                     'type': 'directory',
                                     'name': 'public/instance-logs',
                                     'path': 'instance-logs'
+                                },
+                                {
+                                    'type': 'directory',
+                                    'name': 'public/screenshot/full',
+                                    'path': 'screenshot/full'
+                                },
+                                {
+                                    'type': 'directory',
+                                    'name': 'public/screenshot/thumbnail',
+                                    'path': 'screenshot/thumbnail'
                                 }
                             ],
                             osGroups = [
