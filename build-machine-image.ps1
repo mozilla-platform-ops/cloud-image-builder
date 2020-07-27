@@ -1601,12 +1601,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
               }
-              # system name will change three times during the course of bootstrapping, get system logs for all three
-              $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
-              $fqdnRegion = $target.region.Replace(' ', '').ToLower();
-              $systems = @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion));
-              Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
-              Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
               # check (again) that another task hasn't already created the image
               $existingImage = (Get-AzImage `
                 -ResourceGroupName $target.group `
@@ -1645,6 +1639,13 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 $stopwatch.Stop();
                 Write-Output -InputObject 'final shutdown detected';
               }
+
+              # system name will change three times during the course of bootstrapping, get system logs for all three
+              $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
+              $fqdnRegion = $target.region.Replace(' ', '').ToLower();
+              $systems = @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion));
+              Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
+              Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
               if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
                 # detach data disks from vm before machine image capture
