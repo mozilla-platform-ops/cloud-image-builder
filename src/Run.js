@@ -2,6 +2,7 @@ import React from 'react'
 //import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import Images from './Images';
+import Screenshots from './Screenshots';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 //import { Server } from 'react-bootstrap-icons';
 
@@ -19,6 +20,7 @@ class Run extends React.Component {
       image: {}
     },
     artifacts: [],
+    screenshots: [],
     images: []
   };
 
@@ -51,7 +53,8 @@ class Run extends React.Component {
     .then((container) => {
       if (container.artifacts && container.artifacts.length) {
         this.setState(state => ({
-          artifacts: container.artifacts
+          artifacts: container.artifacts,
+          screenshots: container.artifacts.filter(a => (a.contentType === 'image/png') && a.name.startsWith('public/screenshot/full/'))
         }));
         if (container.artifacts.some(a => a.name.startsWith('public/') && a.name.endsWith('.json'))) {
           let artifact = container.artifacts.find(a => a.name.startsWith('public/') && a.name.endsWith('.json'))
@@ -105,11 +108,18 @@ class Run extends React.Component {
           title={'task ' + this.props.taskId + ', run ' + this.props.run.runId + ': ' + this.props.run.state}>
           {'task ' + this.props.taskId + ', run ' + this.props.run.runId}
         </Button>
-        {
-          (this.props.run.state === 'completed' && this.state.images.length)
-            ? (<Images images={this.state.images} /> )
-            : ''
-        }
+        <>
+          {
+            (this.props.run.state === 'completed' && this.state.images.length)
+              ? (<Images images={this.state.images} /> )
+              : ''
+          }
+          {
+            (this.props.run.state === 'completed' && this.state.screenshots.length)
+              ? (<Screenshots screenshots={this.state.screenshots} taskId={this.props.taskId} runId={this.props.run.runId} /> )
+              : ''
+          }
+        </>
       </li>
     );
   }

@@ -43,7 +43,7 @@ class Tasks extends React.Component {
     return (
       <ul>
         {
-          this.props.tasks.sort((a, b) => ((a.task.metadata.name < b.task.metadata.name) ? -1 : (a.task.metadata.name > b.task.metadata.name) ? 1 : 0)).map(task => (
+          this.props.tasks.sort((a, b) => ((a.task.metadata.name < b.task.metadata.name) ? -1 : (a.task.metadata.name > b.task.metadata.name) ? 1 : 0)).filter(t => (!this.props.settings.limit.tasks || this.props.settings.limit.tasks.includes(t.task.metadata.name.slice(0, 2)))).map(task => (
             <Task task={task} key={task.status.taskId} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
           ))
         }

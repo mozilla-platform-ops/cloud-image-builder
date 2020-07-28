@@ -11,7 +11,6 @@ import Row from 'react-bootstrap/Row';
 import Cookies from 'universal-cookie';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 import Slider from 'rc-slider';
-import 'rc-slider/assets/index.css';
 
 class App extends React.Component {
 
@@ -22,7 +21,11 @@ class App extends React.Component {
     commits: [],
     settings: {
       fluid: (this.cookies.get('fluid') === null) ? true : (this.cookies.get('fluid') === 'true'),
-      showAllTasks: (this.cookies.get('showAllTasks') === null) ? false : (this.cookies.get('showAllTasks') === 'true'),
+      //showAllTasks: (this.cookies.get('showAllTasks') === null) ? false : (this.cookies.get('showAllTasks') === 'true'),
+      limit: {
+        tasks: (this.cookies.get('limitTasks') === null) ? ['03', '04'] : this.cookies.get('limitTasks'),
+        commits: (this.cookies.get('limitCommits') === null) ? 5 : parseInt(this.cookies.get('limitCommits')),
+      },
       commitLimit: (this.cookies.get('commitLimit') === null) ? 5 : parseInt(this.cookies.get('commitLimit'))
     }
   };
@@ -37,13 +40,22 @@ class App extends React.Component {
   */
 
   componentDidMount() {
-    if (this.cookies.get('fluid') === null) {
+    if (this.cookies.get('fluid') === undefined) {
       this.cookies.set('fluid', true, { path: '/', sameSite: 'strict' });
     }
-    if (this.cookies.get('showAllTasks') === null) {
-      this.cookies.set('showAllTasks', false, { path: '/', sameSite: 'strict' });
+    if (this.cookies.get('limit') === undefined) {
+      this.cookies.set(
+        'limit',
+        {
+          commits: 1,
+          tasks: ['03', '04']
+        },
+        {
+          path: '/',
+          sameSite: 'strict'
+        });
     }
-    if (this.cookies.get('commitLimit') === null) {
+    if (this.cookies.get('commitLimit') === undefined) {
       this.cookies.set('commitLimit', 5, { path: '/', sameSite: 'strict' });
     }
     this.getCommits();

@@ -1,5 +1,4 @@
 import React from 'react'
-import Task from './Task';
 import Tasks from './Tasks';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
 import Badge from 'react-bootstrap/Badge';
@@ -133,59 +132,50 @@ class Status extends React.Component {
         &nbsp;
         {this.props.status.description.toLowerCase()}
         &nbsp;
-        ({this.state.taskCount} tasks in group
-        &nbsp;
-        <a href={this.props.status.target_url} title={this.state.taskGroupId}>
+        (
+          {this.state.taskCount} tasks in group
+          &nbsp;
+          <a href={this.props.status.target_url} title={this.state.taskGroupId}>
+            {
+              (this.state.builds.length)
+                ? this.state.taskGroupId
+                : (this.state.taskGroupId && this.state.taskGroupId.slice(0, 7)) + '...'
+            }
+          </a>
+          &nbsp;
           {
-            (this.state.builds.length)
-              ? this.state.taskGroupId
-              : (this.state.taskGroupId && this.state.taskGroupId.slice(0, 7)) + '...'
+            Object.keys(StatusBadgeVariantMap).map(status => (
+              (this.state.tasks.filter(t => t.status.state === status).length)
+                ? (
+                    <Badge
+                      key={status}
+                      style={{ margin: '0 1px' }}
+                      variant={StatusBadgeVariantMap[status]}
+                      title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
+                      {this.state.tasks.filter(t => t.status.state === status).length}
+                    </Badge>
+                  )
+                : ''
+            ))
           }
-        </a>
-        &nbsp;
-        {
-          Object.keys(StatusBadgeVariantMap).map(status => (
-            (this.state.tasks.filter(t => t.status.state === status).length)
-              ? (
-                  <Badge
-                    key={status}
-                    style={{ margin: '0 1px' }}
-                    variant={StatusBadgeVariantMap[status]}
-                    title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
-                    {this.state.tasks.filter(t => t.status.state === status).length}
-                  </Badge>
-                )
-              : ''
-          ))
-        }
-        {
-          [0, 1, null].map((result, rI) => (
-            (this.state.builds.filter(b => b.result === result).length)
-              ? (
-                  <Badge
-                    key={rI}
-                    style={{ margin: '0 1px' }}
-                    variant={(result === null) ? 'info' : StatusBadgeVariantMap[this.travisBuildResults[result]]}
-                    title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
-                    {this.state.builds.filter(b => b.result === result).length}
-                  </Badge>
-                )
-              : ''
-          ))
-        }
+          {
+            [0, 1, null].map((result, rI) => (
+              (this.state.builds.filter(b => b.result === result).length)
+                ? (
+                    <Badge
+                      key={rI}
+                      style={{ margin: '0 1px' }}
+                      variant={(result === null) ? 'info' : StatusBadgeVariantMap[this.travisBuildResults[result]]}
+                      title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
+                      {this.state.builds.filter(b => b.result === result).length}
+                    </Badge>
+                  )
+                : ''
+            ))
+          }
         )
         {
-          (this.props.settings.showAllTasks)
-            ? <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} />
-            : (
-                <ul>
-                  {
-                    (this.state.tasks.filter(t => t.task.metadata.name.startsWith('04 :: generate') && t.status.state === 'completed').map(task => (
-                      <Task task={task} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} />
-                    )))
-                  }
-                </ul>
-              )
+          <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} settings={this.props.settings} />
         }
       </li>
     );
