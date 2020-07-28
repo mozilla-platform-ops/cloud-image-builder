@@ -7,15 +7,21 @@ image:
     timezone: UTC
     hostname: 'cib-win10-64'
     gpu: false
-    owner: Mozilla RelOps
+    owner: Mozilla Release Operations
     organization: Mozilla Corporation
     partition: MBR
     format: VHD
     type: Fixed
+    rdp: true
     obfuscate: true
     reseal:
+        mode: Audit
+        shutdown: true
+    generalize:
         mode: OOBE
-        shutdown: false
+        shutdown: true
+    reboot: 6
+    network: Home
     target:
         platform: amazon
         bucket: windows-ami-builder
@@ -23,11 +29,8 @@ iso:
     source:
         platform: amazon
         bucket: windows-ami-builder
-        # yamllint disable-line rule:line-length
-        # key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
-        # yamllint disable-line rule:line-length
-        key: iso/SW_DVD9_Win_Pro_10_1903_64BIT_English_Pro_Ent_EDU_N_MLF_X22-02890.ISO
-    wimindex: 5
+        key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
+    wimindex: 4
 manager:
     pool:
         - domain: gecko-t
@@ -40,9 +43,11 @@ manager:
               reregistration: 86400
           locations:
               - centralus
-          # lifecycle:
-          #    registrationTimeout: 120
-          #    reregistrationTimeout: 345600
+              - northcentralus
+              - southcentralus
+              - eastus
+              - eastus2
+          lifecycle: normal
           owner: mcornmesser@mozilla.com
           provider: azure
           platform: azure
@@ -56,12 +61,13 @@ target:
               type: uuid
               length: 12
       machine: &machine
-          cpu: 3
-          ram: 14
-          format: Standard_DS{0}_v2
+          cpu: 2
+          ram: 4
+          format: Standard_F{0}s_v2
+      agent: disable
       disk: &disk
           - os: true
-            source: windows10-professional-en-us-x86-64
+            source: windows7-professional-en-us-x86
             variant: ssd
             size: 64
           - os: false
@@ -119,7 +125,8 @@ target:
                   - name: allow-winrm
                     description: >-
                         allow: inbound tcp connections,
-                        \ for: winrm over http and https,
+                        \ for: winrm
+                        \ over: http and https,
                         \ from: allowlist,
                         \ to: any host,
                         \ on ports: 5985, 5986
@@ -147,62 +154,15 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: ec0881c
+            value: 34b58ea
       bootstrap: &bootstrap
-          executions:
-              # set hostname to match the azure machine name
-              # enabling debug logs to be found in papertrail
-              - name: set-computer-name
-                shell: azure-powershell
-                commands:
-                    # yamllint disable rule:line-length
-                    - $instanceName = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri 'http://169.254.169.254/metadata/instance?api-version=2019-06-04').Content) | ConvertFrom-Json).compute.name
-                    - Write-Output -InputObject ('compute.name read as {0} from instance metadata' -f $instanceName)
-                    - '[Environment]::SetEnvironmentVariable("COMPUTERNAME", $instanceName, "Machine")'
-                    - $env:COMPUTERNAME = $instanceName
-                    - $renameResult = ((Get-WmiObject Win32_ComputerSystem).Rename($instanceName))
-                    - if ($renameResult.ReturnValue -eq 0) { Write-Output -InputObject ('host renamed') } else { Write-Output -InputObject $renameResult; Write-Output -InputObject ('host rename failure. rename return value was {0}' -f $renameResult.ReturnValue) }
-                    # yamllint enable rule:line-length
-                test:
-                    std:
-                        out:
-                            match: host renamed
-                # yamllint disable-line rule:truthy
-                on:
-                    success: reboot
-              - name: invoke-ronin-puppet
-                shell: azure-powershell
-                commands:
-                    # yamllint disable-line rule:line-length
-                    - Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/{0}/{1}/{2}/{3}?{4}' -f (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceOrganisation' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRepository' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceRevision' })[0].value, (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'sourceScript' })[0].value, [Guid]::NewGuid()))
-              - name: verify-ronin-puppet
-                shell: azure-powershell
-                commands:
-                    # yamllint disable-line rule:line-length
-                    - if ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\ronin_puppet' -Name 'bootstrap_stage').bootstrap_stage -like 'complete') { Write-Output -InputObject ('puppet bootstrap stage is complete') } else { Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -ErrorAction SilentlyContinue }
-                test:
-                    std:
-                        out:
-                            match: puppet bootstrap stage is complete
-                # yamllint disable-line rule:truthy
-                on:
-                    failure: retry after 60 seconds
-              - name: wait-for-shutdown
-                shell: azure-powershell
-                commands:
-                    - ping 127.0.0.1
-                test:
-                    status:
-                        code:
-                            match: PowerState/stopped
-                # yamllint disable-line rule:truthy
-                on:
-                    failure: retry after 60 seconds
+          executions: []
     - platform: azure
       group: rg-east-us-gecko-t
       region: East US
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-east-us-gecko-t
@@ -221,6 +181,7 @@ target:
       region: East US 2
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-east-us-2-gecko-t
@@ -239,6 +200,7 @@ target:
       region: North Central US
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-north-central-us-gecko-t
@@ -257,6 +219,7 @@ target:
       region: South Central US
       hostname: *hostname
       machine: *machine
+      agent: disable
       disk: *disk
       network:
           name: vn-south-central-us-gecko-t
@@ -267,24 +230,6 @@ target:
               prefix: '10.0.0.0/24'
           flow:
               name: nsg-south-central-us-gecko-t
-              rules: *rules
-      tag: *tag
-      bootstrap: *bootstrap
-    - platform: azure
-      group: rg-west-us-gecko-t
-      region: West US
-      hostname: *hostname
-      machine: *machine
-      disk: *disk
-      network:
-          name: vn-west-us-gecko-t
-          prefix: '10.0.0.0/24'
-          dns: *dns
-          subnet:
-              name: sn-west-us-gecko-t
-              prefix: '10.0.0.0/24'
-          flow:
-              name: nsg-west-us-gecko-t
               rules: *rules
       tag: *tag
       bootstrap: *bootstrap
