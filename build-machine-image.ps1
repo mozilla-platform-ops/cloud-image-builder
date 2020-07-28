@@ -1312,11 +1312,13 @@ function Publish-Screenshot {
     [string] $instanceName,
     [string] $groupName,
     [string] $platform,
-    [string] $thumbnailWidth = 128,
-    [string] $thumbnailHeight = 96,
     [string] $workFolder,
     [string] $savePathFull = ('{0}{1}screenshot{1}full' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)),
-    [string] $savePathThumb = ('{0}{1}screenshot{1}thumbnail' -f $workFolder, ([IO.Path]::DirectorySeparatorChar))
+    [string] $savePathThumb = ('{0}{1}screenshot{1}thumbnail' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)),
+    [hashtable[]] $resize = @(
+      @{ 'width' = 128; 'height' = 96 },
+      @{ 'width' =  64; 'height' = 48 }
+    )
   )
   begin {
     Write-Output -InputObject ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime());
@@ -1332,7 +1334,6 @@ function Publish-Screenshot {
       Get-AzVMBootDiagnosticsData -ResourceGroupName $groupName -Name $instanceName -Windows -LocalPath $savePathFull -ErrorAction SilentlyContinue;
       foreach ($screenshot in (Get-ChildItem -Path $savePathFull -Filter '*.bmp')) {
         try {
-          $thumbnailPath = ('{0}{1}{2}-{3}.png' -f $savePathThumb, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
           $pngPath = ('{0}{1}{2}-{3}.png' -f $savePathFull, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
           $bmpPath = $($screenshot.FullName);
           $image = [System.Drawing.Image]::FromFile($bmpPath);
@@ -1344,16 +1345,24 @@ function Publish-Screenshot {
             Write-Output -InputObject ('{0} :: failed to convert screenshot from {1} to {2}' -f $($MyInvocation.MyCommand.Name), $bmpPath, $pngPath);
           }
           Remove-Item -Path $bmpPath -Force;
-          # generate a thumbnail
-          $thumbnailBitmap = New-Object -TypeName 'System.Drawing.Bitmap' -ArgumentList @($thumbnailWidth, $thumbnailHeight);
-          $thumbnail = [System.Drawing.Graphics]::FromImage($thumbnailBitmap);
-          $thumbnail.SmoothingMode = ([System.Drawing.Drawing2D.SmoothingMode]'HighQuality');
-          $thumbnail.InterpolationMode = ([System.Drawing.Drawing2D.InterpolationMode]'HighQualityBicubic');
-          $thumbnail.PixelOffsetMode = ([System.Drawing.Drawing2D.PixelOffsetMode]'HighQuality');
-          $thumbnail.DrawImage($(New-Object -TypeName 'System.Drawing.Bitmap' -ArgumentList $pngPath), $(New-Object -TypeName 'System.Drawing.Rectangle' -ArgumentList @(0, 0, $thumbnailWidth, $thumbnailHeight)));
-          $thumbnailBitmap.Save($thumbnailPath, [System.Drawing.Imaging.ImageFormat]::Png);
-          $thumbnailBitmap.Dispose();
-          $thumbnail.Dispose();
+          foreach ($size in $resize) {
+            try {
+              # generate a thumbnail
+              $thumbnailPath = ('{0}{1}{2}-{3}-{4}x{5}.png' -f $savePathThumb, ([IO.Path]::DirectorySeparatorChar), $instanceName, $screenshot.LastWriteTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $size.width, $size.height);
+              $thumbnailBitmap = (New-Object -TypeName 'System.Drawing.Bitmap' -ArgumentList @($size.width, $size.height));
+              $thumbnail = [System.Drawing.Graphics]::FromImage($thumbnailBitmap);
+              $thumbnail.SmoothingMode = ([System.Drawing.Drawing2D.SmoothingMode]'HighQuality');
+              $thumbnail.InterpolationMode = ([System.Drawing.Drawing2D.InterpolationMode]'HighQualityBicubic');
+              $thumbnail.PixelOffsetMode = ([System.Drawing.Drawing2D.PixelOffsetMode]'HighQuality');
+              $thumbnail.DrawImage($(New-Object -TypeName 'System.Drawing.Bitmap' -ArgumentList $pngPath), $(New-Object -TypeName 'System.Drawing.Rectangle' -ArgumentList @(0, 0, $size.width, $size.height)));
+              $thumbnailBitmap.Save($thumbnailPath, [System.Drawing.Imaging.ImageFormat]::Png);
+              $thumbnailBitmap.Dispose();
+              $thumbnail.Dispose();
+              Write-Output -InputObject ('{0} :: created thumbnail {1} from {2}' -f $($MyInvocation.MyCommand.Name), $thumbnailPath, $pngPath);
+            } catch {
+              Write-Output -InputObject ('{0} :: failed to create thumbnail {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $thumbnailPath, $pngPath, $_.Exception.Message);
+            }
+          }
         } catch {
           Write-Output -InputObject ('{0} :: failed to convert screenshot from {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $bmpPath, $pngPath, $_.Exception.Message);
         }
