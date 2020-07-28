@@ -29,6 +29,7 @@ iso:
     source:
         platform: amazon
         bucket: windows-ami-builder
+        # yamllint disable-line rule:line-length
         key: iso/en_windows_10_business_editions_version_1903_updated_sept_2019_x64_dvd_a10b235d.iso
     wimindex: 4
 manager:
