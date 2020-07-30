@@ -424,7 +424,6 @@ function Invoke-BootstrapExecutions {
         Invoke-BootstrapExecution -executionNumber $executionNumber -executionCount $executions.Length -instanceName $instanceName -groupName $groupName -execution $execution -flow $flow -disableCleanup:$disableCleanup;
         $executionNumber += 1;
       }
-      $successfulBootstrapDetected = $true;
     }
   }
   end {
@@ -577,7 +576,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.102'
+        'version' = '0.0.103'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1630,8 +1629,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               Write-Output -InputObject ('begin image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
               if ($target.bootstrap.executions) {
                 Invoke-BootstrapExecutions -instanceName $instanceName -groupName $target.group -executions $target.bootstrap.executions -flow $target.network.flow -disableCleanup:$disableCleanup;
-                # todo implement success check
-                $successfulBootstrapDetected = $true;
               } else {
                 Write-Output -InputObject ('no bootstrap command execution configurations detected for: {0}/{1}' -f $target.group, $instanceName);
               }
@@ -1681,98 +1678,96 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
-              if ($successfulBootstrapDetected -or ($config.image.architecture -ne 'x86-64')) {
-                # detach data disks from vm before machine image capture
-                $dataDiskNames = @(Get-AzDisk -ResourceGroupName $target.group | ? { $_.Name -match ('^{0}-data-disk-[0-9]$' -f $instanceName) -and $_.OsType -eq $null } | % { $_.Name });
-                if ($dataDiskNames.Length) {
-                  try {
-                    $removeDataDisksOperation = (Remove-AzVMDataDisk `
-                      -VM $azVm `
-                      -DataDiskNames $dataDiskNames);
-                    if (($removeDataDisksOperation.ProvisioningState -eq 'Succeeded') -and ((Update-AzVM -ResourceGroupName $target.group -VM $azVm).IsSuccessStatusCode)) {
-                      Write-Output -InputObject ('detached: {0} data disks ({1}) from {2}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName);
-                    } else {
-                      Write-Output -InputObject ('failed to detach: {0} data disks ({1}) from {2}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName);
-                    }
-                  } catch {
-                    Write-Output -InputObject ('failed to detach: {0} data disks ({1}) from {2}. {3}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName, $_.Exception.Message);
-                  }
-                }
-                New-CloudImageFromInstance `
-                  -platform $target.platform `
-                  -resourceGroupName $target.group `
-                  -region $target.region `
-                  -instanceName $instanceName `
-                  -imageName $targetImageName `
-                  -imageTags $tags;
+              # detach data disks from vm before machine image capture
+              $dataDiskNames = @(Get-AzDisk -ResourceGroupName $target.group | ? { $_.Name -match ('^{0}-data-disk-[0-9]$' -f $instanceName) -and $_.OsType -eq $null } | % { $_.Name });
+              if ($dataDiskNames.Length) {
                 try {
-                  $azImage = (Get-AzImage `
-                    -ResourceGroupName $target.group `
-                    -ImageName $targetImageName `
-                    -ErrorAction SilentlyContinue);
-                  if ($azImage) {
-                    Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+                  $removeDataDisksOperation = (Remove-AzVMDataDisk `
+                    -VM $azVm `
+                    -DataDiskNames $dataDiskNames);
+                  if (($removeDataDisksOperation.ProvisioningState -eq 'Succeeded') -and ((Update-AzVM -ResourceGroupName $target.group -VM $azVm).IsSuccessStatusCode)) {
+                    Write-Output -InputObject ('detached: {0} data disks ({1}) from {2}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName);
                   } else {
-                    Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
-                    if (-not $disableCleanup) {
-                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
-                    }
-                    exit 1;
+                    Write-Output -InputObject ('failed to detach: {0} data disks ({1}) from {2}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName);
                   }
                 } catch {
-                  Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
+                  Write-Output -InputObject ('failed to detach: {0} data disks ({1}) from {2}. {3}' -f $dataDiskNames.Length, [string]::Join(', ', $dataDiskNames), $instanceName, $_.Exception.Message);
+                }
+              }
+              New-CloudImageFromInstance `
+                -platform $target.platform `
+                -resourceGroupName $target.group `
+                -region $target.region `
+                -instanceName $instanceName `
+                -imageName $targetImageName `
+                -imageTags $tags;
+              try {
+                $azImage = (Get-AzImage `
+                  -ResourceGroupName $target.group `
+                  -ImageName $targetImageName `
+                  -ErrorAction SilentlyContinue);
+                if ($azImage) {
+                  Write-Output -InputObject ('image: {0}, creation appears successful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
+                } else {
+                  Write-Output -InputObject ('image: {0}, creation appears unsuccessful in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
                   if (-not $disableCleanup) {
                     Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
                   }
                   exit 1;
                 }
-                if ($enableSnapshotCopy) {
-                  try {
+              } catch {
+                Write-Output -InputObject ('image: {0}, fetch threw exception in region: {1}, cloud platform: {2}. {3}' -f $targetImageName, $target.region, $target.platform, $_.Exception.Message);
+                if (-not $disableCleanup) {
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                }
+                exit 1;
+              }
+              if ($enableSnapshotCopy) {
+                try {
+                  $azVm = (Get-AzVm `
+                    -ResourceGroupName $target.group `
+                    -Name $instanceName `
+                    -Status `
+                    -ErrorAction SilentlyContinue);
+                  if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
+                    # create a snapshot
+                    # todo: move this functionality to posh-minions-managed
                     $azVm = (Get-AzVm `
                       -ResourceGroupName $target.group `
                       -Name $instanceName `
-                      -Status `
                       -ErrorAction SilentlyContinue);
-                    if (($azVm) -and (@($azVm.Statuses | ? { ($_.Code -eq 'OSState/generalized') -or ($_.Code -eq 'PowerState/deallocated') }).Length -eq 2)) {
-                      # create a snapshot
-                      # todo: move this functionality to posh-minions-managed
-                      $azVm = (Get-AzVm `
+                    if ($azVm -and $azVm.StorageProfile.OsDisk.Name) {
+                      $azDisk = (Get-AzDisk `
                         -ResourceGroupName $target.group `
-                        -Name $instanceName `
-                        -ErrorAction SilentlyContinue);
-                      if ($azVm -and $azVm.StorageProfile.OsDisk.Name) {
-                        $azDisk = (Get-AzDisk `
+                        -DiskName $azVm.StorageProfile.OsDisk.Name);
+                      if ($azDisk -and $azDisk[0].Id) {
+                        $azSnapshotConfig = (New-AzSnapshotConfig `
+                          -SourceUri $azDisk[0].Id `
+                          -CreateOption 'Copy' `
+                          -Location $target.region.Replace(' ', '').ToLower());
+                        $azSnapshot = (New-AzSnapshot `
                           -ResourceGroupName $target.group `
-                          -DiskName $azVm.StorageProfile.OsDisk.Name);
-                        if ($azDisk -and $azDisk[0].Id) {
-                          $azSnapshotConfig = (New-AzSnapshotConfig `
-                            -SourceUri $azDisk[0].Id `
-                            -CreateOption 'Copy' `
-                            -Location $target.region.Replace(' ', '').ToLower());
-                          $azSnapshot = (New-AzSnapshot `
-                            -ResourceGroupName $target.group `
-                            -Snapshot $azSnapshotConfig `
-                            -SnapshotName $targetImageName);
-                        } else {
-                          Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk id' -f $targetImageName, $instanceName);
-                        }
+                          -Snapshot $azSnapshotConfig `
+                          -SnapshotName $targetImageName);
                       } else {
-                        Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk name' -f $targetImageName, $instanceName);
+                        Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk id' -f $targetImageName, $instanceName);
                       }
-                      Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, has state: {2}' -f $targetImageName, $instanceName, $azSnapshot.ProvisioningState.ToLower());
                     } else {
-                      Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined vm state' -f $targetImageName, $instanceName);
+                      Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined osdisk name' -f $targetImageName, $instanceName);
                     }
-                  } catch {
-                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
-                  } finally {
-                    if (-not $disableCleanup) {
-                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
-                    }
+                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, has state: {2}' -f $targetImageName, $instanceName, $azSnapshot.ProvisioningState.ToLower());
+                  } else {
+                    Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, skipped due to undetermined vm state' -f $targetImageName, $instanceName);
                   }
-                } else {
-                  Write-Output -InputObject ('snapshot creation skipped because enableSnapshotCopy is set to false');
+                } catch {
+                  Write-Output -InputObject ('provisioning of snapshot: {0}, from instance: {1}, threw exception. {2}' -f $targetImageName, $instanceName, $_.Exception.Message);
+                } finally {
+                  if (-not $disableCleanup) {
+                    Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                  }
                 }
+              } else {
+                Write-Output -InputObject ('snapshot creation skipped because enableSnapshotCopy is set to false');
               }
               Write-Output -InputObject ('end image import: {0} in region: {1}, cloud platform: {2}' -f $targetImageName, $target.region, $target.platform);
             } else {
