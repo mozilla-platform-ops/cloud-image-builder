@@ -8,6 +8,11 @@
 - queue:create-task:low:relops/*
 - queue:create-task:medium:relops/*
 - queue:create-task:very-high:relops/*
+- queue:create-task:very-high:gecko-t/win*
+- queue:create-task:very-high:gecko-1/win*
+- queue:create-task:very-high:gecko-3/win*
+- queue:create-task:very-high:mpd001-1/win*
+- queue:create-task:very-high:mpd001-3/win*
 - queue:route:index.project.relops.cloud-image-builder.*
 - queue:scheduler-id:-
 - queue:scheduler-id:taskcluster-github
