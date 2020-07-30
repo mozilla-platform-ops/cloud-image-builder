@@ -8,6 +8,11 @@ scopes:
     - queue:create-task:high:relops/*
     - queue:create-task:medium:relops/*
     - queue:create-task:low:relops/*
+    - queue:create-task:high:gecko-t/win*
+    - queue:create-task:high:gecko-1/win*
+    - queue:create-task:high:gecko-3/win*
+    - queue:create-task:high:mpd001-1/win*
+    - queue:create-task:high:mpd001-3/win*
     - queue:create-task:very-high:gecko-t/win*
     - queue:create-task:very-high:gecko-1/win*
     - queue:create-task:very-high:gecko-3/win*
