@@ -55,6 +55,7 @@ try:
     enableSnapshotCopy = any(line.lower().strip() == 'enable-snapshot-copy' for line in lines)
     purgeRelopsResources = True
     purgeTaskclusterResources = any(line.lower().strip() == 'purge-taskcluster-resources' for line in lines)
+    skipImageVerification = any(line.lower().strip() == 'no-verify' for line in lines)
     noCI = any(line.lower().strip() == 'no-ci' or line.lower().strip() == 'no-taskcluster-ci' for line in lines)
     if noCI:
         print('info: **no ci** commit syntax detected. skipping ci task creation')
@@ -341,10 +342,11 @@ for platform in ['amazon', 'azure']:
 
                 queueWorkerPoolConfigurationTask = platform in platformClient
                 if queueWorkerPoolConfigurationTask:
+                    workerPoolConfigurationTaskId = slugid.nice()
                     createTask(
                         queue = queue,
                         image = 'python',
-                        taskId = slugid.nice(),
+                        taskId = workerPoolConfigurationTaskId,
                         taskName = '03 :: generate {} {}/{} worker pool configuration'.format(platform, pool['domain'], pool['variant']),
                         taskDescription = 'create worker pool configuration for {} {}/{} which can be added to worker manager'.format(platform, pool['domain'], pool['variant']),
                         maxRunMinutes = 180,
@@ -362,7 +364,6 @@ for platform in ['amazon', 'azure']:
                                 'path': '{}-{}.yaml'.format(pool['domain'], pool['variant']),
                             }
                         ],
-                        #dependencies = taggingTaskIdsForPool,
                         dependencies = machineImageBuildTaskIdsForPool,
                         provisioner = 'relops',
                         workerType = 'decision',
@@ -388,3 +389,23 @@ for platform in ['amazon', 'azure']:
                             'worker-manager:provider:{}'.format(pool['provider'])
                         ],
                         taskGroupId = taskGroupId)
+
+                    queueWorkerPoolVerificationTask = (not skipImageVerification)
+                    if queueWorkerPoolVerificationTask:
+                        createTask(
+                            queue = queue,
+                            taskId = slugid.nice(),
+                            taskName = '04 :: verify task claimability on {} {}/{}'.format(platform, pool['domain'], pool['variant']),
+                            taskDescription = 'verify that worker pool instance instantiations and task claims succeed using newly deployed machine images',
+                            maxRunMinutes = 60,
+                            retries = 5,
+                            retriggerOnExitCodes = [ 123 ],
+                            dependencies = [ workerPoolConfigurationTaskId ],
+                            provisioner = pool['domain'],
+                            workerType = pool['variant'],
+                            priority = 'high',
+                            commands = [
+                                'echo "hello world, from {}/{} on {}"'.format(pool['domain'], pool['variant'], platform)
+                            ],
+                            scopes = [],
+                            taskGroupId = taskGroupId)
