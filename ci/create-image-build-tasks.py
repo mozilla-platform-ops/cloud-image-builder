@@ -287,7 +287,7 @@ for platform in ['amazon', 'azure']:
                             retries = 5,
                             retriggerOnExitCodes = [ 123 ],
                             dependencies = machineImageBuildDependencies,
-                            provisioner = 'relops',
+                            provisioner = 'relops-3',
                             workerType = 'win2019',
                             priority = 'low',
                             artifacts = [
