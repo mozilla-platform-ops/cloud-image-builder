@@ -1,7 +1,7 @@
 ---
 version: 0
 tasks:
-    - provisionerId: relops
+    - provisionerId: relops-3
       workerType: decision
       routes:
           - >-
@@ -9,24 +9,7 @@ tasks:
             {{event.head.sha}}
           - 'index.project.relops.cloud-image-builder.decision.latest'
       scopes:
-          - 'generic-worker:os-group:relops/win2019/Administrators'
-          - 'generic-worker:run-as-administrator:relops/*'
-          - 'queue:create-task:highest:relops/*'
-          - 'queue:create-task:very-high:relops/*'
-          - 'queue:create-task:high:relops/*'
-          - 'queue:create-task:medium:relops/*'
-          - 'queue:create-task:low:relops/*'
-          - 'queue:route:index.project.relops.cloud-image-builder.*'
-          - 'queue:scheduler-id:taskcluster-github'
-          - 'worker-manager:manage-worker-pool:gecko-1/win*'
-          - 'worker-manager:manage-worker-pool:gecko-3/win*'
-          - 'worker-manager:manage-worker-pool:gecko-t/win*'
-          - 'worker-manager:manage-worker-pool:mpd001-1/win*'
-          - 'worker-manager:manage-worker-pool:mpd001-3/win*'
-          - 'worker-manager:manage-worker-pool:relops/win*'
-          - 'worker-manager:provider:aws'
-          - 'worker-manager:provider:azure'
-          - 'secrets:get:project/relops/image-builder/dev'
+          - 'assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:{{event.head.repo.branch}}'
       extra:
           github:
               env: true
