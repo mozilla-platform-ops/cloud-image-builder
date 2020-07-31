@@ -9,7 +9,7 @@ tasks:
             {{event.head.sha}}
           - 'index.project.relops.cloud-image-builder.decision.latest'
       scopes:
-          - 'assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:{{event.head.repo.branch}}'
+          - 'assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:{{event.head.repo.branch}}'
       extra:
           github:
               env: true
