@@ -11,7 +11,7 @@ createTask(
     taskId = slugid.nice(),
     taskName = '00 :: create maintenance and image build tasks',
     taskDescription = 'determine which windows cloud images should be built, where they should be deployed and trigger appropriate build tasks for the same',
-    provisioner = 'relops',
+    provisioner = 'relops-3',
     workerType = 'decision',
     features = {
         'taskclusterProxy': True

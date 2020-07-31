@@ -121,7 +121,7 @@ createTask(
     maxRunMinutes = 10,
     retries = 5,
     retriggerOnExitCodes = [ 123 ],
-    provisioner = 'relops',
+    provisioner = 'relops-3',
     workerType = 'decision',
     priority = 'high',
     commands = [
@@ -147,7 +147,7 @@ createTask(
     maxRunMinutes = 60,
     retries = 5,
     retriggerOnExitCodes = [ 123 ],
-    provisioner = 'relops',
+    provisioner = 'relops-3',
     workerType = 'win2019',
     priority = 'low',
     features = {
@@ -176,7 +176,7 @@ for resourceGroup in azurePurgeTaskIds:
         maxRunMinutes = 60,
         retries = 5,
         retriggerOnExitCodes = [ 123 ],
-        provisioner = 'relops',
+        provisioner = 'relops-3',
         workerType = 'decision',
         priority = 'high',
         features = {
@@ -212,7 +212,7 @@ for platform in ['amazon', 'azure']:
                     maxRunMinutes = 180,
                     retries = 1,
                     retriggerOnExitCodes = [ 123 ],
-                    provisioner = 'relops',
+                    provisioner = 'relops-3',
                     workerType = 'win2019',
                     priority = 'high',
                     artifacts = [
@@ -365,7 +365,7 @@ for platform in ['amazon', 'azure']:
                             }
                         ],
                         dependencies = machineImageBuildTaskIdsForPool,
-                        provisioner = 'relops',
+                        provisioner = 'relops-3',
                         workerType = 'decision',
                         priority = 'low',
                         features = {

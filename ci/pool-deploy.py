@@ -34,7 +34,7 @@ if runEnvironment == 'travis':
         taskId = taskGroupId,
         taskName = '00 :: task group placeholder',
         taskDescription = 'this task only serves as a task grouping when triggered from travis. it does no actual work',
-        provisioner = 'relops',
+        provisioner = 'relops-3',
         workerType = 'win2019',
         commands = [ 'echo "task: {}, sha: {}"'.format(taskGroupId, commitSha) ])
 elif runEnvironment == 'taskcluster':
@@ -48,7 +48,7 @@ elif runEnvironment == 'taskcluster':
         taskName = '00 :: purge deprecated azure resources',
         taskDescription = 'delete orphaned, deprecated, deallocated and unused azure resources',
         maxRunMinutes = 60,
-        provisioner = 'relops',
+        provisioner = 'relops-3',
         workerType = 'win2019',
         priority = 'high',
         features = {
@@ -98,7 +98,7 @@ for platform in ['amazon', 'azure']:
                                 'path': '{}-{}.yaml'.format(pool['domain'], pool['variant']),
                             }
                         ],
-                        provisioner = 'relops',
+                        provisioner = 'relops-3',
                         workerType = 'decision',
                         priority = 'low',
                         features = {
