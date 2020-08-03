@@ -4,7 +4,7 @@ scopes:
     - generic-worker:os-group:relops-3/win2019/Administrators
     - generic-worker:run-as-administrator:relops-3/*
     - queue:create-task:highest:relops-3/*
-    - queue:route:index.project.relops.cloud-image-builder.*
+    - queue:route:index.project.relops-3.cloud-image-builder.*
     - worker-manager:manage-worker-pool:gecko-1/win*
     - worker-manager:manage-worker-pool:gecko-3/win*
     - worker-manager:manage-worker-pool:gecko-t/win*

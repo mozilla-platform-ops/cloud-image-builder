@@ -2,7 +2,7 @@
 - generic-worker:os-group:relops-3/win2019/Administrators
 - generic-worker:run-as-administrator:relops-3/win2019
 - queue:create-task:highest:relops-3/win2019
-- queue:route:index.project.relops.cloud-image-builder.*
+- queue:route:index.project.relops-3.cloud-image-builder.*
 - queue:scheduler-id:-
 - secrets:get:project/relops/image-builder/dev
 - worker-manager:manage-worker-pool:relops-3/win*
