@@ -245,8 +245,8 @@ for platform in ['amazon', 'azure']:
                         'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
                     ],
                     scopes = [
-                        'generic-worker:os-group:relops/win2019/Administrators',
-                        'generic-worker:run-as-administrator:relops/win2019',
+                        'generic-worker:os-group:relops-3/win2019/Administrators',
+                        'generic-worker:run-as-administrator:relops-3/win2019',
                         'secrets:get:project/relops/image-builder/dev'
                     ],
                     routes = [
@@ -332,8 +332,8 @@ for platform in ['amazon', 'azure']:
                                 )
                             ],
                             scopes = [
-                                'generic-worker:os-group:relops/win2019/Administrators',
-                                'generic-worker:run-as-administrator:relops/win2019',
+                                'generic-worker:os-group:relops-3/win2019/Administrators',
+                                'generic-worker:run-as-administrator:relops-3/win2019',
                                 'secrets:get:project/relops/image-builder/dev'
                             ],
                             routes = [
