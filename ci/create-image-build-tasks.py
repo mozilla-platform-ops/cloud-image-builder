@@ -39,10 +39,14 @@ includeKeys = list(map(lambda x: pathlib.Path(x).stem, allKeyConfigPaths))
 includePools = [poolName for poolNames in map(lambda configPath: map(lambda pool: '{}/{}'.format(pool['domain'], pool['variant']), yaml.safe_load(open(configPath, 'r'))['manager']['pool']), allKeyConfigPaths) for poolName in poolNames]
 includeRegions = sorted(list(set([region for regions in map(lambda configPath: map(lambda target: target['region'].replace(' ', '').lower(), yaml.safe_load(open(configPath, 'r'))['target']), allKeyConfigPaths) for region in regions])))
 includeEnvironments = [
-    'production',
+    #'production',
     'staging'
 ]
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+if currentEnvironment == 'production':
+    print('info: skipping production environment builds')
+    quit()
+
 overwriteDiskImage = False
 overwriteMachineImage = False
 

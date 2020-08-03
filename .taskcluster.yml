@@ -8,6 +8,13 @@ tasks:
           - index.project.relops.cloud-image-builder.decision.latest
       scopes:
           - assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:{{event.head.repo.branch}}
+          - queue:create-task:highest:gecko-1/b-win*
+          - queue:create-task:highest:gecko-1/win*
+          - queue:create-task:highest:gecko-3/b-win*
+          - queue:create-task:highest:gecko-3/win*
+          - queue:create-task:highest:gecko-t/t-win*
+          - queue:create-task:highest:gecko-t/win*
+          - queue:create-task:highest:relops-3/*
           - queue:scheduler-id:taskcluster-github
       extra:
           github:
