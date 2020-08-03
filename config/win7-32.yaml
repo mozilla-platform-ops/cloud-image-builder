@@ -65,6 +65,7 @@ target:
           ram: 4
           format: Standard_F{0}s_v2
       agent: disable
+      diagnostics: enable
       disk: &disk
           - os: true
             source: windows7-professional-en-us-x86
@@ -163,6 +164,7 @@ target:
       hostname: *hostname
       machine: *machine
       agent: disable
+      diagnostics: enable
       disk: *disk
       network:
           name: vn-east-us-gecko-t
@@ -182,6 +184,7 @@ target:
       hostname: *hostname
       machine: *machine
       agent: disable
+      diagnostics: enable
       disk: *disk
       network:
           name: vn-east-us-2-gecko-t
@@ -201,6 +204,7 @@ target:
       hostname: *hostname
       machine: *machine
       agent: disable
+      diagnostics: enable
       disk: *disk
       network:
           name: vn-north-central-us-gecko-t
@@ -220,6 +224,7 @@ target:
       hostname: *hostname
       machine: *machine
       agent: disable
+      diagnostics: enable
       disk: *disk
       network:
           name: vn-south-central-us-gecko-t
