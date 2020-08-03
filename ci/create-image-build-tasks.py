@@ -247,11 +247,11 @@ for platform in ['amazon', 'azure']:
                     scopes = [
                         'generic-worker:os-group:relops-3/win2019/Administrators',
                         'generic-worker:run-as-administrator:relops-3/win2019',
-                        'secrets:get:project/relops-3/image-builder/dev'
+                        'secrets:get:project/relops/image-builder/dev'
                     ],
                     routes = [
-                        'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
-                        'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+                        'index.project.relops-3.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
+                        'index.project.relops-3.cloud-image-builder.{}.{}.latest'.format(platform, key)
                     ],
                     taskGroupId = taskGroupId
                 )
@@ -334,11 +334,11 @@ for platform in ['amazon', 'azure']:
                             scopes = [
                                 'generic-worker:os-group:relops-3/win2019/Administrators',
                                 'generic-worker:run-as-administrator:relops-3/win2019',
-                                'secrets:get:project/relops-3/image-builder/dev'
+                                'secrets:get:project/relops/image-builder/dev'
                             ],
                             routes = [
-                                'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
-                                'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
+                                'index.project.relops-3.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
+                                'index.project.relops-3.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
                             ],
                             taskGroupId = taskGroupId)
                     else:
