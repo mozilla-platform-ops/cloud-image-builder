@@ -4,12 +4,11 @@ tasks:
     - provisionerId: relops-3
       workerType: decision
       routes:
-          - >-
-            index.project.relops.cloud-image-builder.decision.revision.
-            {{event.head.sha}}
-          - 'index.project.relops.cloud-image-builder.decision.latest'
+          - index.project.relops.cloud-image-builder.decision.revision.{{event.head.sha}}
+          - index.project.relops.cloud-image-builder.decision.latest
       scopes:
-          - 'assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:{{event.head.repo.branch}}'
+          - assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:{{event.head.repo.branch}}
+          - queue:scheduler-id:taskcluster-github
       extra:
           github:
               env: true
