@@ -394,7 +394,7 @@ for platform in ['amazon', 'azure']:
                         ],
                         taskGroupId = taskGroupId)
 
-                    queueWorkerPoolVerificationTask = (not skipImageVerification)
+                    queueWorkerPoolVerificationTask = (not skipImageVerification) and ('queue:create-task:highest:{}/win*'.format(pool['domain']) in auth.currentScopes()['scopes'])
                     if queueWorkerPoolVerificationTask:
                         createTask(
                             queue = queue,
