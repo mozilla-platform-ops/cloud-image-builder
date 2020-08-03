@@ -225,4 +225,4 @@ with open(configPath, 'w') as file:
     updateWorkerPool(
         workerManager = taskclusterWorkerManagerClient,
         configPath = configPath,
-        workerPoolId = '{}'.format(poolName))
+        workerPoolId="relops-test-workers/{}".format(poolName.replace("/", "-")))

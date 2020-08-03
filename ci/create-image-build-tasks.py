@@ -405,8 +405,8 @@ for platform in ['amazon', 'azure']:
                             retries = 5,
                             retriggerOnExitCodes = [ 123 ],
                             dependencies = [ workerPoolConfigurationTaskId ],
-                            provisioner = pool['domain'],
-                            workerType = pool['variant'],
+                            provisioner = 'relops-test-workers',
+                            workerType = "{}/{}".format(pool['domain'], pool['variant']),
                             priority = 'high',
                             commands = [
                                 'echo "hello world, from {}/{} on {}"'.format(pool['domain'], pool['variant'], platform)
