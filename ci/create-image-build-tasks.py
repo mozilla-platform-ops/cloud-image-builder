@@ -245,13 +245,13 @@ for platform in ['amazon', 'azure']:
                         'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
                     ],
                     scopes = [
-                        'generic-worker:os-group:relops-3/win2019/Administrators',
-                        'generic-worker:run-as-administrator:relops-3/win2019',
-                        'secrets:get:project/relops-3/image-builder/dev'
+                        'generic-worker:os-group:relops/win2019/Administrators',
+                        'generic-worker:run-as-administrator:relops/win2019',
+                        'secrets:get:project/relops/image-builder/dev'
                     ],
                     routes = [
-                        'index.project.relops-3.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
-                        'index.project.relops-3.cloud-image-builder.{}.{}.latest'.format(platform, key)
+                        'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
+                        'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
                     ],
                     taskGroupId = taskGroupId
                 )
@@ -332,13 +332,13 @@ for platform in ['amazon', 'azure']:
                                 )
                             ],
                             scopes = [
-                                'generic-worker:os-group:relops-3/win2019/Administrators',
-                                'generic-worker:run-as-administrator:relops-3/win2019',
-                                'secrets:get:project/relops-3/image-builder/dev'
+                                'generic-worker:os-group:relops/win2019/Administrators',
+                                'generic-worker:run-as-administrator:relops/win2019',
+                                'secrets:get:project/relops/image-builder/dev'
                             ],
                             routes = [
-                                'index.project.relops-3.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
-                                'index.project.relops-3.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
+                                'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
+                                'index.project.relops.cloud-image-builder.{}.{}.{}.latest'.format(platform, target['group'], key)
                             ],
                             taskGroupId = taskGroupId)
                     else:
@@ -388,7 +388,7 @@ for platform in ['amazon', 'azure']:
                             'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && pip install azure-mgmt-compute boto3 cachetools pyyaml slugid taskcluster urllib3 | grep -v "^[[:space:]]*$" && cd cloud-image-builder && git reset --hard {} && python ci/generate-worker-pool-config.py'.format(commitSha)
                         ],
                         scopes = [
-                            'secrets:get:project/relops-3/image-builder/dev',
+                            'secrets:get:project/relops/image-builder/dev',
                             'worker-manager:manage-worker-pool:{}/{}'.format(pool['domain'], pool['variant']),
                             'worker-manager:provider:{}'.format(pool['provider'])
                         ],

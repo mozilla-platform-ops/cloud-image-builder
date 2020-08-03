@@ -35,7 +35,7 @@
       - East US 2
       - West US
   machine: Standard_A2
-- name: relops-3/win2019-azure
+- name: relops/win2019-azure
   capacity:
       min: 0
       max: 2
