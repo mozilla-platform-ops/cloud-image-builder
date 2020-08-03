@@ -1,13 +1,13 @@
 ---
 - auth:create-role:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:*
 - auth:update-role:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:*
-- generic-worker:os-group:relops/win2019/Administrators
-- generic-worker:run-as-administrator:relops/*
-- queue:create-task:high:relops/*
-- queue:create-task:highest:relops/*
-- queue:create-task:low:relops/*
-- queue:create-task:medium:relops/*
-- queue:create-task:very-high:relops/*
+- generic-worker:os-group:relops-3/win2019/Administrators
+- generic-worker:run-as-administrator:relops-3/*
+- queue:create-task:high:relops-3/*
+- queue:create-task:highest:relops-3/*
+- queue:create-task:low:relops-3/*
+- queue:create-task:medium:relops-3/*
+- queue:create-task:very-high:relops-3/*
 - queue:create-task:high:gecko-t/win*
 - queue:create-task:high:gecko-1/win*
 - queue:create-task:high:gecko-3/win*
@@ -27,6 +27,6 @@
 - worker-manager:manage-worker-pool:gecko-t/win*
 - worker-manager:manage-worker-pool:mpd001-1/win*
 - worker-manager:manage-worker-pool:mpd001-3/win*
-- worker-manager:manage-worker-pool:relops/*
+- worker-manager:manage-worker-pool:relops-3/*
 - worker-manager:provider:aws
 - worker-manager:provider:azure

@@ -245,9 +245,9 @@ for platform in ['amazon', 'azure']:
                         'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
                     ],
                     scopes = [
-                        'generic-worker:os-group:relops/win2019/Administrators',
-                        'generic-worker:run-as-administrator:relops/win2019',
-                        'secrets:get:project/relops/image-builder/dev'
+                        'generic-worker:os-group:relops-3/win2019/Administrators',
+                        'generic-worker:run-as-administrator:relops-3/win2019',
+                        'secrets:get:project/relops-3/image-builder/dev'
                     ],
                     routes = [
                         'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
@@ -332,9 +332,9 @@ for platform in ['amazon', 'azure']:
                                 )
                             ],
                             scopes = [
-                                'generic-worker:os-group:relops/win2019/Administrators',
-                                'generic-worker:run-as-administrator:relops/win2019',
-                                'secrets:get:project/relops/image-builder/dev'
+                                'generic-worker:os-group:relops-3/win2019/Administrators',
+                                'generic-worker:run-as-administrator:relops-3/win2019',
+                                'secrets:get:project/relops-3/image-builder/dev'
                             ],
                             routes = [
                                 'index.project.relops.cloud-image-builder.{}.{}.{}.revision.{}'.format(platform, target['group'], key, commitSha),
