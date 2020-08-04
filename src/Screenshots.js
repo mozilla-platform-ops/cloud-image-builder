@@ -9,10 +9,6 @@ class Screenshots extends React.Component {
     galleryWidth: (window.innerWidth < 960) ? 640 : (640 + 48 + 10)
   };
 
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
     this.setState(state => ({

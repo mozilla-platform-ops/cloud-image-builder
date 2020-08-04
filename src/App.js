@@ -20,13 +20,8 @@ class App extends React.Component {
   state = {
     commits: [],
     settings: {
-      fluid: (this.cookies.get('fluid') === null) ? true : (this.cookies.get('fluid') === 'true'),
-      //showAllTasks: (this.cookies.get('showAllTasks') === null) ? false : (this.cookies.get('showAllTasks') === 'true'),
-      limit: {
-        tasks: (this.cookies.get('limitTasks') === null) ? ['03', '04'] : this.cookies.get('limitTasks'),
-        commits: (this.cookies.get('limitCommits') === null) ? 5 : parseInt(this.cookies.get('limitCommits')),
-      },
-      commitLimit: (this.cookies.get('commitLimit') === null) ? 5 : parseInt(this.cookies.get('commitLimit'))
+      fluid: (this.cookies.get('fluid') === undefined || this.cookies.get('fluid') === null) ? true : (this.cookies.get('fluid') === 'true'),
+      limit: (this.cookies.get('limit') === undefined || this.cookies.get('limit') === null) ? { commits: 1, tasks: ['03', '04'] } : this.cookies.get('limit')
     }
   };
   /*
@@ -40,25 +35,21 @@ class App extends React.Component {
   */
 
   componentDidMount() {
-    if (this.cookies.get('fluid') === undefined) {
+    if (this.cookies.get('fluid') === undefined || this.cookies.get('fluid') === null) {
       this.cookies.set('fluid', true, { path: '/', sameSite: 'strict' });
     }
-    if (this.cookies.get('limit') === undefined) {
+    if (this.cookies.get('limit') === undefined || this.cookies.get('limit') === null) {
       this.cookies.set(
         'limit',
-        {
-          commits: 1,
-          tasks: ['03', '04']
-        },
+        this.state.settings.limit,
         {
           path: '/',
           sameSite: 'strict'
         });
     }
-    if (this.cookies.get('commitLimit') === undefined) {
-      this.cookies.set('commitLimit', 5, { path: '/', sameSite: 'strict' });
-    }
-    this.getCommits();
+    console.log('componentDidMount()');
+    console.log(this.state);
+    this.getCommits(this.state.settings.limit.commits);
 
     // refresh commit list every 5 minutes
     // https://blog.stvmlbrn.com/2019/02/20/automatically-refreshing-data-in-react.html
@@ -70,7 +61,9 @@ class App extends React.Component {
     clearInterval(this.interval);
   }
 
-  getCommits() {
+  getCommits(limit) {
+    console.log('getCommits()');
+    console.log(this.state);
     fetch(
       (window.location.hostname === 'localhost')
         ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits'
@@ -80,7 +73,7 @@ class App extends React.Component {
     .then((githubCommits) => {
       if (githubCommits.length) {
         this.setState(state => ({
-          commits: githubCommits.slice(0, state.settings.commitLimit).map(c => ({
+          commits: githubCommits.slice(0, limit).map(c => ({
             sha: c.sha,
             url: c.html_url,
             author: {...c.commit.author, ...{ id: c.author.id, username: c.author.login, avatar: c.author.avatar_url }},
@@ -99,7 +92,7 @@ class App extends React.Component {
 
   render() {
     return (
-      <Container fluid={this.state.settings.fluid}>
+      <Container fluid={(this.state.settings.fluid === undefined || this.state.settings.fluid === null) ? true : this.state.settings.fluid}>
         <Row>
           <h1 style={{ padding: '0 1em' }}>
             <FontAwesomeIcon style={{ marginRight: '0.4em' }} icon={faCloud} />
@@ -142,28 +135,30 @@ class App extends React.Component {
             </strong>
             <br  />
             <Slider
-              defaultValue={this.state.settings.commitLimit}
+              defaultValue={ this.state.settings.limit.commits }
               min={1}
               max={30}
               onChange={
                 (commitLimit) => {
-                  this.cookies.set('commitLimit', commitLimit, { path: '/', sameSite: 'strict' });
-                  this.setState(state => ({settings: { commitLimit: commitLimit, fluid: state.settings.fluid, showAllTasks: state.settings.showAllTasks }}));
-                  this.getCommits();
+                  let limit = { commits: commitLimit, tasks: this.state.settings.limit.tasks };
+                  this.cookies.set('limit', limit, { path: '/', sameSite: 'strict' });
+                  this.setState(state => ({ settings: { fluid: state.settings.fluid, limit: limit }}));
+                  this.getCommits(commitLimit);
                 }
               }
               style={{ marginTop: '20px' }} />
-            limit commits ({this.state.settings.commitLimit})
+            limit commits ({this.state.settings.limit.commits})
             <br style={{ marginBottom: '20px' }} />
             <Form.Check 
               type="switch"
               id="showAllTasks"
               label="all tasks"
-              checked={this.state.settings.showAllTasks}
+              checked={(this.state.settings.limit.tasks.length > 2)}
               onChange={
                 () => {
-                  this.cookies.set('showAllTasks', (!this.state.settings.showAllTasks), { path: '/', sameSite: 'strict' });
-                  this.setState(state => ({settings: { showAllTasks: !state.settings.showAllTasks, fluid: state.settings.fluid }}));
+                  let limit = { commits: this.state.settings.limit.commits, tasks: (!(this.state.settings.limit.tasks.length > 2)) ? ['00', '01', '02', '03', '04'] : ['03', '04'] };
+                  this.cookies.set('limit', limit, { path: '/', sameSite: 'strict' });
+                  this.setState(state => ({ settings: { fluid: state.settings.fluid, limit: limit }}));
                 }
               }
             />
@@ -175,8 +170,9 @@ class App extends React.Component {
               checked={this.state.settings.fluid}
               onChange={
                 () => {
-                  this.cookies.set('fluid', (!this.state.settings.fluid), { path: '/', sameSite: 'strict' });
-                  this.setState(state => ({settings: { fluid: !state.settings.fluid, showAllTasks: state.settings.showAllTasks }}));
+                  let fluid = !this.state.settings.fluid;
+                  this.cookies.set('fluid', fluid, { path: '/', sameSite: 'strict' });
+                  this.setState(state => ({ settings: { fluid: fluid, limit: state.settings.limit }}));
                 }
               }
             />
