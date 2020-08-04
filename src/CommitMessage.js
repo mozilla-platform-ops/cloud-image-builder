@@ -13,8 +13,8 @@ class CommitMessage extends React.Component {
             !line.match((new RegExp ('^(pool-deploy|overwrite-disk-image|overwrite-machine-image|disable-cleanup|purge-taskcluster-resources|no-ci|no-taskcluster-ci|no-travis-ci)$', 'i')))
           )).map((line, lI) => (
             (lI === 0)
-              ? <strong key={lI}>{line}<br /></strong>
-              : <span key={lI}>{line}<br /></span>
+              ? (line.match(/bug ([0-9]{5,8})/i)) ? <span key={lI}><a href={'https://bugzilla.mozilla.org/show_bug.cgi?id=' + line.match(/bug ([0-9]{5,8})/i)[1] } target="_blank" rel="noopener noreferrer">{line.match(/bug ([0-9]{5,8})/i)[0]}</a> {line.replace(line.match(/bug ([0-9]{5,8})/i)[0], '')}<br /></span> : <strong key={lI}>{line}<br /></strong>
+              : (line.match(/bug ([0-9]{5,8})/i)) ? <span key={lI}><a href={'https://bugzilla.mozilla.org/show_bug.cgi?id=' + line.match(/bug ([0-9]{5,8})/i)[1] } target="_blank" rel="noopener noreferrer">{line.match(/bug ([0-9]{5,8})/i)[0]}</a> {line.replace(line.match(/bug ([0-9]{5,8})/i)[0], '')}<br /></span> : <span key={lI}>{line}<br /></span>
           ))
         }
         {
