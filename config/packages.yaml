@@ -148,6 +148,7 @@
         pass: auditUser
         synchronicity: synchronous
         priority: 302
+        reboot: OnRequest
   target:
       cloud:
           - azure

@@ -16,6 +16,10 @@ if (-not ($actualFqdn -ieq $expectedFqdn)) {
   Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'Domain' -Value $expectedFqdn;
   Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'NV Domain' -Value $expectedFqdn;
   Write-Output -InputObject ('set-regional-fqdn :: fqdn changed from: {0} to: {1}.' -f $actualFqdn, $expectedFqdn);
+  # cause sysprep to reboot and rerun
+  exit 2
 } else {
   Write-Output -InputObject ('set-regional-fqdn :: actual fqdn: {0} matches expected fqdn: {1}.' -f $actualFqdn, $expectedFqdn);
+  # cause sysprep to skip reboot and move to next unattend command
+  exit 0
 }
