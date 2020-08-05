@@ -62,6 +62,9 @@ class App extends React.Component {
   }
 
   getCommits(limit) {
+    if (limit === null || limit === undefined) {
+      limit = 1;
+    }
     console.log('getCommits()');
     console.log(this.state);
     fetch(
