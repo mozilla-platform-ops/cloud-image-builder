@@ -520,18 +520,18 @@
         pass: auditUser
         synchronicity: synchronous
         priority: 700
-      - description: 'bootstrap :: create dsc folder'
+      - description: 'bootstrap :: create bootstrap folder'
         command: cmd /c if not exist C:\bootstrap mkdir C:\bootstrap
         pass: auditUser
         synchronicity: synchronous
         priority: 701
-      - description: 'bootstrap :: install bootstrap script (occ)'
+      - description: 'bootstrap :: install bootstrap script (ronin)'
         # yamllint disable-line rule:line-length
         command: cmd /c if exist C:\Windows\Temp\azure-bootstrap.ps1 move /y C:\Windows\Temp\azure-bootstrap.ps1 C:\bootstrap\azure-bootstrap.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 702
-      - description: 'bootstrap :: run bootstrap script (occ)'
+      - description: 'bootstrap :: run bootstrap script (ronin)'
         # yamllint disable-line rule:line-length
         command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\bootstrap\azure-bootstrap.ps1 > C:\log\bootstrap-stdout.log 2> C:\log\bootstrap-stderr.log
         pass: auditUser
