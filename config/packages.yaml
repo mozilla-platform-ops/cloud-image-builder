@@ -139,6 +139,36 @@
       - platform: url
         # yamllint disable-line rule:line-length
         url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/papertrail-bundle.pem
+- name: set-regional-fqdn
+  savepath: Windows\Temp\set-regional-fqdn.ps1
+  unattend:
+      - description: 'nxlog :: set regional fqdn'
+        # yamllint disable-line rule:line-length
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-regional-fqdn.ps1 > C:\log\rundsc-stdout.log 2> C:\log\rundsc-stderr.log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 302
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 7
+          - Windows 8.1
+          - Windows 10
+          - Windows Server 2012 R2
+          - Windows Server 2016
+          - Windows Server 2019
+          - Windows Server
+      architecture:
+          - x86
+          - x86-64
+      gpu:
+          - true
+          - false
+  sources:
+      - platform: url
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/set-regional-fqdn.ps1
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
