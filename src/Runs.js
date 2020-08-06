@@ -44,7 +44,7 @@ class Runs extends React.Component {
       <ul>
         {
           this.props.runs.map(run => (
-            <Run run={run} key={run.runId} taskId={this.props.taskId} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
+            <Run run={run} key={run.runId} taskId={this.props.taskId} taskName={this.props.taskName} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
           ))
         }
       </ul>

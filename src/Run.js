@@ -1,6 +1,7 @@
 import React from 'react'
 //import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 import Images from './Images';
 import InstanceLogs from './InstanceLogs';
 import Screenshots from './Screenshots';
@@ -56,8 +57,8 @@ class Run extends React.Component {
       if (container.artifacts && container.artifacts.length) {
         this.setState(state => ({
           artifacts: container.artifacts,
-          logs: container.artifacts.filter(a => (a.contentType.startsWith('text/plain')) && a.name.startsWith('public/instance-logs/')),
-          screenshots: container.artifacts.filter(a => (a.contentType === 'image/png') && a.name.startsWith('public/screenshot/full/'))
+          logs: container.artifacts.filter(a => (a.contentType.startsWith('text/plain')) && a.name.startsWith('public/instance-logs/') && a.name.endsWith('.log')),
+          screenshots: container.artifacts.filter(a => (a.contentType === 'image/png') && a.name.startsWith('public/screenshot/full/') && a.name.endsWith('.png'))
         }));
         if (container.artifacts.some(a => a.name.startsWith('public/') && a.name.endsWith('.json'))) {
           let artifact = container.artifacts.find(a => a.name.startsWith('public/') && a.name.endsWith('.json'))
@@ -111,23 +112,23 @@ class Run extends React.Component {
           title={'task ' + this.props.taskId + ', run ' + this.props.run.runId + ': ' + this.props.run.state}>
           {'task ' + this.props.taskId + ', run ' + this.props.run.runId}
         </Button>
-        <>
-          {
-            (this.props.run.state === 'completed' && this.state.images.length)
-              ? (<Images images={this.state.images} /> )
+        { (this.props.taskName.startsWith('03') && this.state.images.length) ? <Images images={this.state.images} /> : '' }
+        {
+          (this.props.taskName.startsWith('02') && this.state.screenshots.length)
+            ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
+              ? <Screenshots screenshots={this.state.screenshots} taskId={this.props.taskId} runId={this.props.run.runId} />
+              : <a style={{marginLeft: '1em'}} href={'https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/' + this.props.taskId + '#artifacts'} target="_blank" rel="noopener noreferrer">screenshots</a>
+            : (this.props.taskName.startsWith('02'))
+              ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
+                ? ''
+                : (
+                    <div style={{width: '100%'}}>
+                      <Spinner animation="grow" variant="secondary" size="sm" />
+                    </div>
+                  )
               : ''
-          }
-          {
-            (this.props.run.state === 'completed' && this.state.screenshots.length)
-              ? (<Screenshots screenshots={this.state.screenshots} taskId={this.props.taskId} runId={this.props.run.runId} /> )
-              : ''
-          }
-          {
-            (this.props.run.state === 'completed' && this.state.logs.length)
-              ? (<InstanceLogs logs={this.state.logs} taskId={this.props.taskId} runId={this.props.run.runId} /> )
-              : ''
-          }
-        </>
+        }
+        { (this.props.taskName.startsWith('02') && this.state.logs.length) ? <InstanceLogs logs={this.state.logs} taskId={this.props.taskId} runId={this.props.run.runId} /> : '' }
       </li>
     );
   }

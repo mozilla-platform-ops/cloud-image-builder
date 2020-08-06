@@ -60,7 +60,7 @@ class Task extends React.Component {
             </Badge>
           ))
         }
-        <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
+        <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} taskName={this.props.task.task.metadata.name} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
       </li>
     );
   }
