@@ -582,7 +582,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://github.com/mozilla-platform-ops/ronin_puppet/blob/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1
+        url: https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1
 - name: dotNetFx45_Full_setup.exe
   savepath: Windows\Temp\dotNetFx45_Full_setup.exe
   unattend:
