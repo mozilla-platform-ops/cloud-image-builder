@@ -70,28 +70,28 @@ class Status extends React.Component {
         }));
         let buildsApi = 'https://api.travis-ci.org/repos/mozilla-platform-ops/cloud-image-builder/builds/' + buildId;
         fetch(buildsApi)
-        .then(responseBuildsApi => responseBuildsApi.json())
-        .then((container) => {
-          if (container.matrix) {
-            this.setState(state => ({
-              taskCount: container.matrix.length,
-              builds: container.matrix,
-              travisApiResponse: container
-            }));
-            this.appendToSummary({
-              task: {
-                completed: { ...container.matrix.filter(x => x.result === 0).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                failed: { ...container.matrix.filter(x => x.result !== null && x.result !== 0).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                exception: {},
-                running: {},
-                pending: { ...container.matrix.filter(x => x.result === null).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                unscheduled: {}
-              },
-              image: []
-            });
-          }
-        })
-        .catch(console.log);
+          .then(responseBuildsApi => responseBuildsApi.json())
+          .then((container) => {
+            if (container.matrix) {
+              this.setState(state => ({
+                taskCount: container.matrix.length,
+                builds: container.matrix,
+                travisApiResponse: container
+              }));
+              this.appendToSummary({
+                task: {
+                  completed: { ...container.matrix.filter(x => x.result === 0).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  failed: { ...container.matrix.filter(x => x.result !== null && x.result !== 0).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  exception: {},
+                  running: {},
+                  pending: { ...container.matrix.filter(x => x.result === null).map(x => [x.id, x.finished_at]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  unscheduled: {}
+                },
+                image: []
+              });
+            }
+          })
+          .catch(e => console.log('error fetching: ' + buildsApi, e));
         break;
       default:
         let taskGroupHtmlUrl = new URL(this.props.status.target_url);
@@ -101,27 +101,27 @@ class Status extends React.Component {
         }));
         let tasksApi = 'https://' + taskGroupHtmlUrl.hostname + '/api/queue/v1/task-group/' + taskGroupId + '/list';
         fetch(tasksApi)
-        .then(responseTasksApi => responseTasksApi.json())
-        .then((container) => {
-          if (container.tasks && container.tasks.length) {
-            this.setState(state => ({
-              taskCount: container.tasks.length,
-              tasks: container.tasks//.sort((a, b) => a.task.metadata.name.localeCompare(b.task.metadata.name))
-            }));
-            this.appendToSummary({
-              task: {
-                completed: { ...container.tasks.filter(x => x.status.state === 'completed').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                failed: { ...container.tasks.filter(x => x.status.state === 'failed').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                exception: { ...container.tasks.filter(x => x.status.state === 'exception').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                running: { ...container.tasks.filter(x => x.status.state === 'running').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                pending: { ...container.tasks.filter(x => x.status.state === 'pending').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-                unscheduled: { ...container.tasks.filter(x => x.status.state === 'unscheduled').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
-              },
-              image: []
-            });
-          }
-        })
-        .catch(console.log);
+          .then(responseTasksApi => responseTasksApi.json())
+          .then((container) => {
+            if (container.tasks && container.tasks.length) {
+              this.setState(state => ({
+                taskCount: container.tasks.length,
+                tasks: container.tasks//.sort((a, b) => a.task.metadata.name.localeCompare(b.task.metadata.name))
+              }));
+              this.appendToSummary({
+                task: {
+                  completed: { ...container.tasks.filter(x => x.status.state === 'completed').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  failed: { ...container.tasks.filter(x => x.status.state === 'failed').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  exception: { ...container.tasks.filter(x => x.status.state === 'exception').map(x => [x.status.taskId, x.status.runs[x.status.runs.length - 1].resolved]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  running: { ...container.tasks.filter(x => x.status.state === 'running').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  pending: { ...container.tasks.filter(x => x.status.state === 'pending').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                  unscheduled: { ...container.tasks.filter(x => x.status.state === 'unscheduled').map(x => [x.status.taskId, null]).reduce((o, [k, v]) => ({...o, [k]: v}), {}) },
+                },
+                image: []
+              });
+            }
+          })
+          .catch(e => console.log('error fetching: ' + tasksApi, e));
         break;
     }
   }
