@@ -6,7 +6,8 @@ import Images from './Images';
 import InstanceLogs from './InstanceLogs';
 import Screenshots from './Screenshots';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
-//import { Server } from 'react-bootstrap-icons';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 class Run extends React.Component {
   state = {
@@ -24,7 +25,8 @@ class Run extends React.Component {
     artifacts: [],
     logs: [],
     screenshots: [],
-    images: []
+    images: [],
+    unattend: null
   };
 
   constructor(props) {
@@ -60,6 +62,15 @@ class Run extends React.Component {
           logs: container.artifacts.filter(a => (a.contentType.startsWith('text/plain')) && a.name.startsWith('public/instance-logs/') && a.name.endsWith('.log')),
           screenshots: container.artifacts.filter(a => (a.contentType === 'image/png') && a.name.startsWith('public/screenshot/full/') && a.name.endsWith('.png'))
         }));
+        if (container.artifacts.some(a => a.name === 'public/unattend.xml')) {
+          fetch('https://artifacts.tcstage.mozaws.net/' + this.props.taskId + '/' + this.props.run.runId + '/public/unattend.xml')
+            .then(response => response.text())
+            .then(text => {
+              this.setState(state => ({
+                unattend: text
+              }));
+            })
+        }
         if (container.artifacts.some(a => a.name.startsWith('public/') && a.name.endsWith('.json'))) {
           let artifact = container.artifacts.find(a => a.name.startsWith('public/') && a.name.endsWith('.json'))
           fetch(this.props.rootUrl + '/api/queue/v1/task/' + this.props.taskId + '/runs/' + this.props.run.runId + '/artifacts/' + artifact.name)
@@ -88,14 +99,10 @@ class Run extends React.Component {
                   return a;
                 }, {})
               });
-            } else {
-              //console.log(container);
             }
           })
           .catch(console.log);
         }
-      } else {
-        //console.log(container);
       }
     })
     .catch(console.log);
@@ -112,23 +119,34 @@ class Run extends React.Component {
           title={'task ' + this.props.taskId + ', run ' + this.props.run.runId + ': ' + this.props.run.state}>
           {'task ' + this.props.taskId + ', run ' + this.props.run.runId}
         </Button>
-        { (this.props.taskName.startsWith('03') && this.state.images.length) ? <Images images={this.state.images} /> : '' }
         {
-          (this.props.taskName.startsWith('02') && this.state.screenshots.length)
-            ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
-              ? <Screenshots screenshots={this.state.screenshots} taskId={this.props.taskId} runId={this.props.run.runId} />
-              : <a style={{marginLeft: '1em'}} href={'https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/' + this.props.taskId + '#artifacts'} target="_blank" rel="noopener noreferrer">screenshots</a>
-            : (this.props.taskName.startsWith('02'))
-              ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
-                ? ''
-                : (
-                    <div style={{width: '100%'}}>
-                      <Spinner animation="grow" variant="secondary" size="sm" />
-                    </div>
-                  )
-              : ''
+          (this.props.taskName.startsWith('01') && this.state.unattend)
+            ? (
+                <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{maxHeight: '200px', fontSize: 'x-small'}}>
+                  {this.state.unattend}
+                </SyntaxHighlighter>
+              )
+            : null
         }
-        { (this.props.taskName.startsWith('02') && this.state.logs.length) ? <InstanceLogs logs={this.state.logs} taskId={this.props.taskId} runId={this.props.run.runId} /> : '' }
+        {
+          (this.props.taskName.startsWith('02'))
+            ? (
+                (this.state.screenshots.length)
+                  ? (
+                      (this.props.run.state === 'completed' || this.props.run.state === 'failed')
+                        ? <Screenshots screenshots={this.state.screenshots} taskId={this.props.taskId} runId={this.props.run.runId} />
+                        : <a style={{marginLeft: '1em'}} href={'https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/' + this.props.taskId + '/runs/' + this.props.run.runId + '/#artifacts'} target="_blank" rel="noopener noreferrer">screenshots ({this.state.screenshots.length})</a>
+                    )
+                  : ((this.state.loading) ? <Spinner style={{marginLeft: '1em'}} animation="grow" variant="secondary" size="sm" /> : null)
+              )
+            : null
+        }
+        {
+          (this.props.taskName.startsWith('02'))
+            ? ((this.state.logs.length) ? <InstanceLogs logs={this.state.logs} taskId={this.props.taskId} runId={this.props.run.runId} /> : null)
+            : null
+        }
+        { (this.props.taskName.startsWith('03') && this.state.images.length) ? <Images images={this.state.images} /> : null }
       </li>
     );
   }

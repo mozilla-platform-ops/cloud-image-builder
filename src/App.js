@@ -47,8 +47,6 @@ class App extends React.Component {
           sameSite: 'strict'
         });
     }
-    console.log('componentDidMount()');
-    console.log(this.state);
     this.getCommits(this.state.settings.limit.commits);
 
     // refresh commit list every 5 minutes
@@ -63,10 +61,8 @@ class App extends React.Component {
 
   getCommits(limit) {
     if (limit === null || limit === undefined) {
-      limit = 1;
+      limit = (this.cookies.get('limit') === undefined || this.cookies.get('limit') === null) ? 1 : this.cookies.get('limit').commits;
     }
-    console.log('getCommits()');
-    console.log(this.state);
     fetch(
       (window.location.hostname === 'localhost')
         ? 'http://localhost:8010/proxy/repos/mozilla-platform-ops/cloud-image-builder/commits'
@@ -86,8 +82,6 @@ class App extends React.Component {
           })),
           latest: githubCommits[0].sha
         }));
-      } else {
-        //console.log(githubCommits)
       }
     })
     .catch(console.log);
@@ -183,8 +177,11 @@ class App extends React.Component {
             <p className="text-muted">
               this page monitors <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/commits/master">commits</a> to the master branch
               of the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder">mozilla-platform-ops/cloud-image-builder</a> repository and
-              the resulting travis-ci builds and taskcluster tasks which produce cloud machine images of the various windows operating system editions
-              and configurations used by firefox ci to build and test gecko products on the windows platform.
+              the resulting <a href="https://travis-ci.org/github/mozilla-platform-ops/cloud-image-builder/builds">travis-ci builds</a> and taskcluster
+              tasks (<a href="https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/index/project.relops.cloud-image-builder">staging</a>,&nbsp;
+              <a href="https://firefox-ci-tc.services.mozilla.com/tasks/index/project.relops.cloud-image-builder">production</a>) which produce cloud
+              machine images of the various windows operating system editions and configurations used by firefox ci to build and test gecko products on
+              the windows platform.
             </p>
             <p className="text-muted">
               the source code for this page is hosted in the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/tree/react">react
