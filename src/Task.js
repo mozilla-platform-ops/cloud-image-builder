@@ -42,27 +42,50 @@ class Task extends React.Component {
   }
 
   render() {
-    return (
-      <li>
-        {this.props.task.task.metadata.name}
-        &nbsp;
-        <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
-          {this.props.task.status.taskId.substring(0, 7)}...
-        </a>
-        {
-          Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
-            <Badge
-              key={state}
-              style={{ margin: '0 1px' }}
-              variant={StatusBadgeVariantMap[state]}
-              title={state + ': ' + this.props.task.status.runs.filter(r => r.state === state).length}>
-              {this.props.task.status.runs.filter(r => r.state === state).length}
-            </Badge>
-          ))
-        }
-        <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} taskName={this.props.task.task.metadata.name} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
-      </li>
-    );
+    if (['01', '02'].includes(this.props.task.task.metadata.name.slice(0, 2))) {
+      return (
+        <li style={{listStyleType: 'none', margin: 0, padding: 0}}>
+          <h6>{this.props.task.task.metadata.name}</h6>
+          <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
+            {this.props.task.status.taskId.substring(0, 7)}...
+          </a>
+          {
+            Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
+              <Badge
+                key={state}
+                style={{ margin: '0 1px' }}
+                variant={StatusBadgeVariantMap[state]}
+                title={state + ': ' + this.props.task.status.runs.filter(r => r.state === state).length}>
+                {this.props.task.status.runs.filter(r => r.state === state).length}
+              </Badge>
+            ))
+          }
+          <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} taskName={this.props.task.task.metadata.name} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
+        </li>
+      );
+    } else {
+      return (
+        <li>
+          {this.props.task.task.metadata.name}
+          &nbsp;
+          <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
+            {this.props.task.status.taskId.substring(0, 7)}...
+          </a>
+          {
+            Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
+              <Badge
+                key={state}
+                style={{ margin: '0 1px' }}
+                variant={StatusBadgeVariantMap[state]}
+                title={state + ': ' + this.props.task.status.runs.filter(r => r.state === state).length}>
+                {this.props.task.status.runs.filter(r => r.state === state).length}
+              </Badge>
+            ))
+          }
+          <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} taskName={this.props.task.task.metadata.name} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
+        </li>
+      );
+    }
   }
 }
 

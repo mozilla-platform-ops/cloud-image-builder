@@ -1,4 +1,6 @@
 import React from 'react'
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 import Status from './Status';
 
 class Statuses extends React.Component {
@@ -41,22 +43,18 @@ class Statuses extends React.Component {
 
   render() {
     return (
-      <ul>
+      <Tabs defaultActiveKey="0">
         {
-          this.props.contexts.map((context, cI) => (
-            <li
+          this.props.contexts.reverse().map((context, cI) => (
+            <Tab
               key={cI}
-              style={{
-                margin: '10px 0 0 0',
-                padding: '0 0 0 40px',
-                listStyle: 'none',
-                backgroundImage: 'url("' + this.props.statuses.find(s => s.context === context).avatar_url + '")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'left top',
-                backgroundSize: '30px'
-              }}>
-              { context }
-              <ul>
+              eventKey={cI}
+              title={
+                <>
+                  <img style={{width: '50px', height: '50px', marginRight: '10px'}} src={this.props.statuses.find(s => s.context === context).avatar_url} />
+                  <span>{context}</span>
+                </>
+              }>
               {
                 // only show pending statuses if there are no others (eg: failed/completed)
                 (this.props.statuses.some(s => s.context === context && s.state !== 'pending'))
@@ -68,11 +66,10 @@ class Statuses extends React.Component {
                     <Status status={status} key={status.id} appender={this.appendToSummary} settings={this.props.settings} />
                   ))
               }
-              </ul>
-            </li>
+            </Tab>
           ))
         }
-      </ul>
+      </Tabs>
     );
   }
 }

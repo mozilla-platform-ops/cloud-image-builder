@@ -1,7 +1,17 @@
 import React from 'react'
+import Badge from 'react-bootstrap/Badge';
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 import Tasks from './Tasks';
 import StatusBadgeVariantMap from './StatusBadgeVariantMap';
-import Badge from 'react-bootstrap/Badge';
+
+const TaskGroupPrefixMap = {
+  '00': 'setup and validation',
+  '01': 'disk image builds',
+  '02': 'machine image builds',
+  '03': 'worker pool deployments',
+  '04': 'worker pool tests'
+};
 
 class Status extends React.Component {
   state = {
@@ -118,66 +128,84 @@ class Status extends React.Component {
 
   render() {
     return (
-      <li>
-        {
-          new Intl.DateTimeFormat('en-GB', {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: 'numeric',
-            minute: 'numeric',
-            timeZoneName: 'short'
-          }).format(new Date(this.props.status.updated_at))
-        }
-        &nbsp;
-        {this.props.status.description.toLowerCase()}
-        &nbsp;
-        (
-          {this.state.taskCount} tasks in group
+      <>
+        <h5 style={{marginTop: '1em'}} className="muted">
+          {
+            new Intl.DateTimeFormat('en-GB', {
+              year: 'numeric',
+              month: 'short',
+              day: '2-digit',
+              hour: 'numeric',
+              minute: 'numeric',
+              timeZoneName: 'short'
+            }).format(new Date(this.props.status.updated_at))
+          }
           &nbsp;
-          <a href={this.props.status.target_url} title={this.state.taskGroupId}>
+          {this.props.status.description.toLowerCase()}
+        </h5>
+        <span style={{marginTop: '0.5em'}}>
+          (
+            {this.state.taskCount} tasks in group
+            &nbsp;
+            <a href={this.props.status.target_url} title={this.state.taskGroupId}>
+              {
+                (this.state.builds.length)
+                  ? this.state.taskGroupId
+                  : (this.state.taskGroupId && this.state.taskGroupId.slice(0, 7)) + '...'
+              }
+            </a>
+            &nbsp;
             {
-              (this.state.builds.length)
-                ? this.state.taskGroupId
-                : (this.state.taskGroupId && this.state.taskGroupId.slice(0, 7)) + '...'
+              Object.keys(StatusBadgeVariantMap).map(status => (
+                (this.state.tasks.filter(t => t.status.state === status).length)
+                  ? (
+                      <Badge
+                        key={status}
+                        style={{ margin: '0 1px' }}
+                        variant={StatusBadgeVariantMap[status]}
+                        title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
+                        {this.state.tasks.filter(t => t.status.state === status).length}
+                      </Badge>
+                    )
+                  : ''
+              ))
             }
-          </a>
-          &nbsp;
-          {
-            Object.keys(StatusBadgeVariantMap).map(status => (
-              (this.state.tasks.filter(t => t.status.state === status).length)
-                ? (
-                    <Badge
-                      key={status}
-                      style={{ margin: '0 1px' }}
-                      variant={StatusBadgeVariantMap[status]}
-                      title={status + ': ' + this.state.tasks.filter(t => t.status.state === status).length}>
-                      {this.state.tasks.filter(t => t.status.state === status).length}
-                    </Badge>
-                  )
-                : ''
-            ))
-          }
-          {
-            [0, 1, null].map((result, rI) => (
-              (this.state.builds.filter(b => b.result === result).length)
-                ? (
-                    <Badge
-                      key={rI}
-                      style={{ margin: '0 1px' }}
-                      variant={(result === null) ? 'info' : StatusBadgeVariantMap[this.travisBuildResults[result]]}
-                      title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
-                      {this.state.builds.filter(b => b.result === result).length}
-                    </Badge>
-                  )
-                : ''
-            ))
-          }
-        )
+            {
+              [0, 1, null].map((result, rI) => (
+                (this.state.builds.filter(b => b.result === result).length)
+                  ? (
+                      <Badge
+                        key={rI}
+                        style={{ margin: '0 1px' }}
+                        variant={(result === null) ? 'info' : StatusBadgeVariantMap[this.travisBuildResults[result]]}
+                        title={this.travisBuildResults[result] + ': ' + this.state.builds.filter(b => b.result === result).length}>
+                        {this.state.builds.filter(b => b.result === result).length}
+                      </Badge>
+                    )
+                  : ''
+              ))
+            }
+          )
+        </span>
         {
-          <Tasks tasks={this.state.tasks} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} settings={this.props.settings} />
+          <Tabs defaultActiveKey="02">
+            {
+              [...new Set(this.state.tasks.map(t => t.task.metadata.name.slice(0, 2)))].sort().map(taskGroupPrefix => (
+                <Tab
+                  key={taskGroupPrefix}
+                  eventKey={taskGroupPrefix}
+                  title={
+                    <span>
+                      {taskGroupPrefix} :: {TaskGroupPrefixMap[taskGroupPrefix]}
+                    </span>
+                  }>
+                  <Tasks tasks={this.state.tasks.filter(t => t.task.metadata.name.startsWith(taskGroupPrefix))} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} settings={this.props.settings} />
+                </Tab>
+              ))
+            }
+          </Tabs>
         }
-      </li>
+      </>
     );
   }
 }

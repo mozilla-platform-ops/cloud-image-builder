@@ -6,6 +6,7 @@ class Screenshots extends React.Component {
   state = {
     screenshots: [],
     thumbnailPosition: (window.innerWidth < 960) ? 'bottom' : 'left',
+    galleryHeight: (window.innerWidth < 960) ? (480 + 64 + 10) : 480,
     galleryWidth: (window.innerWidth < 960) ? 640 : (640 + 48 + 10)
   };
 
@@ -40,11 +41,13 @@ class Screenshots extends React.Component {
     if (window.innerWidth < 960) {
       this.setState(state => ({
         thumbnailPosition: 'bottom',
+        galleryHeight: (480 + 64 + 10),
         galleryWidth: 640
       }));
     } else {
       this.setState(state => ({
         thumbnailPosition: 'left',
+        galleryHeight: 480,
         galleryWidth: (640 + 48 + 10)
       }));
     }
@@ -56,7 +59,7 @@ class Screenshots extends React.Component {
 
   render() {
     return (
-      <div style={{width: '' + this.state.galleryWidth + 'px'}}>
+      <div style={{width: '' + this.state.galleryWidth + 'px', minHeight: '' + this.state.galleryHeight + 'px'}}>
         <ImageGallery items={this.state.screenshots} startIndex={(this.state.screenshots.length - 1)} showIndex={true} thumbnailPosition={this.state.thumbnailPosition} />
       </div>
     );
