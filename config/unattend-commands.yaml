@@ -215,13 +215,13 @@
   target:
       cloud:
           - azure
-       os:
+      os:
           - Windows 10
-       architecture:
-           - x86-64
-       gpu:
-           - true
-           - false
+      architecture:
+          - x86-64
+      gpu:
+          - true
+          - false
 
 # - description: disable firewall for all network profiles
 #   command: >-
