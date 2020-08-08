@@ -1179,8 +1179,13 @@ function Get-Logs {
     [string[]] $programs = @(
       'dsc-run',
       'ed25519-public-key',
+      'HaltOnIdle',
       'MaintainSystem',
       'OpenCloudConfig',
+      'ronin',
+      'stderr',
+      'stdout',
+      'nxlog',
       'user32'
     ),
     [DateTime] $minTime = (Get-Date).AddHours(-3),
