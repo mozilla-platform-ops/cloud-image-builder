@@ -455,6 +455,7 @@
       os:
           - Windows 7
           - Windows 8.1
+          - Windows 10
           - Windows Server 2012 R2
           - Windows Server 2016
           - Windows Server 2019
@@ -463,7 +464,6 @@
           - x86-64
       gpu:
           - true
-          - false
   sources:
       - platform: amazon
         bucket: windows-ami-builder
@@ -580,11 +580,12 @@
           - azure
       os:
           - Windows 7
+          - Windows 10
       architecture:
           - x86
+          - x86-64
       gpu:
           - true
-          - false
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
@@ -623,7 +624,6 @@
       architecture:
           - x86-64
       gpu:
-          - true
           - false
   sources:
       - platform: url
