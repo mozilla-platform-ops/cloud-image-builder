@@ -1,4 +1,34 @@
 ---
+- description: Stop Windows Update service
+  # yamllint disable-line rule:line-length
+  command: cmd /c start /wait net stop wuauserv > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  pass: auditUser
+  synchronicity: asynchronous
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 10
+      architecture:
+          - x86-64
+      gpu:
+          - true
+          - false
+- description: Disable Windows Update service
+  # yamllint disable-line rule:line-length
+  command: cmd /c start /wait sc config wuauserv start= disabled > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
+  pass: auditUser
+  synchronicity: asynchronous
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 10
+      architecture:
+          - x86-64
+      gpu:
+          - true
+          - false
 - description: disable network profile prompt
   # yamllint disable-line rule:line-length
   command: reg add HKLM\System\CurrentControlSet\Control\Network\NewNetworkWindowOff
@@ -207,22 +237,6 @@
       gpu:
           - true
           - false
-- description: Disable Windows Update service
-  # yamllint disable-line rule:line-length
-  command: cmd /c start /wait sc config wuauserv start= disabled > C:\log\unattend-enable-rdp-firewall-exception-stdout.log 2> C:\log\unattend-enable-rdp-firewall-exception-stderr.log
-  pass: auditUser
-  synchronicity: asynchronous
-  target:
-      cloud:
-          - azure
-      os:
-          - Windows 10
-      architecture:
-          - x86-64
-      gpu:
-          - true
-          - false
-
 # - description: disable firewall for all network profiles
 #   command: >-
 #       netsh advfirewall set allprofiles state off >
