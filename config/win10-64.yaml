@@ -229,21 +229,21 @@ target:
               rules: *rules
       tag: *tag
       bootstrap: *bootstrap
-    - platform: azure	
-	      group: rg-west-us-gecko-t	
-	      region: West US	
-	      hostname: *hostname	
-	      machine: *machine	
-	      disk: *disk	
-	      network:	
-	          name: vn-west-us-gecko-t	
-	          prefix: '10.0.0.0/24'	
-	          dns: *dns	
-	          subnet:	
-	              name: sn-west-us-gecko-t	
-	              prefix: '10.0.0.0/24'	
-	          flow:	
-	              name: nsg-west-us-gecko-t	
-	              rules: *rules	
-	      tag: *tag	
-	      bootstrap: *bootstrap
+		- platform: azure	
+		  group: rg-west-us-gecko-t	
+		  region: West US	
+		  hostname: *hostname	
+		  machine: *machine	
+		  disk: *disk	
+		  network:	
+			  name: vn-west-us-gecko-t	
+			  prefix: '10.0.0.0/24'	
+			  dns: *dns	
+			  subnet:	
+				  name: sn-west-us-gecko-t	
+				  prefix: '10.0.0.0/24'	
+			  flow:	
+				  name: nsg-west-us-gecko-t	
+				  rules: *rules	
+		  tag: *tag	
+		  bootstrap: *bootstrap
