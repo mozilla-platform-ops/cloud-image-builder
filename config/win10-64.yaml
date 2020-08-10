@@ -235,10 +235,10 @@ target:
       machine: *machine
       disk: *disk
       network:
-        name: vn-west-us-gecko-t
-        prefix: '10.0.0.0/24'
-        dns: *dns
-        subnet:
+          name: vn-west-us-gecko-t
+          prefix: '10.0.0.0/24'
+          dns: *dns
+          subnet:
           name: sn-west-us-gecko-t
           prefix: '10.0.0.0/24'
         flow:
