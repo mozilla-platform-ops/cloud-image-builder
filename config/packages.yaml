@@ -531,52 +531,6 @@
         synchronicity: synchronous
         priority: 902
         reboot: OnRequest
-      - description: 'bootstrap :: remove unattend file'
-        command: cmd /c if exist C:\unattend.xml del /q C:\unattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        command: cmd /c if exist C:\Autounattend.xml del /q C:\Autounattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        # yamllint disable-line rule:line-length
-        command: cmd /c if exist C:\Windows\System32\Sysprep\unattend.xml del /q C:\Windows\System32\Sysprep\unattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        # yamllint disable-line rule:line-length
-        command: cmd /c if exist C:\Windows\System32\Sysprep\Autounattend.xml del /q C:\Windows\System32\Sysprep\Autounattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        # yamllint disable-line rule:line-length
-        command: cmd /c if exist C:\Panther\Unattend\unattend.xml del /q C:\Panther\Unattend\unattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        # yamllint disable-line rule:line-length
-        command: cmd /c if exist C:\Panther\Unattend\Autounattend.xml del /q C:\Panther\Unattend\Autounattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        # yamllint disable-line rule:line-length
-        command: cmd /c if exist C:\Panther\unattend.xml del /q C:\Panther\unattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
-      - description: 'bootstrap :: remove unattend file'
-        # yamllint disable-line rule:line-length
-        command: cmd /c if exist C:\Panther\Autounattend.xml del /q C:\Panther\Autounattend.xml
-        pass: auditUser
-        synchronicity: synchronous
-        priority: 999
   target:
       cloud:
           - azure
