@@ -1181,11 +1181,12 @@ function Get-Logs {
       'ed25519-public-key',
       'HaltOnIdle',
       'MaintainSystem',
+      'nxlog',
       'OpenCloudConfig',
       'ronin',
       'stderr',
       'stdout',
-      'nxlog',
+      'sysprep',
       'user32'
     ),
     [DateTime] $minTime = (Get-Date).AddHours(-3),
