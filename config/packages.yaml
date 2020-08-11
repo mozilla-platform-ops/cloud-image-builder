@@ -170,8 +170,6 @@
       - platform: url
         # yamllint disable-line rule:line-length
         url: https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/set-regional-fqdn.ps1
-        # yamllint disable-line rule:line-length
-        # url: https://ronin-puppet-package-repo.s3-us-west-2.amazonaws.com/Windows/prerequisites/azure/nxlog.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
