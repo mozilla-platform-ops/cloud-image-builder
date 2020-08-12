@@ -44,16 +44,21 @@
         synchronicity: synchronous
         priority: 300
       - description: 'nxlog :: create log folder'
-        command: cmd /c if not exist C:\log mkdir C:\log
+        command: powershell -command  "start-sleep -s 120"
         pass: auditUser
         synchronicity: synchronous
         priority: 301
+      - description: 'nxlog :: create log folder'
+        command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 302
       - description: 'nxlog :: install nxlog-ce.msi'
         # yamllint disable-line rule:line-length
         command: msiexec /i C:\Windows\Temp\nxlog-ce.msi /q /L*v C:\log\unattend-install-nxlog-stdout.log
         pass: auditUser
         synchronicity: synchronous
-        priority: 301
+        priority: 303
   target:
       cloud:
           - amazon
