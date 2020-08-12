@@ -1186,11 +1186,13 @@ function Get-Logs {
       'ronin',
       'stderr',
       'stdout',
-      'sysprep',
+      'sysprep-setupact',
+      'sysprep-setupapi.app',
+      'sysprep-setupapi.dev',
       'user32'
     ),
     [DateTime] $minTime = (Get-Date).AddHours(-3),
-    [DateTime] $maxTime = $null,
+    [Nullable[DateTime]] $maxTime = $null,
     [string] $workFolder,
     [string] $papertrailCliPath = 'C:\Ruby26-x64\bin\papertrail.bat',
     [string] $token
