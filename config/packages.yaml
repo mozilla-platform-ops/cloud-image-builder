@@ -37,6 +37,53 @@
 - name: nxlog-ce.msi
   savepath: Windows\Temp\nxlog-ce.msi
   unattend:
+      - description: 'nxlog :: check for wuauserv'
+        command: powershell -command  "do { start-sleep -s 5} until (((Get-Service -Name  wuauserv).status) -eq 'Running')"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 300
+      - description: 'nxlog :: create log folder'
+        command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 301
+      - description: 'nxlog :: install nxlog-ce.msi'
+        # yamllint disable-line rule:line-length
+        command: msiexec /i C:\Windows\Temp\nxlog-ce.msi /q /L*v C:\log\unattend-install-nxlog-stdout.log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 301
+  target:
+      cloud:
+          - amazon
+          - azure
+          - google
+      os:
+          - Windows 10
+      architecture:
+          - x86-64
+      gpu:
+          - true
+          - false
+  sources:
+      - platform: amazon
+        bucket: windows-ami-builder
+        key: package/nxlog-ce-2.10.2150.msi
+      - platform: google
+        bucket: windows-ami-builder
+        key: package/nxlog-ce-2.10.2150.msi
+      - platform: azure
+        bucket: windows-ami-builder
+        key: package/nxlog-ce-2.10.2150.msi
+      - platform: url
+        # yamllint disable-line rule:line-length
+        url: https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi
+      - platform: url
+        # yamllint disable-line rule:line-length
+        url: https://mmimagebuilder.blob.core.windows.net/windows-ami-builder/package/nxlog-ce-2.10.2150.msi
+- name: nxlog-ce.msi
+  savepath: Windows\Temp\nxlog-ce.msi
+  unattend:
       - description: 'nxlog :: create log folder'
         command: cmd /c if not exist C:\log mkdir C:\log
         pass: auditUser
@@ -56,7 +103,7 @@
       os:
           - Windows 7
           - Windows 8.1
-          - Windows 10
+          #- Windows 10
           - Windows Server 2012 R2
           - Windows Server 2016
           - Windows Server 2019
