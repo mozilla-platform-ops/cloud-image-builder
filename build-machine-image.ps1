@@ -1204,10 +1204,10 @@ function Get-Logs {
   process {
     foreach ($system in $systems) {
       foreach ($program in $programs) {
-        $logSavePath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
-        $errorPath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}-fetch-error.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+        $logSavePath = ('{0}{1}instance-logs{1}{2}-{3}-{4}.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
+        $errorPath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-fetch-error.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
         $argsList = @('--min-time', ('"{0} UTC"' -f $minTime.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')));
-        if ($maxTime) {
+        if ($maxTime -ne $null) {
           $argsList += '--max-time';
           $argsList += ('"{0} UTC"' -f $maxTime.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss'));
         }
