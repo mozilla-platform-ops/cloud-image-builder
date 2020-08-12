@@ -38,6 +38,7 @@
   savepath: Windows\Temp\nxlog-ce.msi
   unattend:
       - description: 'nxlog :: check for wuauserv'
+        # yamllint disable-line rule:line-length
         command: powershell -command  "do { start-sleep -s 5} until (((Get-Service -Name  wuauserv).status) -eq 'Running')"
         pass: auditUser
         synchronicity: synchronous
