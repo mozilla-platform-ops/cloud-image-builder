@@ -1190,7 +1190,7 @@ function Get-Logs {
       'user32'
     ),
     [DateTime] $minTime = (Get-Date).AddHours(-3),
-    [DateTime] $maxTime = (Get-Date),
+    [DateTime] $maxTime = $null,
     [string] $workFolder,
     [string] $papertrailCliPath = 'C:\Ruby26-x64\bin\papertrail.bat',
     [string] $token
@@ -1204,7 +1204,12 @@ function Get-Logs {
       foreach ($program in $programs) {
         $logSavePath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
         $errorPath = ('{0}{1}instance-logs{1}{2}-{3}-{4}-{5}-fetch-error.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $system, $program, $minTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'), $maxTime.ToUniversalTime().ToString('yyyyMMddTHHmmssZ'));
-        $argsList = @('--min-time', $minTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), '--max-time', $maxTime.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), ('"system:{0} program:{1}"' -f $system, $program));
+        $argsList = @('--min-time', ('"{0} UTC"' -f $minTime.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')));
+        if ($maxTime) {
+          $argsList += '--max-time';
+          $argsList += ('"{0} UTC"' -f $maxTime.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss'));
+        }
+        $argsList += ('"system:{0} program:{1}"' -f $system, $program);
         try {
           $process = (Start-Process -FilePath $papertrailCliPath -ArgumentList $argsList -NoNewWindow -RedirectStandardOutput $logSavePath -RedirectStandardError $errorPath -PassThru);
           Wait-Process -InputObject $process; # see: https://stackoverflow.com/a/43728914/68115
