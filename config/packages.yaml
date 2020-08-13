@@ -587,12 +587,11 @@
           - azure
       os:
           - Windows 7
-          - Windows 10
       architecture:
           - x86
-          - x86-64
       gpu:
           - true
+          - false
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
