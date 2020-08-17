@@ -169,7 +169,7 @@
         command: cmd /c if exist C:\Windows\Temp\papertrail-bundle.pem move /y C:\Windows\Temp\papertrail-bundle.pem "C:\Program Files (x86)\nxlog\cert\papertrail-bundle.pem"
         pass: auditUser
         synchronicity: synchronous
-        priority: 302
+        priority: 350
   target:
       cloud:
           - amazon
