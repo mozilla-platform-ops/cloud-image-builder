@@ -85,12 +85,12 @@ workerPool = {
             }
         },
         'diagnosticsProfile': {
-          'bootDiagnostics': {
-            'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
-            'enabled': True
-          } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
-            'enabled': False
-          }
+            'bootDiagnostics': {
+                'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
+                'enabled': True
+            } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
+                'enabled': False
+            }
         },
         'storageProfile': {
             'imageReference': {
