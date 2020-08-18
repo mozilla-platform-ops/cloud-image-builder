@@ -17,25 +17,6 @@ image:
     reseal:
         mode: Audit
         shutdown: true
-    generalize:
-        mode: OOBE
-        shutdown: true
-    reboot: 9
-    network:
-        location: Home
-        dns:
-            domain: win7-32-gpu.mozilla.com
-            suffixes: []
-            devolution: false
-        interfaces:
-            - alias: Local Area Connection
-              dns:
-                  domain: win7-32-gpu.mozilla.com
-                  dynamic: false
-                  register: false
-                  search:
-                      - '1.1.1.1'
-                      - '1.0.0.1'
     target:
         platform: amazon
         bucket: windows-ami-builder
@@ -146,8 +127,8 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: f499d78
+            value: cc7461c
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: f499d78
+            value: cc7461c
