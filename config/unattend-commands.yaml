@@ -231,6 +231,7 @@
           - true
           - false
 - description: remove unattend files
+  # yamllint disable-line rule:line-length
   command: cmd /c for %d in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %d:\unattend.xml del /q %d:\unattend.xml
   pass: auditUser
   synchronicity: synchronous
