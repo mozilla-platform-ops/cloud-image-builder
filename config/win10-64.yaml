@@ -21,7 +21,21 @@ image:
         mode: OOBE
         shutdown: true
     reboot: 25
-    network: Home
+    network:
+        location: Home
+        dns:
+            domain: win10-64.mozilla.com
+            suffixes: []
+            devolution: false
+        interfaces:
+            - alias: Local Area Connection
+              dns:
+                  domain: win10-64.mozilla.com
+                  dynamic: false
+                  register: false
+                  search:
+                      - '1.1.1.1'
+                      - '1.0.0.1'
     target:
         platform: amazon
         bucket: windows-ami-builder

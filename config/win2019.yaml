@@ -16,6 +16,25 @@ image:
     reseal:
         mode: Audit
         shutdown: true
+    generalize:
+        mode: OOBE
+        shutdown: true
+    reboot: 9
+    network:
+        location: Home
+        dns:
+            domain: win2019.mozilla.com
+            suffixes: []
+            devolution: false
+        interfaces:
+            - alias: Local Area Connection
+              dns:
+                  domain: win2019.mozilla.com
+                  dynamic: false
+                  register: false
+                  search:
+                      - '1.1.1.1'
+                      - '1.0.0.1'
     target:
         platform: amazon
         bucket: windows-ami-builder
@@ -119,11 +138,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: cc7461c
+            value: f499d78
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: cc7461c
+            value: f499d78
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name

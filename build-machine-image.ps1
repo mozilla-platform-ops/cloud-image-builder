@@ -576,7 +576,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.104'
+        'version' = '0.0.105'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1186,6 +1186,7 @@ function Get-Logs {
       'ronin',
       'stderr',
       'stdout',
+      'sysprep-ddaclsys.log',
       'sysprep-setupact',
       'sysprep-setupapi.app',
       'sysprep-setupapi.dev',
@@ -1728,7 +1729,12 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               # system name can change during the course of bootstrapping, get system logs for conventional names
               $fqdnPool = @($target.tag | ? { $_.name -eq 'workerType' })[0].value;
               $fqdnRegion = $target.region.Replace(' ', '').ToLower();
-              $systems = @(('cib-{0}.reddog.microsoft.com' -f $imageKey), ('cib-{0}.{1}.{2}.mozilla.com' -f $imageKey, $fqdnPool, $fqdnRegion), ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion));
+              $systems = @(
+                ('{0}.reddog.microsoft.com' -f $imageArtifactDescriptor.image.hostname), # default fqdn, when sysprep unattend does not contain DNSDomain element
+                ('{0}.{1}' -f $imageArtifactDescriptor.image.hostname, $imageArtifactDescriptor.image.network.dns.domain), # conventional (cib) fqdn, when sysprep unattend does contain DNSDomain element
+                ('{0}.{1}.{2}.mozilla.com' -f $imageArtifactDescriptor.image.hostname, $fqdnPool, $fqdnRegion), # conventional fqdn, when cib has set the hostname and bootstrap has set the domain
+                ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion) # conventional (bootstrap) fqdn, when bootstrap has set the hostname and domain
+              );
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
