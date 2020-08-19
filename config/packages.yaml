@@ -42,11 +42,6 @@
         command: powershell -command  "do { start-sleep -s 5} until (((Get-Service -Name  wuauserv).status) -eq 'Running')"
         pass: auditUser
         synchronicity: synchronous
-        priority: 298
-      - description: 'nxlog :: create log folder'
-        command: powershell -command  "start-sleep -s 120"
-        pass: auditUser
-        synchronicity: synchronous
         priority: 299
       - description: 'nxlog :: create log folder'
         command: cmd /c if not exist C:\log mkdir C:\log
