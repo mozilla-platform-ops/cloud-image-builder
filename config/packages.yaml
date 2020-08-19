@@ -197,7 +197,7 @@
   unattend:
       - description: 'nxlog :: set regional fqdn'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-regional-fqdn.ps1 > C:\log\rundsc-stdout.log 2> C:\log\rundsc-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-regional-fqdn.ps1 >> C:\log\set-regional-fqdn-stdout.log 2>> C:\log\set-regional-fqdn-stderr.log
         pass: auditUser
         synchronicity: synchronous
         priority: 302
@@ -577,7 +577,7 @@
         priority: 901
       - description: 'bootstrap :: run bootstrap script (occ)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1 > C:\log\rundsc-stdout.log 2> C:\log\rundsc-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1 >> C:\log\rundsc-stdout.log 2>> C:\log\rundsc-stdout.log
         pass: auditUser
         synchronicity: synchronous
         priority: 902
@@ -617,7 +617,7 @@
         priority: 702
       - description: 'bootstrap :: run bootstrap script (ronin)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\bootstrap\azure-bootstrap.ps1 > C:\log\bootstrap-stdout.log 2> C:\log\bootstrap-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\bootstrap\azure-bootstrap.ps1 >> C:\log\bootstrap-stdout.log 2>> C:\log\bootstrap-stderr.log
         pass: auditUser
         synchronicity: synchronous
         priority: 703
