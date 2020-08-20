@@ -1186,7 +1186,8 @@ function Get-Logs {
       'ronin',
       'stderr',
       'stdout',
-      'sysprep-ddaclsys.log',
+      'sysprep-cbs',
+      'sysprep-ddaclsys',
       'sysprep-setupact',
       'sysprep-setupapi.app',
       'sysprep-setupapi.dev',
@@ -1691,7 +1692,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 ('{0}.reddog.microsoft.com' -f $config.image.hostname), # default fqdn, when sysprep unattend does not contain DNSDomain element
                 ('{0}.{1}' -f $config.image.hostname, $config.image.network.dns.domain), # conventional (cib) fqdn, when sysprep unattend does contain DNSDomain element
                 ('{0}.{1}.{2}.mozilla.com' -f $config.image.hostname, $fqdnPool, $fqdnRegion), # conventional fqdn, when cib has set the hostname and bootstrap has set the domain
-                ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion) # conventional (bootstrap) fqdn, when bootstrap has set the hostname and domain
+                ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion), # conventional (bootstrap) fqdn, when bootstrap has set the hostname and domain
+                ('{0}.{1}.mozilla.com' -f $fqdnPool, $fqdnRegion) # catch logs forwarded before sysprep has renamed the system
               );
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
