@@ -576,7 +576,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.108'
+        'version' = '0.0.109'
       },
       @{
         'module' = 'powershell-yaml';
@@ -1662,48 +1662,6 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
               # await final shutdown after audit mode completion
               if ($config.image.generalize.shutdown) {
-                # make regular instance status observations, wait until instance has remained in the stopped state for 60 seconds
-                $instanceStatusObservations = @{};
-                $stopwatch = [Diagnostics.Stopwatch]::StartNew();
-                Write-Output -InputObject 'awaiting penultimate shutdown (determined by instance remaining in stopped state for 60 seconds) after sysprep auditUser settings pass has completed.';
-                while (
-                  # make instance status observations for at least 60 seconds
-                  ($stopwatch.Elapsed.TotalSeconds -lt 60) -or
-                  # require that all state observations in the preceeding 60 seconds show a stopped state
-                  (@($instanceStatusObservations.Keys | ? { $_ -gt ((Get-Date).ToUniversalTime().AddSeconds(-60).ToString('yyyyMMddHHmmss')) } | % { $instanceStatusObservations[$_] } | ? { $_ -ne 'PowerState/stopped' }).Length)
-                ) {
-                  # make an instance status observation
-                  $instanceStatusObservationTime = (Get-Date).ToUniversalTime();
-                  $instanceStatus = (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue');
-                  $instanceStatusObservations.Add($instanceStatusObservationTime.ToString('yyyyMMddHHmmss'), $instanceStatus.Code);
-                  Write-Output -InputObject ('instance status observed as: {0}, at: {1} utc' -f $instanceStatus.Code, $instanceStatusObservationTime.ToString('HH:mm:ss'));
-                  Publish-Screenshot -instanceName $instanceName -groupName $target.group -platform $target.platform -workFolder $workFolder;
-                  Start-Sleep -Seconds 1;
-                }
-                $stopwatch.Stop();
-                Write-Output -InputObject ('penultimate shutdown detected (triggered by auditUser/generalize). current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
-
-                # start instance in generalize mode after auditUser bootstrapping.
-                try {
-                  $instanceStartOperation = (Start-AzVM -ResourceGroupName $target.group -Name $instanceName);
-                  if ($instanceStartOperation.Status -eq 'Succeeded') {
-                    Write-Output -InputObject ('instance restart triggered after sysprep generalize to oobe mode (from auditUser) shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
-                  } else {
-                    Write-Output -InputObject ('instance restart failed after sysprep generalize to oobe mode (from auditUser) shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
-                    if (-not $disableCleanup) {
-                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
-                    }
-                    exit 123;
-                  }
-                } catch {
-                  Write-Output -InputObject ('instance restart failed after sysprep generalize to oobe mode (from auditUser) shutdown. current state: {0}. {1}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code, $_.Exception.Message);
-                }
-                while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -ne 'PowerState/running') {
-                  Write-Output -InputObject ('awaiting instance running state after sysprep generalize to oobe mode (from auditUser) shutdown and restart. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
-                  Start-Sleep -Seconds 30;
-                }
-                $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
-
                 # make regular instance status observations, wait until instance has remained in the stopped state for 60 seconds
                 $instanceStatusObservations = @{};
                 $stopwatch = [Diagnostics.Stopwatch]::StartNew();

@@ -230,31 +230,6 @@
       gpu:
           - true
           - false
-- description: remove unattend files
-  # yamllint disable-line rule:line-length
-  command: cmd /c for %d in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %d:\unattend.xml del /q %d:\unattend.xml
-  pass: auditUser
-  synchronicity: synchronous
-  priority: 998
-  target:
-      cloud:
-          - amazon
-          - azure
-          - google
-      os:
-          - Windows 7
-          - Windows 8.1
-          - Windows 10
-          - Windows Server 2012 R2
-          - Windows Server 2016
-          - Windows Server 2019
-          - Windows Server
-      architecture:
-          - x86
-          - x86-64
-      gpu:
-          - true
-          - false
 # - description: disable firewall for all network profiles
 #   command: >-
 #       netsh advfirewall set allprofiles state off >
