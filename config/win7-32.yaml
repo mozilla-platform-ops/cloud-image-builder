@@ -7,7 +7,7 @@ image:
     timezone: UTC
     hostname: 'cib-win7-32'
     gpu: false
-    owner: Mozilla Release Operations
+    owner: Mozilla Infrastructure Operations
     organization: Mozilla Corporation
     partition: MBR
     format: VHD
@@ -21,7 +21,21 @@ image:
         mode: OOBE
         shutdown: true
     reboot: 9
-    network: Home
+    network:
+        location: Home
+        dns:
+            domain: win7-32.mozilla.com
+            suffixes: null
+            devolution: false
+        interfaces:
+            - alias: Local Area Connection
+              dns:
+                  domain: null
+                  dynamic: false
+                  register: false
+                  search:
+                      - '1.1.1.1'
+                      - '1.0.0.1'
     target:
         platform: amazon
         bucket: windows-ami-builder
@@ -151,11 +165,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: cc7461c
+            value: 58f4e6b
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: cc7461c
+            value: 58f4e6b
       bootstrap: &bootstrap
           executions: []
     - platform: azure

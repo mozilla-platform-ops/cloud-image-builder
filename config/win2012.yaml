@@ -7,15 +7,35 @@ image:
     timezone: UTC
     hostname: 'cib-win2012'
     gpu: false
-    owner: Mozilla RelOps
+    owner: Mozilla Infrastructure Operations
     organization: Mozilla Corporation
     partition: MBR
     format: VHD
     type: Fixed
+    rdp: true
     obfuscate: true
     reseal:
         mode: Audit
         shutdown: true
+    generalize:
+        mode: OOBE
+        shutdown: true
+    reboot: 9
+    network:
+        location: Home
+        dns:
+            domain: win2012.mozilla.com
+            suffixes: null
+            devolution: false
+        interfaces:
+            - alias: Local Area Connection
+              dns:
+                  domain: null
+                  dynamic: false
+                  register: false
+                  search:
+                      - '1.1.1.1'
+                      - '1.0.0.1'
     target:
         platform: amazon
         bucket: windows-ami-builder
@@ -163,11 +183,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: cc7461c
+            value: 58f4e6b
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: cc7461c
+            value: 58f4e6b
       bootstrap: &bootstrap
           executions:
               # set hostname to match the azure machine name
@@ -336,11 +356,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: cc7461c
+            value: 58f4e6b
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: cc7461c
+            value: 58f4e6b
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3

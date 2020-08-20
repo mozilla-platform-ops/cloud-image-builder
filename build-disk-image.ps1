@@ -236,7 +236,11 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
         -uiLanguage $config.image.language `
         -registeredOwner $config.image.owner `
         -registeredOrganization $config.image.organization `
-        -networkLocation $(if ($config.image.network) { $config.image.network } else { 'Other' }) `
+        -networkLocation $(if ($config.image.network.location) { $config.image.network.location } else { 'Other' }) `
+        -dnsDomain $(if ($config.image.network.dns.domain) { $config.image.network.dns.domain } else { $null }) `
+        -dnsSuffixSearchOrder $(if ($config.image.network.dns.suffixes) { $config.image.network.dns.suffixes } else { $null }) `
+        -dnsUseDomainNameDevolution $(if ($config.image.network.dns.devolution) { $config.image.network.dns.devolution } else { $true }) `
+        -networkInterfaces $(if ($config.image.network.interfaces) { $config.image.network.interfaces } else { $null }) `
         -commands $commands `
         -os $config.image.os `
         -enableRDP $(if ($config.image.rdp) { $true } else { $false });
