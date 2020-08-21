@@ -13,3 +13,9 @@ ul, ol {
   margin-left: 0;
   padding-left: 1em;
 }
+
+a.nav-item.nav-link.active span {
+  /* hot pink, bold text for active tab title */
+  color: #ff3399;
+  font-weight: bolder;
+}

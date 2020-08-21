@@ -47,7 +47,7 @@ class Task extends React.Component {
         <li style={{listStyleType: 'none', margin: 0, padding: 0}}>
           <h6>{this.props.task.task.metadata.name}</h6>
           <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
-            {this.props.task.status.taskId.substring(0, 7)}...
+            {this.props.task.status.taskId}
           </a>
           {
             Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
@@ -60,6 +60,7 @@ class Task extends React.Component {
               </Badge>
             ))
           }
+          <hr />
           <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} taskName={this.props.task.task.metadata.name} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
         </li>
       );
@@ -69,7 +70,7 @@ class Task extends React.Component {
           {this.props.task.task.metadata.name}
           &nbsp;
           <a href={this.props.rootUrl + '/tasks/' + this.props.task.status.taskId} title={this.props.task.status.taskId}>
-            {this.props.task.status.taskId.substring(0, 7)}...
+            {this.props.task.status.taskId}
           </a>
           {
             Array.from(new Set(this.props.task.status.runs.map(r => r.state))).map(state => (
@@ -82,6 +83,7 @@ class Task extends React.Component {
               </Badge>
             ))
           }
+          <hr />
           <Runs runs={this.props.task.status.runs} taskId={this.props.task.status.taskId} taskName={this.props.task.task.metadata.name} rootUrl={this.props.rootUrl} appender={this.appendToSummary} />
         </li>
       );

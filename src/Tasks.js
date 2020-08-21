@@ -47,7 +47,7 @@ class Tasks extends React.Component {
         let platforms = [...new Set(this.props.tasks.map(t => t.task.metadata.name.split(' ')[3]))].sort().reverse();
         if (platforms.length > 1) {
           return (
-            <Tabs transition={null} defaultActiveKey={platforms[0]}>
+            <Tabs variant="tabs" transition={false} defaultActiveKey={platforms[0]}>
               {
                 platforms.map(platform => (
                   <Tab
@@ -58,6 +58,7 @@ class Tasks extends React.Component {
                         {platform}
                       </span>
                     }>
+                    <hr style={{borderStyle: 'dotted'}} />
                     <ul style={{listStyleType: 'none', margin: 0, padding: 0}}>
                       {
                         this.props.tasks.filter(t => t.task.metadata.name.includes(platform)).sort((a, b) => ((a.task.metadata.name < b.task.metadata.name) ? -1 : (a.task.metadata.name > b.task.metadata.name) ? 1 : 0)).map(task => (
@@ -85,7 +86,7 @@ class Tasks extends React.Component {
         let platformRegions = [...new Set(this.props.tasks.map(t => t.task.metadata.name.split(' ')[3] + '/' + t.task.metadata.name.split(' ').pop()))].sort();
         if (platformRegions.length > 1) {
           return (
-            <Tabs transition={null} defaultActiveKey={platformRegions[0]}>
+            <Tabs variant="tabs" transition={false} defaultActiveKey={platformRegions[0]}>
               {
                 platformRegions.map(platformRegion => (
                   <Tab
@@ -96,6 +97,7 @@ class Tasks extends React.Component {
                         {platformRegion}
                       </span>
                     }>
+                    <hr style={{borderStyle: 'dotted'}} />
                     <ul style={{listStyleType: 'none', margin: 0, padding: 0}}>
                       {
                         this.props.tasks.filter(t => t.task.metadata.name.includes(platformRegion.split('/')[0]) && t.task.metadata.name.endsWith(platformRegion.split('/').pop())).sort((a, b) => ((a.task.metadata.name < b.task.metadata.name) ? -1 : (a.task.metadata.name > b.task.metadata.name) ? 1 : 0)).map(task => (

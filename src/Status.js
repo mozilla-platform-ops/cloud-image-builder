@@ -187,8 +187,9 @@ class Status extends React.Component {
             }
           )
         </span>
+        <hr />
         {
-          <Tabs transition={null} defaultActiveKey="02">
+          <Tabs variant="tabs" transition={null} defaultActiveKey="02">
             {
               [...new Set(this.state.tasks.map(t => t.task.metadata.name.slice(0, 2)))].sort().map(taskGroupPrefix => (
                 <Tab
@@ -199,6 +200,7 @@ class Status extends React.Component {
                       {taskGroupPrefix} :: {TaskGroupPrefixMap[taskGroupPrefix]}
                     </span>
                   }>
+                  <hr style={{borderStyle: 'dotted'}} />
                   <Tasks tasks={this.state.tasks.filter(t => t.task.metadata.name.startsWith(taskGroupPrefix))} rootUrl={'https://' + (new URL(this.props.status.target_url)).hostname} appender={this.appendToSummary} settings={this.props.settings} />
                 </Tab>
               ))

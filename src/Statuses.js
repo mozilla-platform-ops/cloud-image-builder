@@ -43,7 +43,7 @@ class Statuses extends React.Component {
 
   render() {
     return (
-      <Tabs transition={null} defaultActiveKey="0">
+      <Tabs variant="tabs" transition={false} defaultActiveKey="0">
         {
           this.props.contexts.reverse().map((context, cI) => (
             <Tab
@@ -55,6 +55,7 @@ class Statuses extends React.Component {
                   <span>{context}</span>
                 </>
               }>
+              <hr style={{borderStyle: 'dotted'}} />
               {
                 // only show pending statuses if there are no others (eg: failed/completed)
                 (this.props.statuses.some(s => s.context === context && s.state !== 'pending'))

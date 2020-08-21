@@ -182,6 +182,7 @@ class Commit extends React.Component {
         <Accordion.Collapse eventKey={this.props.commit.sha}>
           <Card.Body>
             <CommitMessage message={this.props.commit.message} />
+            <hr />
             <Statuses contexts={this.state.contexts} statuses={this.state.statuses} appender={this.appendToSummary} settings={this.props.settings} />
           </Card.Body>
         </Accordion.Collapse>
