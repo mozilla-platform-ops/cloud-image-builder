@@ -45,13 +45,13 @@ class Statuses extends React.Component {
     return (
       <Tabs variant="tabs" transition={false} defaultActiveKey="0">
         {
-          this.props.contexts.reverse().map((context, cI) => (
+          this.props.contexts.map((context, cI) => (
             <Tab
               key={cI}
               eventKey={cI}
               title={
                 <>
-                  <img style={{width: '30px', height: '30px', marginRight: '1em'}} src={this.props.statuses.find(s => s.context === context).avatar_url} alt={context} />
+                  <img style={{width: '30px', height: '30px', marginRight: '1em'}} src={this.props.statuses.find(s => s.context === context).avatar_url} alt={context} title={context} />
                   <span>{context}</span>
                 </>
               }>

@@ -97,8 +97,10 @@ class Commit extends React.Component {
     .then(responseGithubApiStatuses => responseGithubApiStatuses.json())
     .then((githubCommitStatuses) => {
       if (githubCommitStatuses.length) {
+        // sort contexts in reverse alphabetical order so that the staging context tab is selected by default
+        let contexts = [...new Set(githubCommitStatuses.map(s => s.context))].sort((a, b) => b.toLowerCase().localeCompare(a.toLowerCase()));
         this.setState(state => ({
-          contexts: [...new Set(githubCommitStatuses.map(s => s.context))].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())),
+          contexts: contexts,
           statuses: githubCommitStatuses//.filter(s => s.state !== 'pending')
         }));
       }
