@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "93b0c69061e97f5e05a8102ddcdf34ee",
+    "revision": "9e51e8f96f28b38969091987cd3d46b3",
     "url": "/cloud-image-builder/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/cloud-image-builder/static/css/2.310df2a1.chunk.css"
   },
   {
-    "revision": "9d768470bd6c05b08146",
+    "revision": "6dc693caece6d75cb84d",
     "url": "/cloud-image-builder/static/css/main.39fe9b22.chunk.css"
   },
   {
@@ -20,8 +20,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/cloud-image-builder/static/js/2.eaa89ace.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "9d768470bd6c05b08146",
-    "url": "/cloud-image-builder/static/js/main.e2277ab7.chunk.js"
+    "revision": "6dc693caece6d75cb84d",
+    "url": "/cloud-image-builder/static/js/main.f938afad.chunk.js"
   },
   {
     "revision": "fdf0f9e27cb63827f85a",
