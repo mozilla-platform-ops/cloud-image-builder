@@ -175,17 +175,64 @@ class App extends React.Component {
             />
             <hr />
             <p className="text-muted">
-              this page monitors <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/commits/master">commits</a> to the master branch
-              of the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder">mozilla-platform-ops/cloud-image-builder</a> repository and
-              the resulting <a href="https://travis-ci.org/github/mozilla-platform-ops/cloud-image-builder/builds">travis-ci builds</a> and taskcluster
-              tasks (<a href="https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/index/project.relops.cloud-image-builder">staging</a>,&nbsp;
-              <a href="https://firefox-ci-tc.services.mozilla.com/tasks/index/project.relops.cloud-image-builder">production</a>) which produce cloud
-              machine images of the various windows operating system editions and configurations used by firefox ci to build and test gecko products on
-              the windows platform.
+              <strong>cloud image builder</strong> automates the creation of windows machine images on cloud platforms. it accomplishes this using tasks
+              running in mozilla's taskcluster ci framework, on workers and resources that run within the target cloud platforms. the objective is
+              carried out by the following task sequence implementation:
+            </p>
+            <ol type="1" start="0" className="text-muted">
+              <li>
+                <strong>setup tasks</strong>
+                <ul>
+                  <li>decision task: analyse commit message and generate tasks</li>
+                  <li>cleanup tasks: purge deprecated and orphaned resources on the target cloud platforms</li>
+                  <li>validation tasks: lint and validate the cib repository commit</li>
+                </ul>
+              </li>
+              <li>
+                <strong>disk image builds</strong>
+                <ol type="i">
+                  <li>download and mount a windows iso</li>
+                  <li>create and mount a virtual hard disk (vhd)</li>
+                  <li>install windows setup files from the iso to the vhd</li>
+                  <li>add target platform specific drivers and installer packages to the vhd in conventional locations to be installed by the windows setup process (sysprep) later</li>
+                  <li>add a sysprep unattend.xml instruction set to the vhd</li>
+                  <li>dismount and save the prepared vhd</li>
+                  <li>upload vhd to the target cloud platform</li>
+                </ol>
+              </li>
+              <li>
+                <strong>machine image builds</strong>
+                <ol type="i">
+                  <li>mount disk image (vhd) as a virtual machine (vm) instance boot disk on the target cloud platform and boot the vm</li>
+                  <li>allow time for the vm to boot, and for it to discover and execute the instruction set from its included sysprep configuration and unattend file</li>
+                  <li>simulate manual restarts (by issuing cloud api restart requests) as required by the sysprep instruction set</li>
+                  <li>trigger the execution of any additional configured execution instructions or bootstrapping scripts</li>
+                  <li>await final shutdown of the vm</li>
+                  <li>capture vm as a platform specific machine image</li>
+                  <li>tag machine image with metadata and mark as generalized or specialized as per image sysprep configuration</li>
+                </ol>
+              </li>
+              <li>
+                <strong>generate taskcluster worker-pool configurations</strong>
+                <ol type="i">
+                  <li>generate markdown describing new machine images</li>
+                  <li>generate yaml defining new machine images</li>
+                  <li>update taskcluster worker-manager with new pool definitions</li>
+                </ol>
+              </li>
+              <li>
+                <strong>validate new machine images (not implemented)</strong>
+                <ol type="i">
+                  <li>run tasks against new worker pools that verify the pool capacity to claim and complete tasks</li>
+                  <li>run tasks against new worker pools that verify the pool competence to produce expected output and artifacts</li>
+                </ol>
+              </li>
+            </ol>
+            <p className="text-muted">
+              this page is a simple react app which monitors <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/commits/master">commits</a> to the master branch of the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder">mozilla-platform-ops/cloud-image-builder</a> repository and the resulting <a href="https://travis-ci.org/github/mozilla-platform-ops/cloud-image-builder/builds">travis-ci builds</a> and taskcluster tasks (<a href="https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/index/project.relops.cloud-image-builder">staging</a>, <a href="https://firefox-ci-tc.services.mozilla.com/tasks/index/project.relops.cloud-image-builder">production</a>) which produce cloud machine images of the various windows operating system editions and configurations used by firefox ci to build and test gecko products on the windows platform.
             </p>
             <p className="text-muted">
-              the source code for this page is hosted in the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/tree/react">react
-              branch</a> of the same repository.
+              the source code for this page is hosted in the <a href="https://github.com/mozilla-platform-ops/cloud-image-builder/tree/react">react branch</a> of the same repository.
             </p>
           </Col>
         </Row>

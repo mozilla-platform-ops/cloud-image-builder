@@ -47,7 +47,7 @@ class Tasks extends React.Component {
         let platforms = [...new Set(this.props.tasks.map(t => t.task.metadata.name.split(' ')[3]))].sort().reverse();
         if (platforms.length > 1) {
           return (
-            <Tabs defaultActiveKey={platforms[0]}>
+            <Tabs transition={null} defaultActiveKey={platforms[0]}>
               {
                 platforms.map(platform => (
                   <Tab
@@ -85,7 +85,7 @@ class Tasks extends React.Component {
         let platformRegions = [...new Set(this.props.tasks.map(t => t.task.metadata.name.split(' ')[3] + '/' + t.task.metadata.name.split(' ').pop()))].sort();
         if (platformRegions.length > 1) {
           return (
-            <Tabs defaultActiveKey={platformRegions[0]}>
+            <Tabs transition={null} defaultActiveKey={platformRegions[0]}>
               {
                 platformRegions.map(platformRegion => (
                   <Tab

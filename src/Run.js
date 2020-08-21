@@ -121,11 +121,21 @@ class Run extends React.Component {
         </Button>
         {
           (this.props.taskName.startsWith('01') && this.state.unattend)
-            ? (
-                <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{maxHeight: '800px', fontSize: 'x-small'}}>
-                  {this.state.unattend}
-                </SyntaxHighlighter>
-              )
+            ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
+                ? (
+                    <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{maxHeight: '800px', fontSize: 'x-small'}}>
+                      {this.state.unattend}
+                    </SyntaxHighlighter>
+                  )
+                : (
+                    <a
+                      style={{marginLeft: '1em'}}
+                      href={'https://stage.taskcluster.nonprod.cloudops.mozgcp.net/tasks/' + this.props.taskId + '/runs/' + this.props.run.runId + '/#artifacts'}
+                      target="_blank"
+                      rel="noopener noreferrer">
+                      artifacts
+                    </a>
+                  )
             : null
         }
         {

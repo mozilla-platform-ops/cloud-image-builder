@@ -19,7 +19,7 @@ class Commits extends React.Component {
     return (
       (this.props.commits.length)
         ? (
-            <Accordion defaultActiveKey={null/*this.props.latest*/}>
+            <Accordion transition={null} defaultActiveKey={null/*this.props.latest*/}>
               {
                 this.props.commits.map(commit => (
                   <Commit commit={commit} key={commit.sha} expand={false/*(commit.sha === this.props.latest)*/} settings={this.props.settings} />

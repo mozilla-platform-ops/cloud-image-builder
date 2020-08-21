@@ -151,7 +151,7 @@ class Status extends React.Component {
               {
                 (this.state.builds.length)
                   ? this.state.taskGroupId
-                  : (this.state.taskGroupId && this.state.taskGroupId.slice(0, 7)) + '...'
+                  : (this.state.taskGroupId && this.state.taskGroupId)
               }
             </a>
             &nbsp;
@@ -188,7 +188,7 @@ class Status extends React.Component {
           )
         </span>
         {
-          <Tabs defaultActiveKey="02">
+          <Tabs transition={null} defaultActiveKey="02">
             {
               [...new Set(this.state.tasks.map(t => t.task.metadata.name.slice(0, 2)))].sort().map(taskGroupPrefix => (
                 <Tab
