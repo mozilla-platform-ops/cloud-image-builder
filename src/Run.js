@@ -124,7 +124,7 @@ class Run extends React.Component {
             ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
                 ? (
                     <div style={{width: '100%'}}>
-                      <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{height: '800px', fontSize: 'x-small'}}>
+                      <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{fontSize: 'x-small'}}>
                         {this.state.unattend}
                       </SyntaxHighlighter>
                     </div>
