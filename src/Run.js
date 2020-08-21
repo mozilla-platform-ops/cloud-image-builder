@@ -123,9 +123,11 @@ class Run extends React.Component {
           (this.props.taskName.startsWith('01') && this.state.unattend)
             ? (this.props.run.state === 'completed' || this.props.run.state === 'failed')
                 ? (
-                    <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{maxHeight: '800px', fontSize: 'x-small'}}>
-                      {this.state.unattend}
-                    </SyntaxHighlighter>
+                    <div style={{width: '100%'}}>
+                      <SyntaxHighlighter language="xml" style={a11yDark} showLineNumbers={true} customStyle={{height: '800px', fontSize: 'x-small'}}>
+                        {this.state.unattend}
+                      </SyntaxHighlighter>
+                    </div>
                   )
                 : (
                     <a
