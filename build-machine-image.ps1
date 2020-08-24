@@ -1710,15 +1710,21 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                     'path' = ('{0}{1}instance-logs{1}{2}.{3}.{4}.mozilla.com-OpenCloudConfig-*.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.image.hostname, $fqdnPool, $fqdnRegion);
                   };
                   # occ log file contains
-                  $logCandidates = @(Get-ChildItem -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)) -Filter ('{0}.{1}.{2}.mozilla.com-OpenCloudConfig-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion));
+                  $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-OpenCloudConfig-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion);
+                  $logCandidates = @(Get-ChildItem -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)) -Filter $logCandidatesFilter);
                   if ($logCandidates -and ($logCandidates.Length)) {
                     $imageBuildTaskValidationRules += @{
                       'validator' = 'file-contains';
                       'path' = $logCandidates[0].FullName;
                       'value' = 'Invoke-Shutdown :: sysprep state: IMAGE_STATE_UNDEPLOYABLE, returning control to sysprep with exit code: 0'
                     };
+                  } else {
+                    Write-Output -InputObject ('{0} :: error: failed to determine instance log path from wildcard search: "{1}"' -f $($MyInvocation.MyCommand.Name), $logCandidatesFilter);
+                    if (-not $disableCleanup) {
+                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                    }
+                    exit 1;
                   }
-                  # todo: handle missing log candidates (error)
                   break;
                 }
                 default {
