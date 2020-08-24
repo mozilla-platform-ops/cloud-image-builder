@@ -1707,7 +1707,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                   $logCandidates = @(Get-ChildItem -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)) -Filter $logCandidatesFilter);
                   $imageBuildTaskValidations += @{
                     'program' = $rule.program;
-                    'path' = $(if (($logCandidates) -and ($logCandidates.Length)) { $logCandidates[0].FullName } else { $null };
+                    'path' = $(if (($logCandidates) -and ($logCandidates.Length)) { $logCandidates[0].FullName } else { $null });
                     'match' = $rule.match;
                     # result = true if log file exists and contains match, else false
                     'result' = (($logCandidates) -and ($logCandidates.Length) -and (((Get-Content -Path $logCandidates[0].FullName) | % {($_ -match $rule.match)}) -contains $true))
