@@ -1458,6 +1458,9 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
           Remove-Image -image $existingImage
         } else {
           Write-Output -InputObject ('skipped machine image creation for: {0}, in group: {1}, in cloud platform: {2}. machine image exists' -f $targetImageName, $target.group, $target.platform);
+          # prevent generic-worker from clasifying the task as failed due to missing artifacts
+          New-Item -ItemType 'Directory' -Force -Path @(('{0}{1}screenshot{1}full' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)), ('{0}{1}screenshot{1}thumbnail' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)));
+          New-Item -ItemType 'File' -Path @(('{0}{1}screenshot{1}full{1}intentionally-empty.txt' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)), ('{0}{1}screenshot{1}thumbnail{1}intentionally-empty.txt' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)));
           exit;
         }
       } elseif ($enableSnapshotCopy) {
