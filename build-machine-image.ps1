@@ -1183,7 +1183,9 @@ function Get-Logs {
       'MaintainSystem',
       'nxlog',
       'OpenCloudConfig',
+      'OpenSSH',
       'ronin',
+      'Service_Control_Manager',
       'stderr',
       'stdout',
       'sysprep-cbs',
@@ -1697,6 +1699,67 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               );
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
+
+              # todo: move validation rules to image yaml file
+              $imageBuildTaskValidationRules = [hashtable[]] @();
+              switch ('{0}/{1}' -f $tags.sourceOrganisation, $tags.sourceRepository) {
+                'mozilla-releng/OpenCloudConfig' {
+                  # occ log file exists
+                  $imageBuildTaskValidationRules += @{
+                    'validator' = 'path-exists';
+                    'path' = ('{0}{1}instance-logs{1}{2}.{3}.{4}.mozilla.com-OpenCloudConfig-*.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.image.hostname, $fqdnPool, $fqdnRegion);
+                  };
+                  # occ log file contains
+                  $logCandidates = @(Get-ChildItem -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)) -Filter ('{0}.{1}.{2}.mozilla.com-OpenCloudConfig-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion));
+                  if ($logCandidates -and ($logCandidates.Length)) {
+                    $imageBuildTaskValidationRules += @{
+                      'validator' = 'file-contains';
+                      'path' = $logCandidates[0].FullName;
+                      'value' = 'Invoke-Shutdown :: sysprep state: IMAGE_STATE_UNDEPLOYABLE, returning control to sysprep with exit code: 0'
+                    };
+                  }
+                  # todo: handle missing log candidates (error)
+                  break;
+                }
+                default {
+                  break;
+                }
+              }
+              if ($imageBuildTaskValidationRules.Length) {
+                Write-Output -InputObject ('{0} :: detected {1} image log validation rule{2} configured for bootstrap repository: {3}/{4}' -f $($MyInvocation.MyCommand.Name), $imageBuildTaskValidationRules.Length, $(if ($imageBuildTaskValidationRules.Length -gt 1) { 's' } else { '' }), $tags.sourceOrganisation, $tags.sourceRepository);
+                for ($i=0; $i -lt $imageBuildTaskValidationRules.Length; $i++) {
+                  switch ($imageBuildTaskValidationRules[$i].validator) {
+                    'path-exists' {
+                      $validationResult = (Test-Path -Path $imageBuildTaskValidationRules[$i].path -ErrorAction SilentlyContinue);
+                      $imageBuildTaskValidationRules[$i]['result'] = $validationResult;
+                      break;
+                    }
+                    'file-contains' {
+                      $validationResult = (((Get-Content -Path $imageBuildTaskValidationRules[$i].path) | % {($_ -match $imageBuildTaskValidationRules[$i].value)}) -contains $true);
+                      $imageBuildTaskValidationRules[$i]['result'] = $validationResult;
+                      break;
+                    }
+                    default {
+                      $imageBuildTaskValidationRules[$i]['result'] = $false;
+                      break;
+                    }
+                  }
+                  Write-Output -InputObject ('{0} :: image log {1} validation rule at index {2} has result: {3}' -f $($MyInvocation.MyCommand.Name), $imageBuildTaskValidationRules[$i].validator, $i, $(if ($imageBuildTaskValidationRules[$i]['result']) { 'pass' } else { 'fail' }));
+                }
+              } else {
+                Write-Output -InputObject ('{0} :: no image log validation rules detected for bootstrap repository: {1}/{2}' -f $($MyInvocation.MyCommand.Name), $tags.sourceOrganisation, $tags.sourceRepository);
+              }
+              $imageBuildTaskValidationRuleFailureCount = @($imageBuildTaskValidationRules | ? { (-not ($_.result)) }).Length;
+              $imageBuildTaskValidationRuleSuccessCount = @($imageBuildTaskValidationRules | ? { ($_.result) }).Length;
+              if ($imageBuildTaskValidationRuleFailureCount -gt 0) {
+                Write-Output -InputObject ('image: {0}, failed {1}/{2} validation rule{3}' -f $targetImageName, $imageBuildTaskValidationRuleFailureCount, $imageBuildTaskValidationRules.Length, $(if ($imageBuildTaskValidationRuleFailureCount -gt 1) { 's' } else { '' }));
+                if (-not $disableCleanup) {
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                }
+                exit 123;
+              } else {
+                Write-Output -InputObject ('image: {0}, passed {1}/{2} validation rule{3}' -f $targetImageName, $imageBuildTaskValidationRuleSuccessCount, $imageBuildTaskValidationRules.Length, $(if ($imageBuildTaskValidationRuleSuccessCount -gt 1) { 's' } else { '' }));
+              }
 
               # detach data disks from vm before machine image capture
               $dataDiskNames = @(Get-AzDisk -ResourceGroupName $target.group | ? { $_.Name -match ('^{0}-data-disk-[0-9]$' -f $instanceName) -and $_.OsType -eq $null } | % { $_.Name });
