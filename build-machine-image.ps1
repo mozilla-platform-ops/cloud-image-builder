@@ -1752,13 +1752,13 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               $imageBuildTaskValidationRuleFailureCount = @($imageBuildTaskValidationRules | ? { (-not ($_.result)) }).Length;
               $imageBuildTaskValidationRuleSuccessCount = @($imageBuildTaskValidationRules | ? { ($_.result) }).Length;
               if ($imageBuildTaskValidationRuleFailureCount -gt 0) {
-                Write-Output -InputObject ('image: {0}, failed {1}/{2} validation rule{3}' -f $targetImageName, $imageBuildTaskValidationRuleFailureCount, $imageBuildTaskValidationRules.Length, $(if ($imageBuildTaskValidationRuleFailureCount -gt 1) { 's' } else { '' }));
+                Write-Output -InputObject ('image: {0}, failed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationRuleFailureCount, $imageBuildTaskValidationRules.Length);
                 if (-not $disableCleanup) {
                   Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
                 }
                 exit 123;
               } else {
-                Write-Output -InputObject ('image: {0}, passed {1}/{2} validation rule{3}' -f $targetImageName, $imageBuildTaskValidationRuleSuccessCount, $imageBuildTaskValidationRules.Length, $(if ($imageBuildTaskValidationRuleSuccessCount -gt 1) { 's' } else { '' }));
+                Write-Output -InputObject ('image: {0}, passed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationRuleSuccessCount, $imageBuildTaskValidationRules.Length);
               }
 
               # detach data disks from vm before machine image capture
