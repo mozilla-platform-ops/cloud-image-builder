@@ -1700,71 +1700,39 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
-              # todo: move validation rules to image yaml file
-              $imageBuildTaskValidationRules = [hashtable[]] @();
-              switch ('{0}/{1}' -f $tags.sourceOrganisation, $tags.sourceRepository) {
-                'mozilla-releng/OpenCloudConfig' {
-                  # occ log file exists
-                  $imageBuildTaskValidationRules += @{
-                    'validator' = 'path-exists';
-                    'path' = ('{0}{1}instance-logs{1}{2}.{3}.{4}.mozilla.com-OpenCloudConfig-*.log' -f $workFolder, ([IO.Path]::DirectorySeparatorChar), $config.image.hostname, $fqdnPool, $fqdnRegion);
-                  };
-                  # occ log file contains
-                  $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-OpenCloudConfig-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion);
+              $imageBuildTaskValidations = [hashtable[]] @();
+              if ($config.validation -and $config.validation.instance -and $config.validation.instance.log -and $config.validation.instance.log.Length) {
+                foreach ($rule in $config.validation.instance.log) {
+                  $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-{3}-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion, $rule.program);
                   $logCandidates = @(Get-ChildItem -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)) -Filter $logCandidatesFilter);
-                  if ($logCandidates -and ($logCandidates.Length)) {
-                    $imageBuildTaskValidationRules += @{
-                      'validator' = 'file-contains';
-                      'path' = $logCandidates[0].FullName;
-                      'value' = 'Invoke-Shutdown :: sysprep state: IMAGE_STATE_UNDEPLOYABLE, returning control to sysprep with exit code: 0'
-                    };
-                  } else {
-                    Write-Output -InputObject ('{0} :: error: failed to determine instance log path from wildcard search: "{1}"' -f $($MyInvocation.MyCommand.Name), $logCandidatesFilter);
-                    if (-not $disableCleanup) {
-                      Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
-                    }
-                    exit 1;
-                  }
-                  break;
-                }
-                default {
-                  break;
-                }
-              }
-              if ($imageBuildTaskValidationRules.Length) {
-                Write-Output -InputObject ('{0} :: detected {1} image log validation rule{2} configured for bootstrap repository: {3}/{4}' -f $($MyInvocation.MyCommand.Name), $imageBuildTaskValidationRules.Length, $(if ($imageBuildTaskValidationRules.Length -gt 1) { 's' } else { '' }), $tags.sourceOrganisation, $tags.sourceRepository);
-                for ($i=0; $i -lt $imageBuildTaskValidationRules.Length; $i++) {
-                  switch ($imageBuildTaskValidationRules[$i].validator) {
-                    'path-exists' {
-                      $validationResult = (Test-Path -Path $imageBuildTaskValidationRules[$i].path -ErrorAction SilentlyContinue);
-                      $imageBuildTaskValidationRules[$i]['result'] = $validationResult;
-                      break;
-                    }
-                    'file-contains' {
-                      $validationResult = (((Get-Content -Path $imageBuildTaskValidationRules[$i].path) | % {($_ -match $imageBuildTaskValidationRules[$i].value)}) -contains $true);
-                      $imageBuildTaskValidationRules[$i]['result'] = $validationResult;
-                      break;
-                    }
-                    default {
-                      $imageBuildTaskValidationRules[$i]['result'] = $false;
-                      break;
-                    }
-                  }
-                  Write-Output -InputObject ('{0} :: image log {1} validation rule at index {2} has result: {3}' -f $($MyInvocation.MyCommand.Name), $imageBuildTaskValidationRules[$i].validator, $i, $(if ($imageBuildTaskValidationRules[$i]['result']) { 'pass' } else { 'fail' }));
+                  $imageBuildTaskValidations += @{
+                    'program' = $rule.program;
+                    'path' = $(if (($logCandidates) -and ($logCandidates.Length)) { $logCandidates[0].FullName } else { $null };
+                    'match' = $rule.match;
+                    # result = true if log file exists and contains match, else false
+                    'result' = (($logCandidates) -and ($logCandidates.Length) -and (((Get-Content -Path $logCandidates[0].FullName) | % {($_ -match $rule.match)}) -contains $true))
+                  };
                 }
               } else {
-                Write-Output -InputObject ('{0} :: no image log validation rules detected for bootstrap repository: {1}/{2}' -f $($MyInvocation.MyCommand.Name), $tags.sourceOrganisation, $tags.sourceRepository);
+                Write-Output -InputObject ('{0} :: no image log validation rules detected' -f $($MyInvocation.MyCommand.Name));
               }
-              $imageBuildTaskValidationRuleFailureCount = @($imageBuildTaskValidationRules | ? { (-not ($_.result)) }).Length;
-              $imageBuildTaskValidationRuleSuccessCount = @($imageBuildTaskValidationRules | ? { ($_.result) }).Length;
-              if ($imageBuildTaskValidationRuleFailureCount -gt 0) {
-                Write-Output -InputObject ('image: {0}, failed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationRuleFailureCount, $imageBuildTaskValidationRules.Length);
+              $imageBuildTaskValidationFailures = @($imageBuildTaskValidations | ? { (-not ($_.result)) });
+              $imageBuildTaskValidationSuccesses = @($imageBuildTaskValidations | ? { ($_.result) });
+              if ($imageBuildTaskValidationFailures.Length -gt 0) {
+                Write-Output -InputObject ('image: {0}, failed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationFailures.Length, $imageBuildTaskValidations.Length);
+                foreach ($imageBuildTaskValidationFailure in $imageBuildTaskValidationFailures) {
+                  if ($imageBuildTaskValidationFailure.path) {
+                    Write-Output -InputObject ('log file for program: {0}, at path: {1}, did not contain a match for: "{2}"' -f $imageBuildTaskValidationFailure.program, $imageBuildTaskValidationFailure.path, $imageBuildTaskValidationFailure.match);
+                  } else {
+                    Write-Output -InputObject ('log file for program: {0}, at path: {1}, was missing' -f $imageBuildTaskValidationFailure.program, $imageBuildTaskValidationFailure.path);
+                  }
+                }
                 if (-not $disableCleanup) {
                   Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
                 }
                 exit 123;
               } else {
-                Write-Output -InputObject ('image: {0}, passed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationRuleSuccessCount, $imageBuildTaskValidationRules.Length);
+                Write-Output -InputObject ('image: {0}, passed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationSuccesses.Length, $imageBuildTaskValidations.Length);
               }
 
               # detach data disks from vm before machine image capture
