@@ -1700,17 +1700,21 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 ('{0}.{1}.{2}.mozilla.com' -f $instanceName, $fqdnPool, $fqdnRegion), # conventional (bootstrap) fqdn, when bootstrap has set the hostname and domain
                 ('{0}.{1}.mozilla.com' -f $fqdnPool, $fqdnRegion) # catch logs forwarded before sysprep has renamed the system
               );
+              Write-Output -InputObject 'waiting 5 minutes for instance log ingestion at papertrail';
+              Start-Sleep -Seconds (5 * 60);
               Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
               $imageBuildTaskValidations = [hashtable[]] @();
               if ($config.validation -and $config.validation.instance -and $config.validation.instance.log -and $config.validation.instance.log.Length) {
                 foreach ($rule in $config.validation.instance.log) {
+                  $logCandidatesPath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
                   $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-{3}-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion, $rule.program);
-                  $logCandidates = @(Get-ChildItem -Path ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar)) -Filter $logCandidatesFilter);
+                  $logCandidates = @(Get-ChildItem -Path  -Filter $logCandidatesFilter);
                   $imageBuildTaskValidations += @{
                     'program' = $rule.program;
-                    'path' = $(if (($logCandidates) -and ($logCandidates.Length)) { $logCandidates[0].FullName } else { $null });
+                    'path' = $(if (($logCandidates) -and ($logCandidates.Length)) { $logCandidates[0].FullName } else { $logCandidatesPath });
+                    'filter' = $logCandidatesFilter;
                     'match' = $rule.match;
                     # result = true if log file exists and contains match, else false
                     'result' = (($logCandidates) -and ($logCandidates.Length) -and (((Get-Content -Path $logCandidates[0].FullName) | % {($_ -match $rule.match)}) -contains $true))
@@ -1724,10 +1728,10 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               if ($imageBuildTaskValidationFailures.Length -gt 0) {
                 Write-Output -InputObject ('image: {0}, failed {1}/{2} validation rules' -f $targetImageName, $imageBuildTaskValidationFailures.Length, $imageBuildTaskValidations.Length);
                 foreach ($imageBuildTaskValidationFailure in $imageBuildTaskValidationFailures) {
-                  if ($imageBuildTaskValidationFailure.path) {
+                  if (($imageBuildTaskValidationFailure.path) -and ($imageBuildTaskValidationFailure.path.EndsWith('.log'))) {
                     Write-Output -InputObject ('log file for program: {0}, at path: {1}, did not contain a match for: "{2}"' -f $imageBuildTaskValidationFailure.program, $imageBuildTaskValidationFailure.path, $imageBuildTaskValidationFailure.match);
                   } else {
-                    Write-Output -InputObject ('log file for program: {0}, at path: {1}, was missing' -f $imageBuildTaskValidationFailure.program, $imageBuildTaskValidationFailure.path);
+                    Write-Output -InputObject ('log file for program: {0}, at path: {1}, using filter: "{2}" was missing' -f $imageBuildTaskValidationFailure.program, $imageBuildTaskValidationFailure.path, $imageBuildTaskValidationFailure.filter);
                   }
                 }
                 if (-not $disableCleanup) {
