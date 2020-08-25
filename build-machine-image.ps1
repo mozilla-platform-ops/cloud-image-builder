@@ -1707,10 +1707,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
               $imageBuildTaskValidations = [hashtable[]] @();
               if ($config.validation -and $config.validation.instance -and $config.validation.instance.log -and $config.validation.instance.log.Length) {
+                Write-Output -InputObject ('{0} :: {1} image log validation rules detected' -f $($MyInvocation.MyCommand.Name), $config.validation.instance.log.Length);
                 foreach ($rule in $config.validation.instance.log) {
                   $logCandidatesPath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
                   $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-{3}-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion, $rule.program);
-                  $logCandidates = @(Get-ChildItem -Path  -Filter $logCandidatesFilter);
+                  $logCandidates = @(Get-ChildItem -Path $logCandidatesPath -Filter $logCandidatesFilter);
                   $imageBuildTaskValidations += @{
                     'program' = $rule.program;
                     'path' = $(if (($logCandidates) -and ($logCandidates.Length)) { $logCandidates[0].FullName } else { $logCandidatesPath });
