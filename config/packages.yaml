@@ -654,6 +654,7 @@
         synchronicity: synchronous
         priority: 702
       - description: 'bootstrap :: check for bootstrap script (ronin)'
+        # yamllint disable-line rule:line-length
         command: if (-NOT (Test-Path C:\bootstrap\azure-bootstrap.ps1)) {Invoke-WebRequest -Uri https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1 -OutFile C:\bootstrap\azure-bootstrap.ps1}
         pass: auditUser
         synchronicity: synchronous
