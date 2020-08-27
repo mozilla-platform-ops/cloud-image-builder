@@ -234,7 +234,7 @@
         priority: 998
       - description: 'teardown :: rename oobe unattend file'
         # yamllint disable-line rule:line-length
-        command: powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-oobe-unattend.ps1
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-oobe-unattend.ps1 >> C:\log\set-oobe-unattend-stdout.log 2>> C:\log\set-oobe-unattend-stderr.log
         pass: auditUser
         synchronicity: synchronous
         priority: 999
@@ -655,7 +655,7 @@
         priority: 702
       - description: 'bootstrap :: run bootstrap script (ronin)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\bootstrap\azure-bootstrap.ps1 >> C:\log\bootstrap-stdout.log 2>> C:\log\bootstrap-stderr.log
+        command: powershell.exe -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\bootstrap\azure-bootstrap.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 703
