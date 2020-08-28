@@ -1706,8 +1706,8 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
               $imageBuildTaskValidations = [hashtable[]] @();
-              if ($config.validation -and $config.validation.instance -and $config.validation.instance.log -and $config.validation.instance.log.Length) {
-                Write-Output -InputObject ('{0} :: {1} image log validation rules detected' -f $($MyInvocation.MyCommand.Name), $config.validation.instance.log.Length);
+              if ($config.validation -and $config.validation.instance -and $config.validation.instance.log) {
+                Write-Output -InputObject ('{0} :: {1} image log validation rules detected' -f $($MyInvocation.MyCommand.Name), ([System.Object[]]@($config.validation.instance.log)).Length);
                 foreach ($rule in $config.validation.instance.log) {
                   $logCandidatesPath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
                   $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-{3}-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion, $rule.program);
