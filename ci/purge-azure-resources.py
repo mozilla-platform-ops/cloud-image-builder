@@ -78,14 +78,14 @@ resource_descriptors = {
     },
     'network security group': {
         'filter-descriptor': 'redundant',
-        'list': networkClient.network_security_group.list,
-        'purge': networkClient.network_security_group.delete,
+        'list': networkClient.network_security_groups.list,
+        'purge': networkClient.network_security_groups.delete,
         'filter': lambda network_security_group, resource_group_name: network_security_group.name[0:4] != 'nsg-'
     },
     'virtual network': {
         'filter-descriptor': 'redundant',
-        'list': networkClient.virtual_network.list,
-        'purge': networkClient.virtual_network.delete,
+        'list': networkClient.virtual_networks.list,
+        'purge': networkClient.virtual_networks.delete,
         'filter': lambda virtual_network, resource_group_name: virtual_network.name[0:3] != 'vn-'
     },
     'disk': {
