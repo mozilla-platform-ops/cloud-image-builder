@@ -191,7 +191,7 @@
   unattend:
       - description: 'nxlog :: set regional fqdn'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-regional-fqdn.ps1 >> C:\log\set-regional-fqdn-stdout.log 2>> C:\log\set-regional-fqdn-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\Windows\Temp\set-regional-fqdn.ps1 >C:\log\set-regional-fqdn-stdout.log 3>&1 2>C:\log\set-regional-fqdn-stderr.log"
         pass: auditUser
         synchronicity: synchronous
         priority: 302
@@ -222,19 +222,19 @@
   unattend:
       - description: 'teardown :: create oobe unattend file'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-oobe-unattend.ps1 >> C:\log\set-oobe-unattend-stdout.log 2>> C:\log\set-oobe-unattend-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\Windows\Temp\set-oobe-unattend.ps1 >C:\log\create-oobe-unattend-stdout.log 3>&1 2>C:\log\create-oobe-unattend-stderr.log"
         pass: auditUser
         synchronicity: synchronous
         priority: 997
       - description: 'teardown :: remove cached unattend files'
         # yamllint disable-line rule:line-length
-        command: cmd /c for %d in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %d:\unattend.xml del /q %d:\unattend.xml >> C:\log\set-oobe-unattend-stdout.log 2>> C:\log\set-oobe-unattend-stderr.log
+        command: cmd /c for %d in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do if exist %d:\unattend.xml del /q %d:\unattend.xml > C:\log\del-oobe-unattend-stdout.log 2> C:\log\del-oobe-unattend-stderr.log
         pass: auditUser
         synchronicity: synchronous
         priority: 998
       - description: 'teardown :: rename oobe unattend file'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-oobe-unattend.ps1 >> C:\log\set-oobe-unattend-stdout.log 2>> C:\log\set-oobe-unattend-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\Windows\Temp\set-oobe-unattend.ps1 >C:\log\rename-oobe-unattend-stdout.log 3>&1 2>C:\log\rename-oobe-unattend-stderr.log"
         pass: auditUser
         synchronicity: synchronous
         priority: 999
@@ -615,7 +615,7 @@
         priority: 901
       - description: 'bootstrap :: run bootstrap script (occ)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1 >> C:\log\rundsc-stdout.log 2>> C:\log\rundsc-stdout.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\dsc\rundsc.ps1 >C:\log\rundsc-stdout.log 3>&1 2>C:\log\rundsc-stdout.log"
         pass: auditUser
         synchronicity: synchronous
         priority: 902
