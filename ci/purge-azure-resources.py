@@ -76,6 +76,18 @@ resource_descriptors = {
         'purge': networkClient.public_ip_addresses.delete,
         'filter': lambda public_ip_address, resource_group_name: public_ip_address.ip_address is None
     },
+    'network security group': {
+        'filter-descriptor': 'redundant',
+        'list': networkClient.network_security_group.list,
+        'purge': networkClient.network_security_group.delete,
+        'filter': lambda network_security_group, resource_group_name: network_security_group.name[0:4] != 'nsg-'
+    },
+    'virtual network': {
+        'filter-descriptor': 'redundant',
+        'list': networkClient.virtual_network.list,
+        'purge': networkClient.virtual_network.delete,
+        'filter': lambda virtual_network, resource_group_name: virtual_network.name[0:3] != 'vn-'
+    },
     'disk': {
         'filter-descriptor': 'orphaned',
         'list': computeClient.disks.list_by_resource_group,
