@@ -176,7 +176,7 @@ description = [
     '- commits and build tasks:',
     '\n'.join(list(map(lambda x: '  - {machineImageName}\n    - disk ({diskImageCommitTime}):\n      - commit: {diskImageCommitLink}\n      - build: {diskImageTaskLink}\n    - machine ({machineImageCommitTime}):\n      - commit: {machineImageCommitLink}\n      - build: {machineImageTaskLink}\n    - bootstrap: {bootstrapCommitLink}\n    - deployment: {deploymentCommitLink}'.format(
         machineImageName=x.name,
-        diskImageCommitTime=x.tags['diskImageCommitTime'] if 'diskImageCommitTime' in x.tags else 'missing tag: diskImageCommitTime',
+        diskImageCommitTime=x.tags['diskImageCommitTime'][:-6].replace('T', ' ') if 'diskImageCommitTime' in x.tags else 'missing tag: diskImageCommitTime',
         diskImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
             org='mozilla-platform-ops',
             repo='cloud-image-builder',
@@ -187,7 +187,7 @@ description = [
             taskId=x.tags['diskImageTask'].split('/')[0],
             run=x.tags['diskImageTask'].split('/')[1]
         ) if 'diskImageTask' in x.tags else 'missing tag: diskImageTask',
-        machineImageCommitTime=x.tags['machineImageCommitTime'] if 'machineImageCommitTime' in x.tags else 'missing tag: machineImageCommitTime',
+        machineImageCommitTime=x.tags['machineImageCommitTime'][:-6].replace('T', ' ') if 'machineImageCommitTime' in x.tags else 'missing tag: machineImageCommitTime',
         machineImageCommitLink='[{org}/{repo}/{ref}](https://github.com/{org}/{repo}/commit/{ref})'.format(
             org='mozilla-platform-ops',
             repo='cloud-image-builder',
