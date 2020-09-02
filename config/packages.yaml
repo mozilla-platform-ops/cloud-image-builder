@@ -613,12 +613,17 @@
         pass: auditUser
         synchronicity: synchronous
         priority: 901
-      - description: 'bootstrap :: run bootstrap script (occ)'
-        # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "$env:OccConsoleOutput = 'stdout'; C:\dsc\rundsc.ps1 >C:\log\rundsc-stdout.log 3>&1 2>C:\log\rundsc-stdout.log"
+      - description: 'bootstrap :: set bootstrap environment OccConsoleOutput'
+        command: setx OccConsoleOutput stdout
         pass: auditUser
         synchronicity: synchronous
         priority: 902
+      - description: 'bootstrap :: run bootstrap script (occ)'
+        # yamllint disable-line rule:line-length
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\dsc\rundsc.ps1 >C:\log\rundsc-stdout.log 3>&1 2>C:\log\rundsc-stdout.log"
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 903
         reboot: OnRequest
   target:
       cloud:
