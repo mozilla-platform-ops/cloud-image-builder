@@ -1177,13 +1177,18 @@ function Get-Logs {
   param (
     [string[]] $systems,
     [string[]] $programs = @(
+      'boostrap-puppet',
+      'bootstrap',
       'dsc-run',
       'ed25519-public-key',
+      'fluentd',
       'HaltOnIdle',
       'MaintainSystem',
       'nxlog',
       'OpenCloudConfig',
       'OpenSSH',
+      'puppet',
+      'puppet-run',
       'ronin',
       'Service_Control_Manager',
       'stderr',
@@ -1702,7 +1707,11 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               );
               Write-Output -InputObject 'waiting 5 minutes for instance log ingestion at papertrail';
               Start-Sleep -Seconds (5 * 60);
-              Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
+              if ($config.log) {
+                Get-Logs -minTime $logMinTime -systems $systems -programs $config.log -workFolder $workFolder -token $secret.papertrail.token;
+              } else {
+                Get-Logs -minTime $logMinTime -systems $systems -workFolder $workFolder -token $secret.papertrail.token;
+              }
               Get-PublicKeys -systems $systems -programs @('ed25519-public-key', 'MaintainSystem') -workFolder $workFolder;
 
               $imageBuildTaskValidations = [hashtable[]] @();

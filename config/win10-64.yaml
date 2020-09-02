@@ -260,3 +260,32 @@ target:
               rules: *rules
       tag: *tag
       bootstrap: *bootstrap
+log:
+    - boostrap-puppet
+    - bootstrap
+    - fluentd
+    - HaltOnIdle
+    - MaintainSystem
+    - nxlog
+    - OpenSSH
+    - puppet
+    - puppet-run
+    - ronin
+    - Service_Control_Manager
+    - stderr
+    - stdout
+    - sysprep-cbs
+    - sysprep-ddaclsys
+    - sysprep-setupact
+    - sysprep-setupapi.app
+    - sysprep-setupapi.dev
+    - user32'
+validation:
+    instance:
+        log:
+            - program: 'boostrap-puppet'
+              # yamllint disable-line rule:line-length
+              match: 'Puppet \(notice\): Applied catalog in [0-9]+\.[0-9]{1,2} seconds'
+            - program: 'puppet-run'
+              # yamllint disable-line rule:line-length
+              match: 'Puppet \(notice\): Applied catalog in [0-9]+\.[0-9]{1,2} seconds'
