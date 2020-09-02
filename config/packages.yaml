@@ -615,7 +615,7 @@
         priority: 901
       - description: 'bootstrap :: run bootstrap script (occ)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\dsc\rundsc.ps1 >C:\log\rundsc-stdout.log 3>&1 2>C:\log\rundsc-stdout.log"
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "$env:OccConsoleOutput = 'stdout'; C:\dsc\rundsc.ps1 >C:\log\rundsc-stdout.log 3>&1 2>C:\log\rundsc-stdout.log"
         pass: auditUser
         synchronicity: synchronous
         priority: 902
@@ -655,7 +655,7 @@
         priority: 702
       - description: 'bootstrap :: run bootstrap script (ronin)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\bootstrap\azure-bootstrap.ps1 >> C:\log\bootstrap-stdout.log 2>> C:\log\bootstrap-stderr.log
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\bootstrap\azure-bootstrap.ps1 >C:\log\bootstrap-stdout.log 3>&1 2>C:\log\bootstrap-stderr.log"
         pass: auditUser
         synchronicity: synchronous
         priority: 704
