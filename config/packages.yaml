@@ -640,6 +640,7 @@
         # yamllint disable-line rule:line-length
         url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1
 - name: ronnin_puppet
+  # change
   savepath: Windows\Temp\azure-bootstrap.ps1
   unattend:
       - description: 'bootstrap :: create log folder'
