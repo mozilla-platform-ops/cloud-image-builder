@@ -661,7 +661,7 @@
         priority: 702
       - description: 'bootstrap :: run bootstrap script (ronin)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\bootstrap\azure-bootstrap.ps1"
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File "C:\bootstrap\azure-bootstrap.ps1"
         pass: auditUser
         synchronicity: synchronous
         priority: 704
