@@ -1,5 +1,5 @@
 azure-mgmt-compute==17.0.0
-azure-mgmt-network==16.0.0
+azure-mgmt-network==10.2.0
 azure-mgmt-resource==10.0.0
 cachetools==4.1.1
 msrestazure==0.6.4
