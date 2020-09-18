@@ -191,7 +191,7 @@
   unattend:
       - description: 'nxlog :: set regional fqdn'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\Windows\Temp\set-regional-fqdn.ps1 >C:\log\set-regional-fqdn-stdout.log 3>&1 2>C:\log\set-regional-fqdn-stderr.log"
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-regional-fqdn.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 302
@@ -222,7 +222,7 @@
   unattend:
       - description: 'teardown :: create oobe unattend file'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\Windows\Temp\set-oobe-unattend.ps1 >C:\log\create-oobe-unattend-stdout.log 3>&1 2>C:\log\create-oobe-unattend-stderr.log"
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-oobe-unattend.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 997
@@ -234,7 +234,7 @@
         priority: 998
       - description: 'teardown :: rename oobe unattend file'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\Windows\Temp\set-oobe-unattend.ps1 >C:\log\rename-oobe-unattend-stdout.log 3>&1 2>C:\log\rename-oobe-unattend-stderr.log"
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\Windows\Temp\set-oobe-unattend.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 999
@@ -620,7 +620,7 @@
         priority: 902
       - description: 'bootstrap :: run bootstrap script (occ)'
         # yamllint disable-line rule:line-length
-        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -Command "C:\dsc\rundsc.ps1"
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1
         pass: auditUser
         synchronicity: synchronous
         priority: 903
