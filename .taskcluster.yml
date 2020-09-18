@@ -34,12 +34,12 @@ tasks:
               - '--login'
               - '-c'
               - >-
-                  pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$"
-                  && git clone --quiet {{event.head.repo.url}}
+                  git clone --quiet {{event.head.repo.url}}
                   && cd cloud-image-builder
                   && git fetch
                   && git checkout {{event.head.repo.branch}}
                   && git reset --hard {{event.head.sha}}
+                  && pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$"
                   && python ci/create-image-build-tasks.py
       metadata:
           name: '00 :: create maintenance and image build tasks'
