@@ -34,13 +34,7 @@ tasks:
               - '--login'
               - '-c'
               - >-
-                  pip install azure-mgmt-compute | grep -v "^[[:space:]]*$"
-                  && pip install boto3 | grep -v "^[[:space:]]*$"
-                  && pip install cachetools | grep -v "^[[:space:]]*$"
-                  && pip install pyyaml | grep -v "^[[:space:]]*$"
-                  && pip install slugid | grep -v "^[[:space:]]*$"
-                  && pip install taskcluster | grep -v "^[[:space:]]*$"
-                  && pip install urllib3 | grep -v "^[[:space:]]*$"
+                  pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$"
                   && git clone --quiet {{event.head.repo.url}}
                   && cd cloud-image-builder
                   && git fetch
