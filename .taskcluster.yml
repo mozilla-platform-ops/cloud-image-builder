@@ -33,6 +33,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
+              # yamllint disable rule:line-length
               - >-
                   git clone --quiet {{event.head.repo.url}}
                   && cd cloud-image-builder
@@ -41,6 +42,7 @@ tasks:
                   && git reset --hard {{event.head.sha}}
                   && pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$"
                   && python ci/create-image-build-tasks.py
+              # yamllint enable rule:line-length
       metadata:
           name: '00 :: create maintenance and image build tasks'
           description: >-
