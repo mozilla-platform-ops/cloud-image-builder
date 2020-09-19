@@ -17,7 +17,7 @@ task:
             - '--login'
             - '-c'
             # yamllint disable rule:line-length
-            - git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && pip install -r ci/purge-azure-resources-requirements.txt | grep -v "^[[:space:]]*$" && python ci/purge-azure-resources.py taskcluster-staging-workers-us-central
+            - git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$" && python ci/purge-azure-resources.py taskcluster-staging-workers-us-central
         image: python
         maxRunTime: 600
         retries: 5

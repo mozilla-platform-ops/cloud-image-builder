@@ -190,7 +190,7 @@ for resourceGroup in azurePurgeTaskIds:
             '/bin/bash',
             '--login',
             '-c',
-            'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install -r ci/purge-azure-resources-requirements.txt | grep -v "^[[:space:]]*$" && python ci/purge-azure-resources.py{}'.format(commitSha, '' if resourceGroup == 'default' else ' {}'.format(resourceGroup))
+            'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git && cd cloud-image-builder && git reset --hard {} && pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$" && python ci/purge-azure-resources.py{}'.format(commitSha, '' if resourceGroup == 'default' else ' {}'.format(resourceGroup))
         ],
         scopes = [
             'secrets:get:project/relops/image-builder/dev'
