@@ -280,12 +280,13 @@ log:
     - sysprep-setupapi.app
     - sysprep-setupapi.dev
     - user32'
-validation:
-    instance:
-        log:
-            - program: 'boostrap-puppet'
-              # yamllint disable-line rule:line-length
-              match: 'Puppet \(notice\): Applied catalog in [0-9]+\.[0-9]{1,2} seconds'
-            - program: 'puppet-run'
-              # yamllint disable-line rule:line-length
-              match: 'Puppet \(notice\): Applied catalog in [0-9]+\.[0-9]{1,2} seconds'
+# Comment out for now. will need to figureout a way to validate.
+#validation:
+#    instance:
+#        log:
+#            - program: 'boostrap-puppet'
+#              # yamllint disable-line rule:line-length
+#              match: 'Puppet \(notice\): Applied catalog in [0-9]+\.[0-9]{1,2} seconds'
+#            - program: 'puppet-run'
+#              # yamllint disable-line rule:line-length
+#              match: 'Puppet \(notice\): Applied catalog in [0-9]+\.[0-9]{1,2} seconds'
