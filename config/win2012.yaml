@@ -123,6 +123,8 @@ target:
             source: windowsserver2012r2-datacenter-en-us-x86-64
             variant: ssd
             size: 64
+            caching: ReadWrite
+            create: FromImage
           - os: false
             variant: ssd
             size: 128

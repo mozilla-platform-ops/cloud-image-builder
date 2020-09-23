@@ -97,8 +97,8 @@ workerPool = {
                 'id': getLatestImageId(x['group'], key)
             },
             'osDisk': {
-                'caching': 'ReadWrite',
-                'createOption': 'FromImage',
+                'caching': next(d for d in x['disk'] if d['os'])['caching'],
+                'createOption': next(d for d in x['disk'] if d['os'])['create'],
                 'diskSizeGB': next(d for d in x['disk'] if d['os'])['size'],
                 'managedDisk': {
                     'storageAccountType': 'StandardSSD_LRS' if next(d for d in x['disk'] if d['os'])['variant'] == 'ssd' else 'Standard_LRS'

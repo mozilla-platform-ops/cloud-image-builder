@@ -82,6 +82,8 @@ target:
             source: windows10-professional-en-us-x86-64
             variant: ssd
             size: 64
+            caching: ReadWrite
+            create: FromImage
           - os: false
             variant: ssd
             size: 128
