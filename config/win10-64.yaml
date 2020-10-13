@@ -170,7 +170,7 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: 89c6ba1
+            value: 3ec62fd
       bootstrap: &bootstrap
           executions: []
     - platform: azure
