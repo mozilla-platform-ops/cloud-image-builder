@@ -163,11 +163,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 5cc21fd
+            value: 88a4415
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 5cc21fd
+            value: 88a4415
       bootstrap: &bootstrap
           executions: []
     - platform: azure
