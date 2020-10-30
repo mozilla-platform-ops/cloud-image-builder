@@ -28,6 +28,9 @@ def updateRole(auth, configPath, roleId):
             if tcRestFailure.status_code == 404:
                 role = None
                 print('info: role {} absence detected'.format(roleId))
+            else:
+                raise
+
         if role:
             auth.updateRole(roleId, payload)
             print('info: role {} updated'.format(roleId))
