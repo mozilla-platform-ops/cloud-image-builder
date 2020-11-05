@@ -90,9 +90,13 @@ target:
           - os: false
             variant: ssd
             size: 128
+            label: cache
+            letter: Y
           - os: false
             variant: ssd
             size: 128
+            label: task
+            letter: Z
       network:
           name: vn-central-us-gecko-t
           prefix: '10.0.0.0/24'
