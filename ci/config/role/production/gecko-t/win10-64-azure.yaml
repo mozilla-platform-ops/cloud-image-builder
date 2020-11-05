@@ -1,0 +1,7 @@
+---
+description: >-
+    ## gecko-t/win10-64-azure
+    ### production
+scopes:
+    - auth:sentry:generic-worker
+    - auth:websocktunnel-token:firefoxcitc/*

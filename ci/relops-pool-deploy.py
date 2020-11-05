@@ -32,3 +32,9 @@ updateRole(
   auth = taskclusterAuth,
   configPath = 'ci/config/role/branch-master.yaml',
   roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
+
+for pool in ['gecko-t/win10-64-azure', 'gecko-t/win7-32-azure']:
+  updateRole(
+    auth = taskclusterAuth,
+    configPath = 'ci/config/role/{}/{}.yaml'.format(currentEnvironment, pool),
+    roleId = 'worker-pool:{}'.format(pool))

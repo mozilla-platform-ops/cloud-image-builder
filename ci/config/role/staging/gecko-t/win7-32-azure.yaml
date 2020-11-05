@@ -1,0 +1,7 @@
+---
+description: >-
+    ## gecko-t/win7-32-azure
+    ### staging
+scopes:
+    - auth:sentry:generic-worker
+    - auth:websocktunnel-token:cloudopsstage/*
