@@ -235,7 +235,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
                 @{
                   'id' = 1;
                   'type' = @{
-                    'name': 'Primary';
+                    'name' = 'Primary';
                     'id' = '0x27'
                   };
                   'size' = 100;
@@ -246,7 +246,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
                 @{
                   'id' = 2;
                   'type' = @{
-                    'name': 'Primary'
+                    'name' = 'Primary'
                   };
                   'extend' = $true;
                   'active' = $true;
@@ -260,7 +260,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
                 @{
                   'id' = 1;
                   'type' = @{
-                    'name': 'Primary'
+                    'name' = 'Primary'
                   };
                   'label' = $_.label;
                   'letter' = $_.letter;
