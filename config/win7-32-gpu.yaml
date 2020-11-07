@@ -36,6 +36,48 @@ image:
                   search:
                       - '1.1.1.1'
                       - '1.0.0.1'
+    disks:
+        - id: 0
+          wipe: true
+          partitions:
+              - id: 1
+                type:
+                    name: Primary
+                    id: 0x27
+                size: 100
+                active: true
+                format: NTFS
+                label: System Reserved
+              - id: 2
+                type:
+                    name: Primary
+                extend: true
+                active: true
+                format: NTFS
+                label: os
+                letter: 'C'
+        - id: 1
+          wipe: true
+          partitions:
+              - id: 1
+                type:
+                    name: Primary
+                extend: true
+                active: true
+                format: NTFS
+                label: cache
+                letter: 'Y'
+        - id: 2
+          wipe: true
+          partitions:
+              - id: 1
+                type:
+                    name: Primary
+                extend: true
+                active: true
+                format: NTFS
+                label: task
+                letter: 'Z'
 iso:
     source:
         platform: amazon
@@ -81,13 +123,9 @@ target:
           - os: false
             variant: ssd
             size: 128
-            label: cache
-            letter: Y
           - os: false
             variant: ssd
             size: 128
-            label: task
-            letter: Z
       network:
           name: vn-east-us-gecko-t
           prefix: '10.0.0.0/24'
