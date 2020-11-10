@@ -197,7 +197,7 @@ target:
                         - 5986
       tag:
           - name: workerType
-            value: gecko-t-win10-64-occ-azure
+            value: gecko-t-win10-64-gpu-azure
           - name: sourceOrganisation
             value: mozilla-releng
           - name: sourceRepository

@@ -639,6 +639,50 @@
       - platform: url
         # yamllint disable-line rule:line-length
         url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1
+- name: OpenCloudConfig
+  savepath: Windows\Temp\rundsc.ps1
+  unattend:
+      - description: 'bootstrap :: create log folder'
+        command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 900
+      - description: 'bootstrap :: create dsc folder'
+        command: cmd /c if not exist C:\dsc mkdir C:\dsc
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 900
+      - description: 'bootstrap :: install bootstrap script (occ)'
+        # yamllint disable-line rule:line-length
+        command: cmd /c if exist C:\Windows\Temp\rundsc.ps1 move /y C:\Windows\Temp\rundsc.ps1 C:\dsc\rundsc.ps1
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 901
+      - description: 'bootstrap :: set bootstrap environment OccConsoleOutput'
+        command: setx OccConsoleOutput stdout
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 902
+      - description: 'bootstrap :: run bootstrap script (occ)'
+        # yamllint disable-line rule:line-length
+        command: powershell -ExecutionPolicy Bypass -NoLogo -NoProfile -File C:\dsc\rundsc.ps1
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 903
+        reboot: OnRequest
+  target:
+      cloud:
+          - azure
+      os:
+          - Windows 10
+      architecture:
+          - x86-64
+      gpu:
+          - true
+  sources:
+      - platform: url
+        # yamllint disable-line rule:line-length
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1
 - name: ronnin_puppet
   #  change
   savepath: Windows\Temp\azure-bootstrap.ps1
