@@ -78,6 +78,9 @@ image:
                 format: NTFS
                 label: task
                 letter: 'Z'
+    target:
+        platform: amazon
+        bucket: windows-ami-builder
 iso:
     source:
         platform: amazon
