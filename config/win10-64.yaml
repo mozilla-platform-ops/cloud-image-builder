@@ -128,7 +128,7 @@ target:
             variant: ssd
             size: 64
             caching: ReadWrite
-            create: Attach
+            create: FromImage
           - os: false
             variant: ssd
             size: 128
@@ -212,7 +212,7 @@ target:
           - name: sourceScript
             value: provisioners/windows/azure/azure-bootstrap.ps1
           - name: deploymentId
-            value: ab4298a
+            value: 39b8154
       bootstrap: &bootstrap
           executions: []
     - platform: azure
