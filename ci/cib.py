@@ -54,6 +54,8 @@ def updateWorkerPool(workerManager, configPath, workerPoolId):
                     workerPoolId))
                 workerManager.createWorkerPool(workerPoolId, payload)
                 print('info: worker pool {} created'.format(workerPoolId))
+            else:
+                raise
 
 
 def createTask(
