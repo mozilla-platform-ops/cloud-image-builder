@@ -703,7 +703,6 @@ function Initialize-Platform {
           Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
         } catch {
           Write-Output -InputObject ('{0} :: on platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
-
         }
       }
     }
@@ -730,7 +729,7 @@ function Get-ImageArtifactDescriptor {
       $imageArtifactDescriptor = ($streamReader.ReadToEnd() | ConvertFrom-Json);
       Write-Debug -Message ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, suceeded' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri);
     } catch {
-      Write-Debug -Message ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
+      Write-Output -Message ('{0} :: disk image config for: {1}, on {2}, fetch and extraction from: {3}, failed. {4}' -f $($MyInvocation.MyCommand.Name), $imageKey, $platform, $uri, $_.Exception.Message);
       exit 1
     }
     return $imageArtifactDescriptor;
