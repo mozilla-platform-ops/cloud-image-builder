@@ -5,7 +5,8 @@ import string
 import taskcluster
 import urllib.request
 import yaml
-from azure.common.credentials import ServicePrincipalCredentials
+#from azure.common.credentials import ServicePrincipalCredentials
+from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from cib import updateWorkerPool
 from datetime import datetime
@@ -19,10 +20,14 @@ currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TAS
 taskclusterWorkerManagerClient = taskcluster.WorkerManager(taskclusterOptions)
 
 azureComputeManagementClient = ComputeManagementClient(
-    ServicePrincipalCredentials(
-        client_id = secret['azure']['id'],
-        secret = secret['azure']['key'],
-        tenant = secret['azure']['account']),
+    #ServicePrincipalCredentials(
+    #    client_id = secret['azure']['id'],
+    #    secret = secret['azure']['key'],
+    #    tenant = secret['azure']['account']),
+    ClientSecretCredential(
+        tenant_id=secret['azure']['account'],
+        client_id=secret['azure']['id'],
+        client_secret=secret['azure']['key']),
     secret['azure']['subscription'])
 
 

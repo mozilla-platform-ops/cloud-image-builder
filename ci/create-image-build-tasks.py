@@ -7,7 +7,8 @@ import taskcluster
 import urllib.request
 import yaml
 from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
-from azure.common.credentials import ServicePrincipalCredentials
+#from azure.common.credentials import ServicePrincipalCredentials
+from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 
 
@@ -24,12 +25,17 @@ secrets = taskcluster.Secrets(taskclusterOptions)
 
 secret = secrets.get('project/relops/image-builder/dev')['secret']
 
+
 platformClient = {
     'azure': ComputeManagementClient(
-        ServicePrincipalCredentials(
-            client_id = secret['azure']['id'],
-            secret = secret['azure']['key'],
-            tenant = secret['azure']['account']),
+        #ServicePrincipalCredentials(
+        #    client_id = secret['azure']['id'],
+        #    secret = secret['azure']['key'],
+        #    tenant = secret['azure']['account']),
+        ClientSecretCredential(
+            tenant_id=secret['azure']['account'],
+            client_id=secret['azure']['id'],
+            client_secret=secret['azure']['key']),
         secret['azure']['subscription'])
 }
 

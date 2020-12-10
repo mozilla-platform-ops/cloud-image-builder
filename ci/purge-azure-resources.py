@@ -2,7 +2,8 @@ import os
 import sys
 import taskcluster
 import yaml
-from azure.common.credentials import ServicePrincipalCredentials
+#from azure.common.credentials import ServicePrincipalCredentials
+from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
@@ -50,7 +51,8 @@ else:
     print('failed to obtain taskcluster secrets')
     exit(1)
 
-azureCredentials = ServicePrincipalCredentials(client_id = secret['id'], secret = secret['key'], tenant = secret['account'])
+#azureCredentials = ServicePrincipalCredentials(client_id = secret['id'], secret = secret['key'], tenant = secret['account'])
+azureCredentials = ClientSecretCredential(tenant_id=secret['azure']['account'], client_id=secret['azure']['id'], client_secret=secret['azure']['key'])
 computeClient = ComputeManagementClient(azureCredentials, secret['subscription'])
 networkClient = NetworkManagementClient(azureCredentials, secret['subscription'])
 resourceClient = ResourceManagementClient(azureCredentials, secret['subscription'])

@@ -4,7 +4,8 @@ import string
 import taskcluster
 import uuid
 import yaml
-from azure.common.credentials import ServicePrincipalCredentials
+#from azure.common.credentials import ServicePrincipalCredentials
+from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
@@ -200,10 +201,14 @@ def spawnMinion(provisionerId, workerType, region, machine):
 taskclusterQueueClient = taskcluster.Queue(taskcluster.optionsFromEnvironment())
 # init azure clients
 azureConfig = yaml.safe_load(open('{}/.azure.yaml'.format(os.getenv('HOME')), 'r'))
-azureCredentials = ServicePrincipalCredentials(
-    client_id = azureConfig['client_id'],
-    secret = azureConfig['secret'],
-    tenant = azureConfig['tenant'])
+#azureCredentials = ServicePrincipalCredentials(
+#    client_id = azureConfig['client_id'],
+#    secret = azureConfig['secret'],
+#    tenant = azureConfig['tenant'])
+azureCredentials = ClientSecretCredential(
+    tenant_id=secret['azure']['account'],
+    client_id=secret['azure']['id'],
+    client_secret=secret['azure']['key'])
 azureComputeManagementClient = ComputeManagementClient(
     azureCredentials,
     azureConfig['subscription'])

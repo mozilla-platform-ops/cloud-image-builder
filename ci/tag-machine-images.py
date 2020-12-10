@@ -6,7 +6,8 @@ import taskcluster
 import urllib.error
 import urllib.request
 import yaml
-from azure.common.credentials import ServicePrincipalCredentials
+#from azure.common.credentials import ServicePrincipalCredentials
+from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 
 from cachetools import cached, TTLCache
@@ -83,10 +84,14 @@ print('key: {}'.format(key))
 
 if platform == 'azure':
     azureComputeManagementClient = ComputeManagementClient(
-        ServicePrincipalCredentials(
-            client_id = secret['azure']['id'],
-            secret = secret['azure']['key'],
-            tenant = secret['azure']['account']),
+        #ServicePrincipalCredentials(
+        #    client_id = secret['azure']['id'],
+        #    secret = secret['azure']['key'],
+        #    tenant = secret['azure']['account']),
+        ClientSecretCredential(
+            tenant_id=secret['azure']['account'],
+            client_id=secret['azure']['id'],
+            client_secret=secret['azure']['key']),
         secret['azure']['subscription'])
 
     pattern = re.compile('^{}-{}-([a-f0-9]{{7}})-([a-f0-9]{{7}})$'.format(group.replace('rg-', ''), key))
