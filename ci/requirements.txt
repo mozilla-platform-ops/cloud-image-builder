@@ -1,5 +1,5 @@
 azure-identity==1.5.0
-azure-mgmt-compute==12.0.0
+azure-mgmt-compute==18.0.0
 azure-mgmt-network==17.0.0
 azure-mgmt-resource==15.0.0
 boto3==1.15.0

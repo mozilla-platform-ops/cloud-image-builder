@@ -93,7 +93,7 @@ resource_descriptors = {
     'disk': {
         'filter-descriptor': 'orphaned',
         'list': computeClient.disks.list_by_resource_group,
-        'purge': computeClient.disks.delete,
+        'purge': computeClient.disks.begin_delete,
         'filter': lambda disk, resource_group_name: ((disk.disk_state == 'Unattached') or ((disk.disk_state == 'ReadyToUpload') and (disk.time_created < (datetime.now(disk.time_created.tzinfo) - timedelta(hours=6)))))
     }
     #,
