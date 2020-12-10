@@ -52,7 +52,7 @@ else:
     exit(1)
 
 #azureCredentials = ServicePrincipalCredentials(client_id = secret['id'], secret = secret['key'], tenant = secret['account'])
-azureCredentials = ClientSecretCredential(tenant_id=secret['azure']['account'], client_id=secret['azure']['id'], client_secret=secret['azure']['key'])
+azureCredentials = ClientSecretCredential(tenant_id=secret['account'], client_id=secret['id'], client_secret=secret['key'])
 computeClient = ComputeManagementClient(azureCredentials, secret['subscription'])
 networkClient = NetworkManagementClient(azureCredentials, secret['subscription'])
 resourceClient = ResourceManagementClient(azureCredentials, secret['subscription'])
