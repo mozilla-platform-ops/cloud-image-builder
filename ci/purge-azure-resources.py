@@ -69,7 +69,7 @@ resource_descriptors = {
     'network interface': {
         'filter-descriptor': 'orphaned',
         'list': networkClient.network_interfaces.list,
-        'purge': networkClient.network_interfaces.delete,
+        'purge': networkClient.network_interfaces.begin_delete,
         'filter': lambda network_interface, resource_group_name: network_interface.virtual_machine is None
     },
     'public ip address': {
