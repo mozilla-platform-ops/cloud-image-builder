@@ -116,7 +116,7 @@ target:
       machine:
           cpu: 6
           ram: 56
-          format: Standard_NV{0}_Promo
+          format: Standard_NV{0}
       disk:
           - os: true
             source: windows10-professional-en-us-x86-64-gpu

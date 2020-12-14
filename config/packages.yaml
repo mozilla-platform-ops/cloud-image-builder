@@ -857,3 +857,37 @@
       - platform: amazon
         bucket: windows-ami-builder
         key: package/vac464.zip
+- name: vac464.zip
+  savepath: Windows\Temp
+  unattend:
+      - description: 'vac :: create log folder'
+        command: cmd /c if not exist C:\log mkdir C:\log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 700
+      - description: 'vac :: install virtual audio cable 64 bit v464'
+        # yamllint disable-line rule:line-length
+        command: cmd /c start /wait C:\Windows\Temp\vac464\setup64.exe -s -k 30570681-0a8b-46e5-8cb2-d835f43af0c5
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 701
+      - description: 'vac :: move install log'
+        # yamllint disable-line rule:line-length
+        command: cmd /c if exist "C:\Program Files (x86)\Virtual Audio Cable\install.log" set COPYCMD=/Y && move /y "C:\Program Files (x86)\Virtual Audio Cable\install.log" C:\log\unattend-install-vac-stdout.log
+        pass: auditUser
+        synchronicity: synchronous
+        priority: 702
+  extract: true
+  target:
+      cloud:
+          - amazon
+      os:
+          - Windows 10
+      architecture:
+          - x86-64
+      gpu:
+          - true
+  sources:
+      - platform: amazon
+        bucket: windows-ami-builder
+        key: package/vac464.zip
