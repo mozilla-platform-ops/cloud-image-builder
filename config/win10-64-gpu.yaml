@@ -203,10 +203,10 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: b232a71
+            value: 006c17e
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: b232a71
+            value: 006c17e
       bootstrap:
           executions: []
