@@ -48,6 +48,10 @@ includeEnvironments = [
     #'production',
     'staging'
 ]
+includePlatforms = [
+    #'amazon',
+    'azure'
+]
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
 if currentEnvironment == 'production':
     print('info: skipping production environment builds')
@@ -204,7 +208,7 @@ for resourceGroup in azurePurgeTaskIds:
         taskGroupId = taskGroupId
     )
 
-for platform in ['amazon', 'azure']:
+for platform in includePlatforms:
     for key in includeKeys:
         configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
         with open(configPath, 'r') as stream:
