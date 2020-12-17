@@ -350,3 +350,12 @@ target:
               rules: *rules
       tag: *tag
       bootstrap: *bootstrap
+validation:
+    instance:
+        log:
+            - program: 'sysprep-setupact'
+              # yamllint disable-line rule:line-length
+              match: '\[audit\.exe\] Successfully launched Sysprep with command line \[C:\\Windows\\system32\\sysprep\\sysprep\.exe  \/Generalize \/oobe \/shutdown\]'
+            - program: 'OpenCloudConfig'
+              # yamllint disable-line rule:line-length
+              match: 'Invoke-Shutdown :: sysprep state: IMAGE_STATE_UNDEPLOYABLE, returning control to sysprep with exit code: 0'
