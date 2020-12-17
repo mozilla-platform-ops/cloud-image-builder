@@ -1514,6 +1514,16 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
           try {
             Write-Output -InputObject ('begin image export: {0}, to region: {1}, in cloud platform: {2}' -f $exportImageName, $target.region, $target.platform);
             switch ($target.hostname.slug.type) {
+              'disk-image-sha' {
+                $resourceId = ($imageArtifactDescriptor.build.revision.Substring(0, $target.hostname.slug.length));
+                $instanceName = ($target.hostname.format -f $resourceId);
+                break;
+              }
+              'machine-image-sha' {
+                $resourceId = ($revision.Substring(0, $target.hostname.slug.length));
+                $instanceName = ($target.hostname.format -f $resourceId);
+                break;
+              }
               'uuid' {
                 $resourceId = (([Guid]::NewGuid()).ToString().Substring((36 - $target.hostname.slug.length)));
                 $instanceName = ($target.hostname.format -f $resourceId);

@@ -5,7 +5,7 @@ image:
     language: en-US
     architecture: x86
     timezone: UTC
-    hostname: 'cib-win7-32'
+    hostname: 'cib-sha'
     gpu: false
     owner: Mozilla Infrastructure Operations
     organization: Mozilla Corporation
@@ -112,10 +112,10 @@ target:
       group: rg-central-us-gecko-t
       region: Central US
       hostname: &hostname
-          format: vm-{0}
+          format: cib-{0}
           slug:
-              type: uuid
-              length: 12
+              type: disk-image-sha
+              length: 7
       machine: &machine
           cpu: 2
           ram: 4
@@ -209,11 +209,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 006c17e
+            value: e3c3d11
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 006c17e
+            value: e3c3d11
       bootstrap: &bootstrap
           executions: []
     - platform: azure

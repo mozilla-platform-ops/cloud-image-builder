@@ -219,7 +219,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       New-UnattendFile `
         -destinationPath $unattendLocalPath `
         -processorArchitecture $(if ($config.image.architecture -eq 'x86-64') { 'amd64' } else { $config.image.architecture }) `
-        -computerName $(if ($config.image.hostname) { $config.image.hostname } else { '*' }) `
+        -computerName $(if ($config.image.hostname) { $(if ($config.image.hostname -eq 'cib-sha') { ('cib-{0}' -f $revision.Substring(0, 7)) } else { $config.image.hostname }) } else { '*' }) `
         -productKey $productKey `
         -timeZone $(if ($config.image.timezone) { $config.image.timezone } else { 'UTC' }) `
         -administratorPassword $administratorPassword `
