@@ -1728,7 +1728,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 Write-Output -InputObject ('{0} :: {1} image log validation rules detected' -f $($MyInvocation.MyCommand.Name), ([System.Object[]]@($config.validation.instance.log)).Length);
                 foreach ($rule in $config.validation.instance.log) {
                   $logCandidatesPath = ('{0}{1}instance-logs' -f $workFolder, ([IO.Path]::DirectorySeparatorChar));
-                  $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-{3}-*.log' -f $config.image.hostname, $fqdnPool, $fqdnRegion, $rule.program);
+                  $logCandidatesFilter = ('{0}.{1}.{2}.mozilla.com-{3}-*.log' -f $instanceName, $fqdnPool, $fqdnRegion, $rule.program);
                   $logCandidates = @(Get-ChildItem -Path $logCandidatesPath -Filter $logCandidatesFilter);
                   $imageBuildTaskValidations += @{
                     'program' = $rule.program;
