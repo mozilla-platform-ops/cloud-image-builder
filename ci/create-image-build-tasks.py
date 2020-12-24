@@ -297,7 +297,7 @@ for platform in includePlatforms:
                             taskId = machineImageBuildTaskId,
                             taskName = '02 :: build {} {}/{} machine image from {} {} disk image using {}/{} revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapOrganisation, bootstrapRepository, bootstrapRevision, platform, target['group']),
                             taskDescription = 'build {} {}/{} machine image from {} {} disk image using {}/{} revision {} and deploy to {} {}'.format(platform, pool['domain'], pool['variant'], platform, key, bootstrapOrganisation, bootstrapRepository, bootstrapRevision, platform, target['group']),
-                            maxRunMinutes = 180,
+                            maxRunMinutes = 240 if key in ['win2012'] else 180,
                             retries = 5,
                             retriggerOnExitCodes = [ 123 ],
                             dependencies = machineImageBuildDependencies,
