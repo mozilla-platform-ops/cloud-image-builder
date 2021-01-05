@@ -20,7 +20,7 @@ image:
     generalize:
         mode: OOBE
         shutdown: true
-    reboot: 9
+    reboot: 12
     network:
         location: Home
         dns:
@@ -227,11 +227,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 6c04a10
+            value: e783de3
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 6c04a10
+            value: e783de3
       bootstrap: &bootstrap
           executions: []
     - platform: azure
@@ -348,11 +348,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 6c04a10
+            value: e783de3
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 6c04a10
+            value: e783de3
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3
