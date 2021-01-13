@@ -436,6 +436,7 @@ function Remove-Resource {
     [string] $resourceId,
     [string] $resourceGroupName,
     [string[]] $resourceNames = @(
+      ('cib-{0}' -f $resourceId),
       ('vm-{0}' -f $resourceId),
       ('ni-{0}' -f $resourceId),
       ('ip-{0}' -f $resourceId),
@@ -452,6 +453,7 @@ function Remove-Resource {
     do {
       foreach ($resourceName in $resourceNames) {
         $resourceType = @{
+          'cib' = 'virtual machine';
           'vm' = 'virtual machine';
           'ni' = 'network interface';
           'ip' = 'public ip address';
