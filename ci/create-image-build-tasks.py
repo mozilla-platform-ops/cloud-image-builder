@@ -252,7 +252,7 @@ for platform in includePlatforms:
                         'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
                         'cd cloud-image-builder',
                         'git reset --hard {}'.format(commitSha),
-                        'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
+                        'powershell -File WIP_packer\\build-packer-image.ps1' if key in ['win10-64'] else 'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
                     ],
                     scopes = [
                         'generic-worker:os-group:relops-3/win2019/Administrators',
