@@ -3,6 +3,11 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
+param (
+  [Parameter(Mandatory = $true)]
+  [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2')]
+  [string] $location
+)
 
 function Write-Log {
   param (
@@ -42,8 +47,11 @@ function Write-Log {
     Write-Host  -object $message -ForegroundColor $fc
   }
 }
-function Build-Packer-Image {
+function Build-PackerImage {
   param (
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2')]
+    [string] $location
   )
   begin {
     Write-host Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -59,7 +67,6 @@ function Build-Packer-Image {
      # The values that are label with markco in the yaml file will be replaced next week
     
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64_packer.yaml') -Raw | ConvertFrom-Yaml)
-     $build_location = $yaml_data.azure.build_location
 
      # Get taskcluster secrets
      $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
@@ -68,7 +75,7 @@ function Build-Packer-Image {
      $Env:client_id = $secret.azure.packer.client_id
      $Env:client_secret = $secret.azure.packer.client_secret
      $Env:tenant_id = $secret.azure.account
-     $Env:subscription_id $secret.azure.subscription 
+     $Env:subscription_id = $secret.azure.subscription 
      $Env:image_publisher = $yaml_data.image.publisher
      $Env:image_offer = $yaml_data.image.offer
      $Env:image_sku = $yaml_data.image.sku
@@ -81,31 +88,18 @@ function Build-Packer-Image {
      $Env:sourceRevision = $yaml_data.vm.tags.sourceRevision
      $Env:deploymentId = $yaml_data.vm.tags.deploymentId
      $Env:managed_by = $yaml_data.vm.tags.managed_by
-     $Env:location = $build_location
+     $Env:location = $location
      $Env:vm_size = $yaml_data.vm.size
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
-     $Env:managed_image_name = ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $build_location, $yaml_data.vm.tags.deploymentId)
-     $Env:temp_resource_group_name = ('{0}-{1}-{2}-tmp3' -f $yaml_data.vm.tags.workerType, $build_location, $yaml_data.vm.tags.deploymentId)
+     $Env:managed_image_name = ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId)
+     $Env:temp_resource_group_name = ('{0}-{1}-{2}-tmp3' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId)
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
-     powershell .\packer.exe build  -force .\packer-json-template.json
-     
-     # With the foreach Powershell waits for one build to finish before startting the next one
-     # Was trying to copy the image between regions
-     # Alternatively we could have a seperate task per region. 
-         
-     $locations = $yaml_data.azure.locations
-     foreach ($location in $locations) {
-        if ($location -ne $build_location ) {
-            write-host ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId)
-            az extension add --name image-copy-extension
-            az image copy --source-resource-group $yaml_data.azure.managed_image_resource_group_name --source-object-name  $Env:managed_image_name --target-location $location --target-resource-group $yaml_data.azure.managed_image_resource_group_name --cleanup
-        }
-     }
+     powershell .\packer.exe build -force .\packer-json-template.json
   }
   end {
     write-host Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 
-Build-Packer-Image 
+Build-PackerImage -location $location

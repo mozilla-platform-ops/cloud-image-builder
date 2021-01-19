@@ -219,55 +219,110 @@ for platform in includePlatforms:
             isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
-                buildTaskId = slugid.nice()
-                createTask(
-                    queue = queue,
-                    taskId = buildTaskId,
-                    taskName = '01 :: build {} {} disk image from {} {} iso'.format(platform, key, config['image']['os'], config['image']['edition']),
-                    taskDescription = 'build a customised {} disk image file for {}, from iso file {} and upload to cloud storage'.format(key, platform, os.path.basename(config['iso']['source']['key'])),
-                    dependencies = [ yamlLintTaskId ],
-                    maxRunMinutes = 180,
-                    retries = 1,
-                    retriggerOnExitCodes = [ 123 ],
-                    provisioner = 'relops-3',
-                    workerType = 'win2019',
-                    priority = 'high',
-                    artifacts = [
-                        {
-                            'type': 'file',
-                            'name': 'public/unattend.xml',
-                            'path': 'unattend.xml'
+                if key in ['win10-64', 'win10-64-gpu']:
+                    packerConfigPath = '{}/../WIP_packer/{}_packer.yaml'.format(os.path.dirname(__file__), key)
+                    with open(packerConfigPath, 'r') as packerConfigStream:
+                        packerConfig = yaml.safe_load(packerConfigStream)
+                        for location in packerConfig['azure']['locations']:
+                            buildTaskId = slugid.nice()
+                            createTask(
+                                queue = queue,
+                                taskId = buildTaskId,
+                                taskName = '01 :: build {} {} packer image'.format(platform, key),
+                                taskDescription = 'build a customised {} packer image file for {}'.format(key, platform),
+                                dependencies = [ yamlLintTaskId ],
+                                maxRunMinutes = 180,
+                                retries = 1,
+                                retriggerOnExitCodes = [ 123 ],
+                                provisioner = 'relops-3',
+                                workerType = 'win2019',
+                                priority = 'high',
+                                artifacts = [
+                                    {
+                                        'type': 'file',
+                                        'name': 'public/unattend.xml',
+                                        'path': 'unattend.xml'
+                                    },
+                                    {
+                                        'type': 'file',
+                                        'name': 'public/image-bucket-resource.json',
+                                        'path': 'image-bucket-resource.json'
+                                    }
+                                ],
+                                osGroups = [
+                                    'Administrators'
+                                ],
+                                features = {
+                                    'taskclusterProxy': True,
+                                    'runAsAdministrator': True
+                                },
+                                commands = [
+                                    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
+                                    'cd cloud-image-builder',
+                                    'git reset --hard {}'.format(commitSha),
+                                    'powershell -File WIP_packer\\build-packer-image.ps1 {}'.format(location)
+                                ],
+                                scopes = [
+                                    'generic-worker:os-group:relops-3/win2019/Administrators',
+                                    'generic-worker:run-as-administrator:relops-3/win2019',
+                                    'secrets:get:project/relops/image-builder/dev'
+                                ],
+                                routes = [
+                                    'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
+                                    'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+                                ],
+                                taskGroupId = taskGroupId
+                            )
+                else:
+                    buildTaskId = slugid.nice()
+                    createTask(
+                        queue = queue,
+                        taskId = buildTaskId,
+                        taskName = '01 :: build {} {} disk image from {} {} iso'.format(platform, key, config['image']['os'], config['image']['edition']),
+                        taskDescription = 'build a customised {} disk image file for {}, from iso file {} and upload to cloud storage'.format(key, platform, os.path.basename(config['iso']['source']['key'])),
+                        dependencies = [ yamlLintTaskId ],
+                        maxRunMinutes = 180,
+                        retries = 1,
+                        retriggerOnExitCodes = [ 123 ],
+                        provisioner = 'relops-3',
+                        workerType = 'win2019',
+                        priority = 'high',
+                        artifacts = [
+                            {
+                                'type': 'file',
+                                'name': 'public/unattend.xml',
+                                'path': 'unattend.xml'
+                            },
+                            {
+                                'type': 'file',
+                                'name': 'public/image-bucket-resource.json',
+                                'path': 'image-bucket-resource.json'
+                            }
+                        ],
+                        osGroups = [
+                            'Administrators'
+                        ],
+                        features = {
+                            'taskclusterProxy': True,
+                            'runAsAdministrator': True
                         },
-                        {
-                            'type': 'file',
-                            'name': 'public/image-bucket-resource.json',
-                            'path': 'image-bucket-resource.json'
-                        }
-                    ],
-                    osGroups = [
-                        'Administrators'
-                    ],
-                    features = {
-                        'taskclusterProxy': True,
-                        'runAsAdministrator': True
-                    },
-                    commands = [
-                        'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
-                        'cd cloud-image-builder',
-                        'git reset --hard {}'.format(commitSha),
-                        'powershell -File WIP_packer\\build-packer-image.ps1' if key in ['win10-64'] else 'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
-                    ],
-                    scopes = [
-                        'generic-worker:os-group:relops-3/win2019/Administrators',
-                        'generic-worker:run-as-administrator:relops-3/win2019',
-                        'secrets:get:project/relops/image-builder/dev'
-                    ],
-                    routes = [
-                        'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
-                        'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
-                    ],
-                    taskGroupId = taskGroupId
-                )
+                        commands = [
+                            'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
+                            'cd cloud-image-builder',
+                            'git reset --hard {}'.format(commitSha),
+                            'powershell -File build-disk-image.ps1 {} {}'.format(platform, key)
+                        ],
+                        scopes = [
+                            'generic-worker:os-group:relops-3/win2019/Administrators',
+                            'generic-worker:run-as-administrator:relops-3/win2019',
+                            'secrets:get:project/relops/image-builder/dev'
+                        ],
+                        routes = [
+                            'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
+                            'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+                        ],
+                        taskGroupId = taskGroupId
+                    )
             else:
                 buildTaskId = None
                 print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
@@ -276,7 +331,7 @@ for platform in includePlatforms:
                 machineImageBuildTaskIdsForPool = []
                 #taggingTaskIdsForPool = []
                 for target in [t for t in config['target'] if t['group'].endswith('-{}'.format(pool['domain'])) and t['region'].lower().replace(' ', '') in includeRegions]:
-                    queueMachineImageBuild = (not poolDeploy) and (platform in platformClient) and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
+                    queueMachineImageBuild = (key not in ['win10-64', 'win10-64-gpu']) and (not poolDeploy) and (platform in platformClient) and (queueDiskImageBuild or machineImageManifestHasChanged(platform, key, commitSha, target['group']) or not machineImageExists(
                         taskclusterIndex = index,
                         platformClient = platformClient[platform],
                         platform = platform,
