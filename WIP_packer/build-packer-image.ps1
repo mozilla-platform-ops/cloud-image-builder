@@ -58,7 +58,7 @@ function Build-Packer-Image {
      # I am trying to have the script and json template agnostic and all unique values will come from the yaml file
      # The values that are label with markco in the yaml file will be replaced next week
     
-     $yaml_data = @((Get-Content -Path .\win10-64_packer.yaml -Raw | ConvertFrom-Yaml))
+     $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64_packer.yaml') -Raw | ConvertFrom-Yaml)
      $build_location = $yaml_data.azure.build_location
      
      # Get taskcluster secrets
@@ -88,9 +88,8 @@ function Build-Packer-Image {
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
      $Env:managed_image_name = ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $build_location, $yaml_data.vm.tags.deploymentId)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-tmp3' -f $yaml_data.vm.tags.workerType, $build_location, $yaml_data.vm.tags.deploymentId)
-         
-     # packer.exe stored at https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe
-     # No installation/ down load binary and run
+
+     (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      powershell .\packer.exe build  -force .\packer-json-template.json
      
      # With the foreach Powershell waits for one build to finish before startting the next one
