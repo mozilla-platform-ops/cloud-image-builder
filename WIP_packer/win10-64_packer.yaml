@@ -17,10 +17,10 @@ vm:
     size: Standard_B2S
     disk_additional_size: 30
     tags:
-       Project: Markco Packer test
-       workerType: gecko-t-win10-64-azure
-       sourceOrganisation: mozilla-platform-ops
-       sourceRepository: ronin_puppet
-       sourceRevision: cloud_windows
-       deploymentId: 03fc422
-       managed_by: packer
+        Project: Markco Packer test
+        workerType: gecko-t-win10-64-azure
+        sourceOrganisation: mozilla-platform-ops
+        sourceRepository: ronin_puppet
+        sourceRevision: cloud_windows
+        deploymentId: 03fc422
+        managed_by: packer
