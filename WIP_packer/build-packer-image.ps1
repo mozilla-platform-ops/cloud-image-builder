@@ -60,17 +60,15 @@ function Build-Packer-Image {
     
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64_packer.yaml') -Raw | ConvertFrom-Yaml)
      $build_location = $yaml_data.azure.build_location
-     
+
      # Get taskcluster secrets
-     # $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
-     # With the secrets in place the packer build completes successfully
+     $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
      # The image copy fails on authentication
      
-     write-host location is $location
-     $Env:client_id = # TC secrets azure.packer.client_id
-     $Env:client_secret = # TC secrets azure.packer.client_secret
-     $Env:tenant_id = # TC secrets azure.account
-     $Env:subscription_id # TC secrets azure.subscription 
+     $Env:client_id = $secret.azure.packer.client_id
+     $Env:client_secret = $secret.azure.packer.client_secret
+     $Env:tenant_id = $secret.azure.account
+     $Env:subscription_id $secret.azure.subscription 
      $Env:image_publisher = $yaml_data.image.publisher
      $Env:image_offer = $yaml_data.image.offer
      $Env:image_sku = $yaml_data.image.sku
@@ -102,7 +100,6 @@ function Build-Packer-Image {
             write-host ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId)
             az extension add --name image-copy-extension
             az image copy --source-resource-group $yaml_data.azure.managed_image_resource_group_name --source-object-name  $Env:managed_image_name --target-location $location --target-resource-group $yaml_data.azure.managed_image_resource_group_name --cleanup
-            
         }
      }
   }
