@@ -228,8 +228,8 @@ for platform in includePlatforms:
                             createTask(
                                 queue = queue,
                                 taskId = buildTaskId,
-                                taskName = '01 :: build {} {} packer image'.format(platform, key),
-                                taskDescription = 'build a customised {} packer image file for {}'.format(key, platform),
+                                taskName = '01 :: build {} {} packer image for {}'.format(platform, key, location),
+                                taskDescription = 'build a customised {} packer image file for {} {}'.format(key, platform, location),
                                 dependencies = [ yamlLintTaskId ],
                                 maxRunMinutes = 180,
                                 retries = 1,
