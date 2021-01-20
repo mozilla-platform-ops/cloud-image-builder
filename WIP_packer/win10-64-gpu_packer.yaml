@@ -1,0 +1,24 @@
+---
+image:
+    publisher: MicrosoftWindowsDesktop
+    offer: Windows-10
+    sku: 19h1-evd
+azure:
+    managed_image_resource_group_name: markcoPacker2
+    managed_image_storage_account_type: Standard_LRS
+    build_location: eastus
+    locations:
+        - centralus
+        - southcentralus
+        - eastus
+vm:
+    size: Standard_NV6
+    disk_additional_size: 30
+    tags:
+        Project: Markco Packer test
+        workerType: gecko-t-win10-64-gpu-azure
+        sourceOrganisation: mozilla-platform-ops
+        sourceRepository: ronin_puppet
+        sourceRevision: cloud_windows
+        deploymentId: 03fc422
+        managed_by: packer
