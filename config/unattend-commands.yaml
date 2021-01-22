@@ -248,7 +248,7 @@
 #           - false
 # - description: enable winrm on windows 7
 # yamllint disable-line rule:line-length
-#   command: powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-Expression -Command (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/enable-winrm.ps1');" >> C:\log\unattend-enable-winrm-stdout.log 2>> C:\log\unattend-enable-winrm-stderr.log
+#   command: powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-Expression -Command (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/main/scripts/enable-winrm.ps1');" >> C:\log\unattend-enable-winrm-stdout.log 2>> C:\log\unattend-enable-winrm-stderr.log
 #   target:
 #       cloud:
 #           - azure

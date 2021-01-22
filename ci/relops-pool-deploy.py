@@ -30,8 +30,8 @@ taskclusterWorkerManager = taskcluster.WorkerManager(taskcluster.optionsFromEnvi
 
 updateRole(
   auth = taskclusterAuth,
-  configPath = 'ci/config/role/branch-master.yaml',
-  roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:master')
+  configPath = 'ci/config/role/branch-main.yaml',
+  roleId = 'repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:main')
 
 for pool in ['gecko-t/win10-64-azure', 'gecko-t/win7-32-azure']:
   updateRole(

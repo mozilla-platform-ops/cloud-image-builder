@@ -216,7 +216,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/set-regional-fqdn.ps1
+        url: https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/main/scripts/set-regional-fqdn.ps1
 - name: set-oobe-unattend
   savepath: Windows\Temp\set-oobe-unattend.ps1
   unattend:
@@ -260,7 +260,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/master/scripts/set-oobe-unattend.ps1
+        url: https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/main/scripts/set-oobe-unattend.ps1
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
