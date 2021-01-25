@@ -52,6 +52,8 @@ tasks:
           image: python:latest
           features:
             taskclusterProxy: true
+          env:
+            GITHUB_HEAD_SHA: ${event.after}
           command:
             - /bin/bash
             - '--login'
@@ -59,7 +61,7 @@ tasks:
             # yamllint disable rule:line-length
             - >-
               git clone --quiet ${event.repository.clone_url}
-              && cd cloud-image-builder
+              && cd ${event.repository.name}
               && git fetch
               && git checkout ${head_rev}
               && git reset --hard ${event.after}
