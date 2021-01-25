@@ -25,7 +25,7 @@ tasks:
           - index.project.relops.${event.repository.name}.decision.revision.${event.after}
           - index.project.relops.${event.repository.name}.decision.latest
         scopes:
-          - assume:repo:github.com/${event.organization.name}/${event.repository.name}:branch:${event.repository.default_branch}
+          - assume:repo:github.com/${event.organization.login}/${event.repository.name}:branch:${event.repository.default_branch}
           - queue:scheduler-id:taskcluster-github
         extra:
           github:
