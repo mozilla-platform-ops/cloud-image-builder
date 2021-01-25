@@ -53,12 +53,12 @@ includePlatforms = [
     'azure'
 ]
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
-#if currentEnvironment == 'production':
-#    print('info: skipping production environment builds')
-#    quit()
-if currentEnvironment == 'staging':
-    print('info: skipping staging environment builds. environment is busted')
+if currentEnvironment == 'production':
+    print('info: skipping production environment builds')
     quit()
+#if currentEnvironment == 'staging':
+#    print('info: skipping staging environment builds')
+#    quit()
 
 overwriteDiskImage = False
 overwriteMachineImage = False
