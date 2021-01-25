@@ -1,52 +1,69 @@
 ---
-version: 0
+version: 1
+policy:
+  pullRequests: collaborators
 tasks:
-    - provisionerId: relops-3
-      workerType: decision
-      routes:
+  $let:
+    head_rev:
+      $if: tasks_for == "github-pull-request"
+      then: ${event.pull_request.head.sha}
+      else: ${event.after}
+    repository:
+      $if: tasks_for == "github-pull-request"
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+  in:
+    $match:
+      (tasks_for == "github-push"):
+        taskId:
+          $eval: as_slugid("decision")
+        deadline:
+          $fromNow: 1 day
+        provisionerId: relops-3
+        workerType: decision
+        routes:
           - index.project.relops.cloud-image-builder.decision.revision.{{event.head.sha}}
           - index.project.relops.cloud-image-builder.decision.latest
-      scopes:
+        scopes:
           - assume:repo:github.com/mozilla-platform-ops/cloud-image-builder:branch:{{event.head.repo.branch}}
           - queue:scheduler-id:taskcluster-github
-      extra:
+        extra:
           github:
-              env: true
-              events:
-                  # - pull_request.*
-                  - push
+            env: true
           data:
-              base:
-                  sha: '{{event.base.sha}}'
-                  user:
-                      login: '{{event.base.user.login}}'
-              head:
-                  sha: '{{event.head.sha}}'
-                  user:
-                      email: '{{event.head.user.email}}'
-      payload:
-          maxRunTime: 600
-          image: python
-          features:
-              taskclusterProxy: true
-          command:
-              - '/bin/bash'
-              - '--login'
-              - '-c'
-              # yamllint disable rule:line-length
-              - >-
-                  git clone --quiet {{event.head.repo.url}}
-                  && cd cloud-image-builder
-                  && git fetch
-                  && git checkout {{event.head.repo.branch}}
-                  && git reset --hard {{event.head.sha}}
-                  && pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$"
-                  && python ci/create-image-build-tasks.py
-              # yamllint enable rule:line-length
-      metadata:
+            base:
+              sha: '{{event.base.sha}}'
+              user:
+                login: '{{event.base.user.login}}'
+            head:
+              sha: '{{event.head.sha}}'
+              user:
+                email: '{{event.head.user.email}}'
+        metadata:
           name: '00 :: create maintenance and image build tasks'
           description: |+
-              determine which cloud images should be built, where they should
-              be deployed and trigger appropriate build tasks for the same
-          owner: '{{event.head.user.email}}'
-          source: '{{event.head.repo.url}}'
+              determine which cloud images should be built,
+              where they should be deployed and trigger appropriate
+              build tasks for the same
+          owner: ${event.head.user.email}
+          source: ${event.repository.url}
+        payload:
+          maxRunTime: 600
+          image: python:latest
+          features:
+            taskclusterProxy: true
+          command:
+            - /bin/bash
+            - '--login'
+            - '-c'
+            # yamllint disable rule:line-length
+            - >-
+              git clone --quiet {{event.head.repo.url}}
+              && cd cloud-image-builder
+              && git fetch
+              && git checkout {{event.head.repo.branch}}
+              && git reset --hard {{event.head.sha}}
+              && python -m pip install --upgrade pip | grep -v "^[[:space:]]*$"
+              && pip install -r ci/requirements.txt | grep -v "^[[:space:]]*$"
+              && python ci/create-image-build-tasks.py
+            # yamllint enable rule:line-length
