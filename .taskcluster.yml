@@ -25,7 +25,7 @@ tasks:
           - index.project.relops.${event.repository.name}.decision.revision.${event.after}
           - index.project.relops.${event.repository.name}.decision.latest
         scopes:
-          - assume:repo:github.com/mozilla-platform-ops/${event.repository.name}:branch:main
+          - assume:repo:github.com/${event.organization.name}/${event.repository.name}:branch:${event.repository.default_branch}
           - queue:scheduler-id:taskcluster-github
         extra:
           github:
@@ -38,14 +38,14 @@ tasks:
             head:
               sha: ${event.after}
               user:
-                email: ${event.sender.login}@users.noreply.github.com
+                email: ${event.pusher.email}
         metadata:
           name: '00 :: create maintenance and image build tasks'
           description: |+
               determine which cloud images should be built,
               where they should be deployed and trigger appropriate
               build tasks for the same
-          owner: ${event.sender.login}@users.noreply.github.com
+          owner: ${event.pusher.email}
           source: ${event.repository.html_url}
         payload:
           maxRunTime: 600
