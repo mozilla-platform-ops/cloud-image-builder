@@ -234,8 +234,8 @@ def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
         'public/image-bucket-resource.json')
     image = None
     if platform == 'azure':
-        imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
         try:
+            imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
             image = platformClient.images.get(group, imageName)
             print('{} machine image: {} found with id: {}'.format(platform, imageName, image.id))
         except:
