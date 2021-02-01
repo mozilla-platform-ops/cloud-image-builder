@@ -238,12 +238,12 @@ def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
             imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
             try:
                 image = platformClient.images.get(group, imageName)
-                print('{} machine image: {} found with id: {}'.format(platform, imageName, image.id))
+                print('info: {} machine image: {} found with id: {}'.format(platform, imageName, image.id))
             except:
                 image = None
-                print('{} machine image: {} not found'.format(platform, imageName))
+                print('info: {} machine image - {} not found'.format(platform, imageName))
         except:
             image = None
-            print('{} machine image: failed to determine latest image revision for {}-{}'.format(platform, group.replace('rg-', ''), key.replace('-{}'.format(platform), '')))
+            print('debug: {} machine image - failed to determine latest image revision for {}-{}'.format(platform, group.replace('rg-', ''), key.replace('-{}'.format(platform), '')))
     #elif platform == 'amazon':
     return image is not None
