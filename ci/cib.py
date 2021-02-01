@@ -238,7 +238,7 @@ def machineImageExists(taskclusterIndex, platformClient, platform, group, key):
             imageName = '{}-{}-{}'.format(group.replace('rg-', ''), key.replace('-{}'.format(platform), ''), artifact['build']['revision'][0:7])
             try:
                 image = platformClient.images.get(group, imageName)
-                print('info: {} machine image: {} found with id: {}'.format(platform, imageName, image.id))
+                print('info: {} machine image - {} found with id: {}'.format(platform, imageName, image.id))
             except:
                 image = None
                 print('info: {} machine image - {} not found'.format(platform, imageName))
