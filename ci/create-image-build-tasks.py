@@ -20,7 +20,7 @@ taskclusterOptions = { 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] }
 
 auth = taskcluster.Auth(taskclusterOptions)
 queue = taskcluster.Queue(taskclusterOptions)
-index = taskcluster.Index(taskcluster.optionsFromEnvironment())
+index = taskcluster.Index(taskclusterOptions)
 secrets = taskcluster.Secrets(taskclusterOptions)
 
 secret = secrets.get('project/relops/image-builder/dev')['secret']
