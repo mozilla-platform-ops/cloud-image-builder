@@ -295,7 +295,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win7.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win7-verbose.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -330,7 +330,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10-verbose.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -365,7 +365,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2012.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2012-verbose.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -400,7 +400,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2016.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2016-verbose.conf
 - name: nxlog.conf
   savepath: Windows\Temp\nxlog.conf
   unattend:
@@ -435,7 +435,7 @@
   sources:
       - platform: url
         # yamllint disable-line rule:line-length
-        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2019.conf
+        url: https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2019-verbose.conf
 - name: EC2Install.zip
   savepath: Windows\Temp
   unattend:
