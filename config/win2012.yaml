@@ -227,11 +227,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 5017fdd
+            value: 0fc82f7
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 5017fdd
+            value: 0fc82f7
       bootstrap: &bootstrap
           executions: []
     - platform: azure
@@ -348,11 +348,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 5017fdd
+            value: 0fc82f7
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 5017fdd
+            value: 0fc82f7
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3
