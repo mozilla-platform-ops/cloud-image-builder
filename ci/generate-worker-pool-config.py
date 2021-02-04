@@ -150,16 +150,16 @@ workerPool = {
                     'wstServerURL': 'https://websocktunnel-stage.taskcluster.nonprod.cloudops.mozgcp.net' if currentEnvironment == 'staging' else 'https://firefoxci-websocktunnel.services.mozilla.com'
                 }
             }
-        }
+        },
+        'virtualMachineProfile': {
+          'priority': 'Spot',
+          'evictionPolicy': 'Deallocate',
+          'billingProfile': {
+            'maxPrice': -1
+          }
+        } if 'lifecycle' in poolConfig and poolConfig['lifecycle'] == 'spot' else {}
     }, filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target']))))
 }
-if 'lifecycle' in poolConfig and poolConfig['lifecycle'] == 'spot':
-    for pI in workerPool['launchConfigs']:
-        workerPool['launchConfigs'][pI]['priority'] = 'Spot'
-        workerPool['launchConfigs'][pI]['evictionPolicy'] = 'Deallocate'
-        workerPool['launchConfigs'][pI]['billingProfile'] = {
-            'maxPrice': -1
-        }
 
 # create an artifact containing the worker pool config that can be used for manual worker manager updates in the taskcluster web ui
 with open('../{}.json'.format(poolName.replace('/', '-')), 'w') as file:
