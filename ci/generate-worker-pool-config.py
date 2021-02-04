@@ -67,6 +67,7 @@ try:
 except:
     print('warn: error reading commit message for sha: {}'.format(commitSha))
 
+isSpot = 'lifecycle' in poolConfig and poolConfig['lifecycle'] == 'spot'
 workerPool = {
     'minCapacity': poolConfig['capacity']['minimum'],
     'maxCapacity': poolConfig['capacity']['maximum'],
@@ -151,13 +152,11 @@ workerPool = {
                 }
             }
         },
-        'virtualMachineProfile': {
-          'priority': 'Spot',
-          'evictionPolicy': 'Deallocate',
-          'billingProfile': {
+        'priority': 'Spot' if isSpot else None,
+        'evictionPolicy': 'Deallocate' if isSpot else None,
+        'billingProfile': {
             'maxPrice': -1
-          }
-        } if 'lifecycle' in poolConfig and poolConfig['lifecycle'] == 'spot' else {}
+        } if isSpot else None
     }, filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target']))))
 }
 
