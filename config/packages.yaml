@@ -785,7 +785,7 @@
         pass: auditUser
         synchronicity: synchronous
         priority: 101
-        reboot: Always
+        reboot: Never
       - description: 'netfx45 :: registry tls 1.2 enable'
         # yamllint disable-line rule:line-length
         command: cmd /c reg add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NetFramework\v4.0.30319 /v SchUseStrongCrypto /t REG_DWORD /d 1 /f

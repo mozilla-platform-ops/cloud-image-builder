@@ -20,7 +20,7 @@ image:
     generalize:
         mode: OOBE
         shutdown: true
-    reboot: 10
+    reboot: 9
     network:
         location: Home
         dns:
