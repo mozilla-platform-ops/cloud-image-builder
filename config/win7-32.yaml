@@ -103,7 +103,7 @@ manager:
               - southcentralus
               - eastus
               - eastus2
-          lifecycle: spot
+          lifecycle: on-demand
           owner: grenade@mozilla.com
           provider: azure
           platform: azure

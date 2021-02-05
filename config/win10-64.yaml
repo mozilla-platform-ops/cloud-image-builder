@@ -104,7 +104,7 @@ manager:
               - southcentralus
               - eastus
               - eastus2
-          lifecycle: normal
+          lifecycle: on-demand
           owner: mcornmesser@mozilla.com
           provider: azure
           platform: azure

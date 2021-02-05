@@ -99,7 +99,7 @@ manager:
               reregistration: 86400
           locations:
               - centralus
-          lifecycle: normal
+          lifecycle: on-demand
           owner: grenade@mozilla.com
           provider: azure
           platform: azure

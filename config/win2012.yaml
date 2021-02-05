@@ -104,7 +104,7 @@ manager:
               - eastus
               - eastus2
               - westus
-          lifecycle: normal
+          lifecycle: on-demand
           owner: grenade@mozilla.com
           provider: azure
           platform: azure

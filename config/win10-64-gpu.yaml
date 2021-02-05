@@ -100,7 +100,7 @@ manager:
               reregistration: 86400
           locations:
               - eastus
-          lifecycle: normal
+          lifecycle: on-demand
           owner: grenade@mozilla.com
           provider: azure
           platform: azure
