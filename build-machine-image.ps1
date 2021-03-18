@@ -655,11 +655,11 @@ function Initialize-Platform {
         try {
           Connect-AzAccount `
             -ServicePrincipal `
-            -Credential (New-Object System.Management.Automation.PSCredential($secret.azure.id, (ConvertTo-SecureString `
-              -String $secret.azure.key `
+            -Credential (New-Object System.Management.Automation.PSCredential($secret.azure_beta.app_id, (ConvertTo-SecureString `
+              -String $secret.azure_beta.password `
               -AsPlainText `
               -Force))) `
-            -Tenant $secret.azure.account | Out-Null;
+            -Tenant $secret.azure_beta.tennant_id | Out-Null;
           Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
         } catch {
           Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
