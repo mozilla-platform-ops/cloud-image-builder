@@ -20,15 +20,11 @@ currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TAS
 taskclusterWorkerManagerClient = taskcluster.WorkerManager(taskclusterOptions)
 
 azureComputeManagementClient = ComputeManagementClient(
-    #ServicePrincipalCredentials(
-    #    client_id = secret['azure']['id'],
-    #    secret = secret['azure']['key'],
-    #    tenant = secret['azure']['account']),
     ClientSecretCredential(
-        tenant_id=secret['azure']['account'],
-        client_id=secret['azure']['id'],
-        client_secret=secret['azure']['key']),
-    secret['azure']['subscription'])
+        tenant_id=secret['azure_beta']['tenant_id'],
+        client_id=secret['azure_beta']['app_id'],
+        client_secret=secret['azure_beta']['password']),
+    secret['azure_beta']['subscription_id'])
 
 
 def getLatestImage(resourceGroup, key):
@@ -48,7 +44,6 @@ commitSha = os.getenv('GITHUB_HEAD_SHA')
 platform = os.getenv('platform')
 key = os.getenv('key')
 poolName = os.getenv('pool')
-subscriptionId = 'dd0d4271-9b26-4c37-a025-1284a43a4385'
 config = yaml.safe_load(urllib.request.urlopen('https://raw.githubusercontent.com/mozilla-platform-ops/cloud-image-builder/{}/config/{}.yaml'.format(commitSha, key)).read().decode())
 poolConfig = next(p for p in config['manager']['pool'] if '{}/{}'.format(p['domain'], p['variant']) == poolName)
 
@@ -78,7 +73,7 @@ workerPool = {
     'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in poolConfig['locations'] and x['location'] in includeRegions, map(lambda x: {
         'location': x['region'].lower().replace(' ', ''),
         'capacityPerInstance': 1,
-        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(subscriptionId, x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
+        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(secret['azure_beta']['subscription_id'], x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
         'hardwareProfile': {
             'vmSize': x['machine']['format'].format(x['machine']['cpu'])
         },

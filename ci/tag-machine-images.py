@@ -89,10 +89,10 @@ if platform == 'azure':
         #    secret = secret['azure']['key'],
         #    tenant = secret['azure']['account']),
         ClientSecretCredential(
-            tenant_id=secret['azure']['account'],
-            client_id=secret['azure']['id'],
-            client_secret=secret['azure']['key']),
-        secret['azure']['subscription'])
+            tenant_id=secret['azure_beta']['tenant_id'],
+            client_id=secret['azure_beta']['app_id'],
+            client_secret=secret['azure_beta']['password']),
+        secret['azure_beta']['subscription_id'])
 
     pattern = re.compile('^{}-{}-([a-f0-9]{{7}})-([a-f0-9]{{7}})$'.format(group.replace('rg-', ''), key))
     images = list([x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)])

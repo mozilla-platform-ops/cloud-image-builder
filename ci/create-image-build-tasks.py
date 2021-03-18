@@ -28,15 +28,11 @@ secret = secrets.get('project/relops/image-builder/dev')['secret']
 
 platformClient = {
     'azure': ComputeManagementClient(
-        #ServicePrincipalCredentials(
-        #    client_id = secret['azure']['id'],
-        #    secret = secret['azure']['key'],
-        #    tenant = secret['azure']['account']),
         ClientSecretCredential(
-            tenant_id=secret['azure']['account'],
-            client_id=secret['azure']['id'],
-            client_secret=secret['azure']['key']),
-        secret['azure']['subscription'])
+            tenant_id=secret['azure_beta']['tenant_id'],
+            client_id=secret['azure_beta']['app_id'],
+            client_secret=secret['azure_beta']['password']),
+        secret['azure_beta']['subscription_id'])
 }
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')

@@ -38,24 +38,24 @@ def purge_filter(resource, resource_group_name = None):
 
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
     secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
-    secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure']
+    secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure_beta']
     print('secrets fetched using taskcluster proxy')
 elif 'TASKCLUSTER_ROOT_URL' in os.environ and 'TASKCLUSTER_CLIENT_ID' in os.environ and 'TASKCLUSTER_ACCESS_TOKEN' in os.environ:
     secretsClient = taskcluster.Secrets(taskcluster.optionsFromEnvironment())
-    secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure']
+    secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure_beta']
     print('secrets fetched using taskcluster environment credentials')
 elif os.path.isfile('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME'])):
-    secret = yaml.safe_load(open('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME']), 'r'))['azure']
+    secret = yaml.safe_load(open('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME']), 'r'))['azure_beta']
     print('secrets obtained from local filesystem')
 else:
     print('failed to obtain taskcluster secrets')
     exit(1)
 
 #azureCredentials = ServicePrincipalCredentials(client_id = secret['id'], secret = secret['key'], tenant = secret['account'])
-azureCredentials = ClientSecretCredential(tenant_id=secret['account'], client_id=secret['id'], client_secret=secret['key'])
-computeClient = ComputeManagementClient(azureCredentials, secret['subscription'])
-networkClient = NetworkManagementClient(azureCredentials, secret['subscription'])
-resourceClient = ResourceManagementClient(azureCredentials, secret['subscription'])
+azureCredentials = ClientSecretCredential(tenant_id=secret['tenant_id'], client_id=secret['app_id'], client_secret=secret['password'])
+computeClient = ComputeManagementClient(azureCredentials, secret['subscription_id'])
+networkClient = NetworkManagementClient(azureCredentials, secret['subscription_id'])
+resourceClient = ResourceManagementClient(azureCredentials, secret['subscription_id'])
 
 allGroups = list(resourceClient.resource_groups.list())
 targetGroups = sys.argv[1:] if len(sys.argv) > 1 else list(map(lambda x: x.name, filter(purge_filter, allGroups)))

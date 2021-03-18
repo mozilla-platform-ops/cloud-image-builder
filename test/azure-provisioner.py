@@ -206,18 +206,18 @@ azureConfig = yaml.safe_load(open('{}/.azure.yaml'.format(os.getenv('HOME')), 'r
 #    secret = azureConfig['secret'],
 #    tenant = azureConfig['tenant'])
 azureCredentials = ClientSecretCredential(
-    tenant_id=secret['azure']['account'],
-    client_id=secret['azure']['id'],
-    client_secret=secret['azure']['key'])
+    tenant_id=secret['azure_beta']['tenant_id'],
+    client_id=secret['azure_beta']['app_id'],
+    client_secret=secret['azure_beta']['password'])
 azureComputeManagementClient = ComputeManagementClient(
     azureCredentials,
-    azureConfig['subscription'])
+    secret['azure_beta']['subscription_id'])
 azureNetworkManagementClient = NetworkManagementClient(
     azureCredentials,
-    azureConfig['subscription'])
+    secret['azure_beta']['subscription_id'])
 azureResourceManagementClient = ResourceManagementClient(
     azureCredentials,
-    azureConfig['subscription'])
+    secret['azure_beta']['subscription_id'])
 
 
 # provision until interrupted [ctrl + c]
