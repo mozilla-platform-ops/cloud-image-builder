@@ -77,7 +77,7 @@ switch ($platform) {
         -String $secret.azure_beta.password `
         -AsPlainText `
         -Force))) `
-      -Tenant $secret.azure_beta.tennant_id | Out-Null;
+      -Tenant $secret.azure_beta.tenant_id | Out-Null;
 
     $azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
     $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);

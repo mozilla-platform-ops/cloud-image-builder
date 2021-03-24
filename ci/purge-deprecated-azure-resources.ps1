@@ -65,7 +65,7 @@ Connect-AzAccount `
     -String $secret.azure_beta.password `
     -AsPlainText `
     -Force))) `
-  -Tenant $secret.azure_beta.tennant_id | Out-Null;
+  -Tenant $secret.azure_beta.tenant_id | Out-Null;
 
 
 $jobs = [hashtable[]] @();
