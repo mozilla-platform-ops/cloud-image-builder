@@ -461,7 +461,12 @@ function Remove-Resource {
         }[$resourceName.Split('-')[0]];
         switch ($resourceType) {
           'virtual machine' {
-            if (Get-AzVM -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+            $resource = (Get-AzVM `
+              -ResourceGroupName $resourceGroupName `
+              -Name $resourceName `
+              -ErrorAction SilentlyContinue);
+            if (($resource) -and ($resource.Name -eq $resourceName)) {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal attempt started...' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resource.Name));
               try {
                 $operation = (Remove-AzVm `
                   -ResourceGroupName $resourceGroupName `
@@ -481,7 +486,12 @@ function Remove-Resource {
             }
           }
           'network interface' {
-            if (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+            $resource = (Get-AzNetworkInterface `
+              -ResourceGroupName $resourceGroupName `
+              -Name $resourceName `
+              -ErrorAction SilentlyContinue);
+            if (($resource) -and ($resource.Name -eq $resourceName)) {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal attempt started...' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resource.Name));
               try {
                 $operation = (Remove-AzNetworkInterface `
                   -ResourceGroupName $resourceGroupName `
@@ -501,7 +511,12 @@ function Remove-Resource {
             }
           }
           'public ip address' {
-            if (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name $resourceName -ErrorAction SilentlyContinue) {
+            $resource = (Get-AzPublicIpAddress `
+              -ResourceGroupName $resourceGroupName `
+              -Name $resourceName `
+              -ErrorAction SilentlyContinue);
+            if (($resource) -and ($resource.Name -eq $resourceName)) {
+              Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal attempt started...' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $resource.Name));
               try {
                 $operation = (Remove-AzPublicIpAddress `
                   -ResourceGroupName $resourceGroupName `
@@ -521,8 +536,13 @@ function Remove-Resource {
             }
           }
           'disk' {
-            if (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue) {
+            $resource = (Get-AzDisk `
+              -ResourceGroupName $resourceGroupName `
+              -DiskName $resourceName `
+              -ErrorAction SilentlyContinue);
+            if (($resource) -and ($resource.Name -eq $resourceName)) {
               foreach ($azDisk in @(Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName $resourceName -ErrorAction SilentlyContinue)) {
+                Write-Output -InputObject (('{0} :: {1}: {2}/{3}, removal attempt started...' -f $($MyInvocation.MyCommand.Name), $resourceType, $resourceGroupName, $azDisk.Name));
                 try {
                   $operation = (Remove-AzDisk `
                     -ResourceGroupName $resourceGroupName `
@@ -545,10 +565,26 @@ function Remove-Resource {
         }
       }
     } while (
-      (Get-AzVM -ResourceGroupName $resourceGroupName -Name ('vm-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
-      (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
-      (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -or
-      (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName ('disk-{0}*' -f $resourceId) -ErrorAction SilentlyContinue)
+      (
+        (Get-AzVM -ResourceGroupName $resourceGroupName -Name ('cib-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -and
+        ((Get-AzVM -ResourceGroupName $resourceGroupName -Name ('cib-{0}' -f $resourceId) -ErrorAction SilentlyContinue).Name -eq ('cib-{0}' -f $resourceId))
+      ) -or
+      (
+        (Get-AzVM -ResourceGroupName $resourceGroupName -Name ('vm-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -and
+        ((Get-AzVM -ResourceGroupName $resourceGroupName -Name ('vm-{0}' -f $resourceId) -ErrorAction SilentlyContinue).Name -eq ('vm-{0}' -f $resourceId))
+      ) -or
+      (
+        (Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -and
+        ((Get-AzNetworkInterface -ResourceGroupName $resourceGroupName -Name ('ni-{0}' -f $resourceId) -ErrorAction SilentlyContinue).Name -eq ('ni-{0}' -f $resourceId))
+      ) -or
+      (
+        (Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue) -and
+        ((Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name ('ip-{0}' -f $resourceId) -ErrorAction SilentlyContinue).Name -eq ('ip-{0}' -f $resourceId))
+      ) -or
+      (
+        (Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName ('disk-{0}*' -f $resourceId) -ErrorAction SilentlyContinue) -and
+        ((Get-AzDisk -ResourceGroupName $resourceGroupName -DiskName ('disk-{0}*' -f $resourceId) -ErrorAction SilentlyContinue).Name -eq ('disk-{0}*' -f $resourceId))
+      )
     )
   }
   end {
@@ -578,7 +614,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.114'
+        'version' = '0.0.115'
       },
       @{
         'module' = 'powershell-yaml';
