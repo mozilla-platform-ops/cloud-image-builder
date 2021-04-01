@@ -4,7 +4,7 @@ image:
     offer: Windows-10
     sku: 19h1-evd
 azure:
-    managed_image_resource_group_name: packer-through-cib
+    managed_image_resource_group_name: rg-packer-through-cib
     managed_image_storage_account_type: Standard_LRS
     build_location: eastus
     locations:
@@ -13,6 +13,8 @@ azure:
         - southcentralus
         - eastus
         - eastus2
+        - westus
+        - westus2
 vm:
     size: Standard_B2S
     disk_additional_size: 30

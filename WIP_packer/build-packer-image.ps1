@@ -72,10 +72,10 @@ function Build-PackerImage {
      $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
      # The image copy fails on authentication
      
-     $Env:client_id = $secret.azure.packer.client_id
-     $Env:client_secret = $secret.azure.packer.client_secret
-     $Env:tenant_id = $secret.azure.account
-     $Env:subscription_id = $secret.azure.subscription 
+     $Env:client_id = $secret.relops_azure.packer.client_id
+     $Env:client_secret = $secret.relops_azure.packer.client_secret
+     $Env:tenant_id = $secret.relops_azure.tenant_id
+     $Env:subscription_id = $secret.relops_azure.subscription_id 
      $Env:image_publisher = $yaml_data.image.publisher
      $Env:image_offer = $yaml_data.image.offer
      $Env:image_sku = $yaml_data.image.sku
