@@ -1611,6 +1611,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
 
             $newCloudInstanceInstantiationAttempts = 0;
             do {
+              Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
               $logMinTime = (Get-Date);
               New-CloudInstanceFromImageExport `
                 -platform $target.platform `
