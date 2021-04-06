@@ -50,7 +50,7 @@ function Write-Log {
 function Build-PackerImage {
   param (
     [Parameter(Mandatory = $true)]
-    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2')]
+    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus2', 'westus')]
     [string] $location
   )
   begin {
