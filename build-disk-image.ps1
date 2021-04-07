@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.120'
+    'version' = '0.0.121'
   },
   @{
     'module' = 'powershell-yaml';
@@ -313,6 +313,7 @@ if (Test-Path -Path $vhdLocalPath -ErrorAction SilentlyContinue) {
       -VhdFormat $config.image.format `
       -VhdType $config.image.type `
       -VhdPartitionStyle $config.image.partition `
+      -SizeBytes ($config.image.size * 1GB) `
       -Edition $(if ($config.iso.wimindex) { $config.iso.wimindex } else { $config.image.edition }) -UnattendPath $unattendLocalPath `
       -RemoteDesktopEnable:$true `
       -DisableWindowsService $disableWindowsService `

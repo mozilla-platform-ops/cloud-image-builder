@@ -12,6 +12,7 @@ image:
     partition: MBR
     format: VHD
     type: Fixed
+    size: 64
     rdp: true
     obfuscate: true
     reseal:
