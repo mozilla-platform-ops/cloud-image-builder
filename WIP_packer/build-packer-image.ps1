@@ -5,7 +5,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 param (
   [Parameter(Mandatory = $true)]
-  [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2')]
+  [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2' )]
   [string] $location
 )
 
@@ -50,7 +50,7 @@ function Write-Log {
 function Build-PackerImage {
   param (
     [Parameter(Mandatory = $true)]
-    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus2', 'westus')]
+    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2')]
     [string] $location
   )
   begin {
