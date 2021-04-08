@@ -122,6 +122,7 @@ target:
           cpu: 3
           ram: 14
           format: Standard_DS{0}_v2
+          hyperv: V1
           agent: disable
       disk: &disk
           - os: true

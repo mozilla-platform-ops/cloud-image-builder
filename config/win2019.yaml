@@ -117,6 +117,7 @@ target:
           cpu: 2
           ram: 4
           format: Standard_A{0}
+          hyperv: V1
       disk: &disk
           - os: true
             source: windowsserver2019-datacenter-en-us-x86-64

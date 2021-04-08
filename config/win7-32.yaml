@@ -121,6 +121,7 @@ target:
           cpu: 2
           ram: 4
           format: Standard_F{0}s_v2
+          hyperv: V1
       agent: disable
       diagnostics: enable
       disk: &disk

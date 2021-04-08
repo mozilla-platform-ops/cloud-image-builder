@@ -1620,6 +1620,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 -targetResourceGroupName $target.group `
                 -targetResourceRegion $target.region `
                 -targetInstanceMachineVariantFormat $target.machine.format `
+                -targetInstanceHyperVGeneration $target.machine.hyperv `
                 -targetInstanceCpuCount $target.machine.cpu `
                 -targetInstanceRamGb $target.machine.ram `
                 -targetInstanceName $instanceName `
