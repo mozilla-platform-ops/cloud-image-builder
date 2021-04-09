@@ -147,11 +147,91 @@ workerPool = {
                 }
             }
         },
-        'priority': 'Spot' if isSpot else None,
-        'evictionPolicy': 'Deallocate' if isSpot else None,
+        # https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#virtualmachineprioritytypes
+        'priority': 'Spot',
+        # https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#virtualmachineevictionpolicytypes
+        'evictionPolicy': 'Delete',
+        # https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/createorupdate#billingprofile
         'billingProfile': {
             'maxPrice': -1
-        } if isSpot else None
+        }
+    } if isSpot else {
+        'location': x['region'].lower().replace(' ', ''),
+        'capacityPerInstance': 1,
+        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(secret['azure_beta']['subscription_id'], x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
+        'hardwareProfile': {
+            'vmSize': x['machine']['format'].format(x['machine']['cpu'])
+        },
+        'osProfile': {
+            'allowExtensionOperations': ('agent' not in x or x['agent'] != 'disable'),
+            'windowsConfiguration': {
+                'enableAutomaticUpdates': ('agent' not in x or x['agent'] != 'disable'),
+                'provisionVMAgent': ('agent' not in x or x['agent'] != 'disable'),
+                'timeZone': config['image']['timezone']
+            }
+        },
+        'diagnosticsProfile': {
+            'bootDiagnostics': {
+                'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
+                'enabled': True
+            } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
+                'enabled': False
+            }
+        },
+        'storageProfile': {
+            'imageReference': {
+                'id': getLatestImageId(x['group'], key)
+            },
+            'osDisk': {
+                'caching': next(d for d in x['disk'] if d['os'])['caching'],
+                'createOption': next(d for d in x['disk'] if d['os'])['create'],
+                'diskSizeGB': next(d for d in x['disk'] if d['os'])['size'],
+                'managedDisk': {
+                    'storageAccountType': 'StandardSSD_LRS' if next(d for d in x['disk'] if d['os'])['variant'] == 'ssd' else 'Standard_LRS'
+                },
+                'osType': 'Windows'
+            },
+            'dataDisks': [
+                {
+                    'lun': dataDiskIndex,
+                    'createOption': 'Empty',
+                    'diskSizeGB': dataDisk['size'],
+                    'managedDisk': {
+                        'storageAccountType': 'StandardSSD_LRS' if dataDisk['variant'] == 'ssd' else 'Standard_LRS'
+                    }
+                } for dataDiskIndex, dataDisk in enumerate(filter(lambda disk: (not disk['os']), x['disk']))
+            ]
+        },
+        'tags': { t['name']: t['value'] for t in x['tag'] },
+        'workerConfig': {
+            'genericWorker': {
+                'config': {
+                    'idleTimeoutSecs': 90,
+                    'cachesDir': 'Z:\\caches',
+                    'cleanUpTaskDirs': True,
+                    'deploymentId': commitSha[0:7],
+                    'disableReboots': False,
+                    'downloadsDir': 'Z:\\downloads',
+                    'ed25519SigningKeyLocation': 'C:\\generic-worker\\ed25519-private.key',
+                    'livelogExecutable': 'C:\\generic-worker\\livelog.exe',
+                    'numberOfTasksToRun': 0,
+                    'provisionerId': poolConfig['domain'],
+                    'runAfterUserCreation': 'C:\\generic-worker\\task-user-init.cmd',
+                    'runTasksAsCurrentUser': False,
+                    'sentryProject': 'generic-worker',
+                    'shutdownMachineOnIdle': False,
+                    'shutdownMachineOnInternalError': True,
+                    'taskclusterProxyExecutable': 'C:\\generic-worker\\taskcluster-proxy.exe',
+                    'taskclusterProxyPort': 80,
+                    'tasksDir': 'Z:\\',
+                    'workerGroup': x['group'],
+                    'workerLocation': '{{"cloud":"azure","region":"{}","availabilityZone":"{}"}}'.format(x['region'].lower().replace(' ', ''), x['region'].lower().replace(' ', '')),
+                    'workerType': poolConfig['variant'],
+                    'wstAudience': 'cloudopsstage' if currentEnvironment == 'staging' else 'firefoxcitc',
+                    'wstServerURL': 'https://websocktunnel-stage.taskcluster.nonprod.cloudops.mozgcp.net' if currentEnvironment == 'staging' else 'https://firefoxci-websocktunnel.services.mozilla.com'
+                }
+            }
+        }
     }, filter(lambda x: x['group'].endswith('-{}'.format(poolConfig['domain'])), config['target']))))
 }
 
