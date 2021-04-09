@@ -51,7 +51,6 @@ else:
     print('failed to obtain taskcluster secrets')
     exit(1)
 
-#azureCredentials = ServicePrincipalCredentials(client_id = secret['id'], secret = secret['key'], tenant = secret['account'])
 azureCredentials = ClientSecretCredential(tenant_id=secret['tenant_id'], client_id=secret['app_id'], client_secret=secret['password'])
 computeClient = ComputeManagementClient(azureCredentials, secret['subscription_id'])
 networkClient = NetworkManagementClient(azureCredentials, secret['subscription_id'])
