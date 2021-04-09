@@ -66,6 +66,7 @@ Connect-AzAccount `
     -AsPlainText `
     -Force))) `
   -Tenant $secret.azure_beta.tenant_id | Out-Null;
+Set-AzContext -Subscription $secret.azure_beta.subscription_id;
 
 
 $jobs = [hashtable[]] @();

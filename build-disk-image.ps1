@@ -78,7 +78,7 @@ switch ($platform) {
         -AsPlainText `
         -Force))) `
       -Tenant $secret.azure_beta.tenant_id | Out-Null;
-
+    Set-AzContext -Subscription $secret.azure_beta.subscription_id;
     $azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
     $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
     $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';

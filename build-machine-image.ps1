@@ -696,6 +696,7 @@ function Initialize-Platform {
               -AsPlainText `
               -Force))) `
             -Tenant $secret.azure_beta.tenant_id | Out-Null;
+          Set-AzContext -Subscription $secret.azure_beta.subscription_id;
           Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
         } catch {
           Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
