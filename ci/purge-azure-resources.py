@@ -108,17 +108,20 @@ resource_descriptors = {
 }
 
 print('scanning subscription (total resource groups: {}, target resource groups: {}): '.format(len(allGroups), len(targetGroups)))
-for group in targetGroups:
-    print('- scanning resource group {}:'.format(group))
-    for resource_type, resource_descriptor in resource_descriptors.items():
-        all_resources = list(resource_descriptor['list'](**{'resource_group_name': group}))
-        filtered_resources = list(filter(lambda x: resource_descriptor['filter'](x, group), all_resources))
-        print('    - {}{}:'.format(resource_type, 'es' if resource_type[-1] == 's' else 's'))
-        print('        - total: {}'.format(len(all_resources)))
-        print('        - {}: {}'.format(resource_descriptor['filter-descriptor'], len(filtered_resources)))
-        for resource_item in filtered_resources:
-            try:
-                resource_descriptor['purge'](*[group, resource_item.name])
-                print('            - deleted: {}'.format(resource_item.name))
-            except BaseException as e:
-                print('            - failed to delete: {}. {}'.format(resource_item.name, str(e)))
+for resource_group_name in targetGroups:
+    if any(group.name == resource_group_name for group in allGroups):
+        print('- scanning resource group: {}'.format(resource_group_name))
+        for resource_type, resource_descriptor in resource_descriptors.items():
+            all_resources = list(resource_descriptor['list'](**{'resource_group_name': resource_group_name}))
+            filtered_resources = list(filter(lambda x: resource_descriptor['filter'](x, resource_group_name), all_resources))
+            print('    - {}{}:'.format(resource_type, 'es' if resource_type[-1] == 's' else 's'))
+            print('        - total: {}'.format(len(all_resources)))
+            print('        - {}: {}'.format(resource_descriptor['filter-descriptor'], len(filtered_resources)))
+            for resource_item in filtered_resources:
+                try:
+                    resource_descriptor['purge'](*[resource_group_name, resource_item.name])
+                    print('            - deleted: {}'.format(resource_item.name))
+                except BaseException as e:
+                    print('            - failed to delete: {}. {}'.format(resource_item.name, str(e)))
+    else:
+        print('- skipping resource group: {} (not found)'.format(resource_group_name))
