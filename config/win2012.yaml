@@ -151,6 +151,7 @@ manager:
 target:
     - platform: azure
       group: rg-central-us-gecko-1
+      storage: sacentralusgecko1
       region: Central US
       hostname: &hostname
           format: cib-{0}
@@ -238,6 +239,7 @@ target:
           executions: []
     - platform: azure
       group: rg-east-us-gecko-1
+      storage: saeastusgecko1
       region: East US
       hostname: *hostname
       machine: *machine
@@ -256,6 +258,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-2-gecko-1
+      storage: saeastus2gecko1
       region: East US 2
       hostname: *hostname
       machine: *machine
@@ -274,6 +277,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-north-central-us-gecko-1
+      storage: sanorthcentralusgecko1
       region: North Central US
       hostname: *hostname
       machine: *machine
@@ -292,6 +296,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-south-central-us-gecko-1
+      storage: sasouthcentralusgecko1
       region: South Central US
       hostname: *hostname
       machine: *machine
@@ -310,6 +315,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-west-us-gecko-1
+      storage: sawestusgecko1
       region: West US
       hostname: *hostname
       machine: *machine
@@ -328,6 +334,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-central-us-gecko-3
+      storage: sacentralusgecko3
       region: Central US
       hostname: *hostname
       machine: *machine
@@ -358,6 +365,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3
+      storage: saeastusgecko3
       region: East US
       hostname: *hostname
       machine: *machine
@@ -376,6 +384,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-2-gecko-3
+      storage: saeastus2gecko3
       region: East US 2
       hostname: *hostname
       machine: *machine
@@ -394,6 +403,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-north-central-us-gecko-3
+      storage: sanorthcentralusgecko3
       region: North Central US
       hostname: *hostname
       machine: *machine
@@ -412,6 +422,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-south-central-us-gecko-3
+      storage: sasouthcentralusgecko3
       region: South Central US
       hostname: *hostname
       machine: *machine
@@ -430,6 +441,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-west-us-gecko-3
+      storage: sawestusgecko3
       region: West US
       hostname: *hostname
       machine: *machine
@@ -448,6 +460,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-central-us-mpd001-1
+      storage: sacentralusmpd0011
       region: Central US
       hostname: *hostname
       machine: *machine
@@ -476,6 +489,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-east-us-mpd001-1
+      storage: saeastusmpd0011
       region: East US
       hostname: *hostname
       machine: *machine
@@ -494,6 +508,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-east-us-2-mpd001-1
+      storage: saeastus2mpd0011
       region: East US 2
       hostname: *hostname
       machine: *machine
@@ -512,6 +527,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-north-central-us-mpd001-1
+      storage: sanorthcentralusmpd0011
       region: North Central US
       hostname: *hostname
       machine: *machine
@@ -530,6 +546,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-south-central-us-mpd001-1
+      storage: sasouthcentralusmpd0011
       region: South Central US
       hostname: *hostname
       machine: *machine
@@ -548,6 +565,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-west-us-mpd001-1
+      storage: sawestusmpd0011
       region: West US
       hostname: *hostname
       machine: *machine
@@ -566,6 +584,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-central-us-mpd001-3
+      storage: sacentralusmpd0013
       region: Central US
       hostname: *hostname
       machine: *machine
@@ -594,6 +613,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-east-us-mpd001-3
+      storage: saeastusmpd0013
       region: East US
       hostname: *hostname
       machine: *machine
@@ -612,6 +632,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-east-us-2-mpd001-3
+      storage: saeastus2mpd0013
       region: East US 2
       hostname: *hostname
       machine: *machine
@@ -630,6 +651,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-north-central-us-mpd001-3
+      storage: sanorthcentralusmpd0013
       region: North Central US
       hostname: *hostname
       machine: *machine
@@ -648,6 +670,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-south-central-us-mpd001-3
+      storage: sasouthcentralusmpd0013
       region: South Central US
       hostname: *hostname
       machine: *machine
@@ -666,6 +689,7 @@ target:
       bootstrap: *bootstrap
     - platform: amazon
       group: rg-west-us-mpd001-3
+      storage: sawestusmpd0013
       region: West US
       hostname: *hostname
       machine: *machine

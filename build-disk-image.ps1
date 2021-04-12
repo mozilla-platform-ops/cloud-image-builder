@@ -36,7 +36,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.125'
+    'version' = '0.0.126'
   },
   @{
     'module' = 'powershell-yaml';
@@ -77,8 +77,11 @@ switch ($platform) {
         -String $secret.azure_beta.password `
         -AsPlainText `
         -Force))) `
-      -Tenant $secret.azure_beta.tenant_id | Out-Null;
-    Set-AzContext -Subscription $secret.azure_beta.subscription_id;
+      -TenantId $secret.azure_beta.tenant_id `
+      -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+    Set-AzContext `
+      -TenantId $secret.azure_beta.tenant_id `
+      -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
     $azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
     $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
     $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';

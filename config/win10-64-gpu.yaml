@@ -108,6 +108,7 @@ manager:
 target:
     - platform: azure
       group: rg-east-us-gecko-t
+      storage: saeastusgeckot
       region: East US
       hostname:
           format: cib-{0}

@@ -614,7 +614,7 @@ function Update-RequiredModules {
       },
       @{
         'module' = 'posh-minions-managed';
-        'version' = '0.0.125'
+        'version' = '0.0.126'
       },
       @{
         'module' = 'powershell-yaml';
@@ -695,8 +695,11 @@ function Initialize-Platform {
               -String $secret.azure_beta.password `
               -AsPlainText `
               -Force))) `
-            -Tenant $secret.azure_beta.tenant_id | Out-Null;
-          Set-AzContext -Subscription $secret.azure_beta.subscription_id;
+            -TenantId $secret.azure_beta.tenant_id `
+            -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+          Set-AzContext `
+            -TenantId $secret.azure_beta.tenant_id `
+            -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
           Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, succeeded' -f $($MyInvocation.MyCommand.Name), $platform);
         } catch {
           Write-Output -InputObject ('{0} :: for platform: {1}, setting of credentials, failed. {2}' -f $($MyInvocation.MyCommand.Name), $platform, $_.Exception.Message);
@@ -1619,6 +1622,7 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
                 -localImagePath $vhdLocalPath `
                 -targetResourceId $resourceId `
                 -targetResourceGroupName $target.group `
+                -targetStorageAccountName $target.storage `
                 -targetResourceRegion $target.region `
                 -targetInstanceMachineVariantFormat $target.machine.format `
                 -targetInstanceHyperVGeneration $target.machine.hyperv `

@@ -33,7 +33,7 @@ foreach ($rm in @(
   },
   @{
     'module' = 'posh-minions-managed';
-    'version' = '0.0.125'
+    'version' = '0.0.126'
   },
   @{
     'module' = 'powershell-yaml';
@@ -65,8 +65,11 @@ Connect-AzAccount `
     -String $secret.azure_beta.password `
     -AsPlainText `
     -Force))) `
-  -Tenant $secret.azure_beta.tenant_id | Out-Null;
-Set-AzContext -Subscription $secret.azure_beta.subscription_id;
+  -TenantId $secret.azure_beta.tenant_id `
+  -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+Set-AzContext `
+  -TenantId $secret.azure_beta.tenant_id `
+  -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
 
 
 $jobs = [hashtable[]] @();

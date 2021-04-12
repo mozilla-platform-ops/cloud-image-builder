@@ -110,6 +110,7 @@ manager:
 target:
     - platform: azure
       group: rg-central-us-gecko-t
+      storage: sacentralusgeckot
       region: Central US
       hostname: &hostname
           format: cib-{0}
@@ -216,6 +217,7 @@ target:
           executions: []
     - platform: azure
       group: rg-east-us-gecko-t
+      storage: saeastusgeckot
       region: East US
       hostname: *hostname
       machine: *machine
@@ -234,6 +236,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-2-gecko-t
+      storage: saeastus2geckot
       region: East US 2
       hostname: *hostname
       machine: *machine
@@ -252,6 +255,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-north-central-us-gecko-t
+      storage: sanorthcentralusgeckot
       region: North Central US
       hostname: *hostname
       machine: *machine
@@ -270,6 +274,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-south-central-us-gecko-t
+      storage: sasouthcentralusgeckot
       region: South Central US
       hostname: *hostname
       machine: *machine
@@ -288,6 +293,7 @@ target:
       bootstrap: *bootstrap
     - platform: azure
       group: rg-west-us-gecko-t
+      storage: sawestusgeckot
       region: West US
       hostname: *hostname
       machine: *machine
