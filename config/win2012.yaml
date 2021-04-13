@@ -105,7 +105,7 @@ manager:
               - eastus
               - eastus2
               - westus
-          lifecycle: on-demand
+          lifecycle: spot
           owner: grenade@mozilla.com
           provider: azure
           platform: azure
@@ -230,11 +230,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 0fc82f7
+            value: 2facf4f
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 0fc82f7
+            value: 2facf4f
       bootstrap: &bootstrap
           executions: []
     - platform: azure
@@ -357,11 +357,11 @@ target:
           - name: sourceRepository
             value: OpenCloudConfig
           - name: sourceRevision
-            value: 0fc82f7
+            value: 2facf4f
           - name: sourceScript
             value: userdata/rundsc.ps1
           - name: deploymentId
-            value: 0fc82f7
+            value: 2facf4f
       bootstrap: *bootstrap
     - platform: azure
       group: rg-east-us-gecko-3

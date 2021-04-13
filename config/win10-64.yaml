@@ -105,7 +105,7 @@ manager:
               - southcentralus
               - eastus
               - eastus2
-          lifecycle: on-demand
+          lifecycle: spot
           owner: mcornmesser@mozilla.com
           provider: azure
           platform: azure
