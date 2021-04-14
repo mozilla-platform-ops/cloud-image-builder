@@ -5,7 +5,6 @@ import string
 import taskcluster
 import urllib.request
 import yaml
-#from azure.common.credentials import ServicePrincipalCredentials
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from cib import updateWorkerPool

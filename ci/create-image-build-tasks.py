@@ -7,7 +7,6 @@ import taskcluster
 import urllib.request
 import yaml
 from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
-#from azure.common.credentials import ServicePrincipalCredentials
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 
@@ -40,21 +39,12 @@ allKeyConfigPaths = glob.glob('{}/../config/win*.yaml'.format(os.path.dirname(__
 includeKeys = list(map(lambda x: pathlib.Path(x).stem, allKeyConfigPaths))
 includePools = []#[poolName for poolNames in map(lambda configPath: map(lambda pool: '{}/{}'.format(pool['domain'], pool['variant']), yaml.safe_load(open(configPath, 'r'))['manager']['pool']), allKeyConfigPaths) for poolName in poolNames]
 includeRegions = sorted(list(set([region for regions in map(lambda configPath: map(lambda target: target['region'].replace(' ', '').lower(), yaml.safe_load(open(configPath, 'r'))['target']), allKeyConfigPaths) for region in regions])))
-includeEnvironments = [
-    'production',
-    'staging'
-]
+includeEnvironments = yaml.safe_load(open('{}/../.environments.yml'.format(os.path.dirname(__file__)), 'r'))
 includePlatforms = [
     #'amazon',
     'azure'
 ]
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
-if currentEnvironment == 'production':
-    print('info: skipping production environment builds')
-    quit()
-#if currentEnvironment == 'staging':
-#    print('info: skipping staging environment builds')
-#    quit()
 
 overwriteDiskImage = False
 overwriteMachineImage = False
@@ -477,3 +467,4 @@ for platform in includePlatforms:
                             ],
                             scopes = [],
                             taskGroupId = taskGroupId)
+                    else:
