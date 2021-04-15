@@ -139,6 +139,8 @@
     {
       "type": "powershell",
       "inline": [
+        "$stage =  ((Get-ItemProperty -path HKLM:\\SOFTWARE\\Mozilla\\ronin_puppet).bootstrap_stage)",
+        "If ($stage -ne 'complete') { exit 2}",
         "Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Mozilla\\ronin_puppet' -name hand_off_ready -type  string -value yes",
 		" # NOTE: the following *3* lines are only needed if the you have installed the Guest Agent.",
         "  while ((Get-Service RdAgent).Status -ne 'Running') { Start-Sleep -s 5 }",

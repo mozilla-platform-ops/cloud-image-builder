@@ -203,7 +203,7 @@ for platform in includePlatforms:
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
                 if key in ['win10-64', 'win10-64-gpu']:
-                    packerConfigPath = '{}/../WIP_packer/{}_packer.yaml'.format(os.path.dirname(__file__), key)
+                    packerConfigPath = '{}/../packer/{}_packer.yaml'.format(os.path.dirname(__file__), key)
                     with open(packerConfigPath, 'r') as packerConfigStream:
                         packerConfig = yaml.safe_load(packerConfigStream)
                         for location in packerConfig['azure']['locations']:
@@ -243,7 +243,7 @@ for platform in includePlatforms:
                                     'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
                                     'cd cloud-image-builder',
                                     'git reset --hard {}'.format(commitSha),
-                                    'powershell -File WIP_packer\\build-packer-image.ps1 {}'.format(location)
+                                    'powershell -File packer\\build-packer-image.ps1 {}'.format(location)
                                 ],
                                 scopes = [
                                     'generic-worker:os-group:relops-3/win2019/Administrators',
