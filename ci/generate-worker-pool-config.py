@@ -87,14 +87,14 @@ workerPool = {
                 'timeZone': config['image']['timezone']
             }
         },
-        'diagnosticsProfile': {
-            'bootDiagnostics': {
-                'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
-                'enabled': True
-            } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
-                'enabled': False
-            }
-        },
+        #'diagnosticsProfile': {
+        #    'bootDiagnostics': {
+        #        'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
+        #        'enabled': True
+        #    } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
+        #        'enabled': False
+        #    }
+        #},
         'storageProfile': {
             'imageReference': {
                 'id': getLatestImageId(x['group'], key)
@@ -173,14 +173,14 @@ workerPool = {
                 'timeZone': config['image']['timezone']
             }
         },
-        'diagnosticsProfile': {
-            'bootDiagnostics': {
-                'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
-                'enabled': True
-            } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
-                'enabled': False
-            }
-        },
+        #'diagnosticsProfile': {
+        #    'bootDiagnostics': {
+        #        'storageUri': 'http://{}diag.blob.core.windows.net'.format(poolConfig['domain'].replace('-', '')),
+        #        'enabled': True
+        #    } if ('diagnostics' in x and x['diagnostics'] == 'enable') else {
+        #        'enabled': False
+        #    }
+        #},
         'storageProfile': {
             'imageReference': {
                 'id': getLatestImageId(x['group'], key)
