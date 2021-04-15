@@ -24,14 +24,14 @@ secrets = taskcluster.Secrets(taskclusterOptions)
 
 secret = secrets.get('project/relops/image-builder/dev')['secret']
 
-
+azureDeployment = 'azure_beta' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
 platformClient = {
     'azure': ComputeManagementClient(
         ClientSecretCredential(
-            tenant_id=secret['azure_beta']['tenant_id'],
-            client_id=secret['azure_beta']['app_id'],
-            client_secret=secret['azure_beta']['password']),
-        secret['azure_beta']['subscription_id'])
+            tenant_id=secret[azureDeployment]['tenant_id'],
+            client_id=secret[azureDeployment]['app_id'],
+            client_secret=secret[azureDeployment]['password']),
+        secret[azureDeployment]['subscription_id'])
 }
 
 commitSha = os.getenv('GITHUB_HEAD_SHA')

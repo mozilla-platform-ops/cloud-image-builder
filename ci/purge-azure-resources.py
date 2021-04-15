@@ -35,17 +35,17 @@ def purge_filter(resource, resource_group_name = None):
         print('no filter mechanism identified for {}'.format(resource.__class__.__name__))
         return False
 
-
+azureDeployment = 'azure_beta' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
     secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
-    secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure_beta']
+    secret = secretsClient.get('project/relops/image-builder/dev')['secret'][azureDeployment]
     print('secrets fetched using taskcluster proxy')
 elif 'TASKCLUSTER_ROOT_URL' in os.environ and 'TASKCLUSTER_CLIENT_ID' in os.environ and 'TASKCLUSTER_ACCESS_TOKEN' in os.environ:
     secretsClient = taskcluster.Secrets(taskcluster.optionsFromEnvironment())
-    secret = secretsClient.get('project/relops/image-builder/dev')['secret']['azure_beta']
+    secret = secretsClient.get('project/relops/image-builder/dev')['secret'][azureDeployment]
     print('secrets fetched using taskcluster environment credentials')
 elif os.path.isfile('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME'])):
-    secret = yaml.safe_load(open('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME']), 'r'))['azure_beta']
+    secret = yaml.safe_load(open('{}/.cloud-image-builder-secrets.yml'.format(os.environ['HOME']), 'r'))[azureDeployment]
     print('secrets obtained from local filesystem')
 else:
     print('failed to obtain taskcluster secrets')

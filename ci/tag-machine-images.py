@@ -83,16 +83,17 @@ print('group: {}'.format(group))
 print('key: {}'.format(key))
 
 if platform == 'azure':
+    azureDeployment = 'azure_beta' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
     azureComputeManagementClient = ComputeManagementClient(
         #ServicePrincipalCredentials(
         #    client_id = secret['azure']['id'],
         #    secret = secret['azure']['key'],
         #    tenant = secret['azure']['account']),
         ClientSecretCredential(
-            tenant_id=secret['azure_beta']['tenant_id'],
-            client_id=secret['azure_beta']['app_id'],
-            client_secret=secret['azure_beta']['password']),
-        secret['azure_beta']['subscription_id'])
+            tenant_id=secret[azureDeployment]['tenant_id'],
+            client_id=secret[azureDeployment]['app_id'],
+            client_secret=secret[azureDeployment]['password']),
+        secret[azureDeployment]['subscription_id'])
 
     pattern = re.compile('^{}-{}-([a-f0-9]{{7}})-([a-f0-9]{{7}})$'.format(group.replace('rg-', ''), key))
     images = list([x for x in azureComputeManagementClient.images.list_by_resource_group(group) if pattern.match(x.name)])

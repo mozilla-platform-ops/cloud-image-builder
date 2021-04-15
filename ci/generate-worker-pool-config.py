@@ -15,15 +15,17 @@ taskclusterSecretsClient = taskcluster.Secrets(taskclusterOptions)
 secret = taskclusterSecretsClient.get('project/relops/image-builder/dev')['secret']
 
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
+azureDeployment = 'azure_alpha' if currentEnvironment == 'production' else 'azure_beta'
 
 taskclusterWorkerManagerClient = taskcluster.WorkerManager(taskclusterOptions)
 
+
 azureComputeManagementClient = ComputeManagementClient(
     ClientSecretCredential(
-        tenant_id=secret['azure_beta']['tenant_id'],
-        client_id=secret['azure_beta']['app_id'],
-        client_secret=secret['azure_beta']['password']),
-    secret['azure_beta']['subscription_id'])
+        tenant_id=secret[azureDeployment]['tenant_id'],
+        client_id=secret[azureDeployment]['app_id'],
+        client_secret=secret[azureDeployment]['password']),
+    secret[azureDeployment]['subscription_id'])
 
 
 def getLatestImage(resourceGroup, key):
@@ -72,7 +74,7 @@ workerPool = {
     'launchConfigs': list(filter(lambda x: x['storageProfile']['imageReference']['id'] is not None and x['location'] in poolConfig['locations'] and x['location'] in includeRegions, map(lambda x: {
         'location': x['region'].lower().replace(' ', ''),
         'capacityPerInstance': 1,
-        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(secret['azure_beta']['subscription_id'], x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
+        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(secret[azureDeployment]['subscription_id'], x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
         'hardwareProfile': {
             'vmSize': x['machine']['format'].format(x['machine']['cpu'])
         },
@@ -158,7 +160,7 @@ workerPool = {
     } if isSpot else {
         'location': x['region'].lower().replace(' ', ''),
         'capacityPerInstance': 1,
-        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(secret['azure_beta']['subscription_id'], x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
+        'subnetId': '/subscriptions/{}/resourceGroups/{}/providers/Microsoft.Network/virtualNetworks/{}/subnets/{}'.format(secret[azureDeployment]['subscription_id'], x['group'], x['group'].replace('rg-', 'vn-'), x['group'].replace('rg-', 'sn-')),
         'hardwareProfile': {
             'vmSize': x['machine']['format'].format(x['machine']['cpu'])
         },
