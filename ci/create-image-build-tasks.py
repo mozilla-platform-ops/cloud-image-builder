@@ -445,7 +445,9 @@ for platform in includePlatforms:
                         ],
                         taskGroupId = taskGroupId)
 
-                    queueWorkerPoolVerificationTask = (not skipImageVerification) and ('queue:create-task:highest:{}/win*'.format(pool['domain']) in auth.currentScopes()['scopes'])
+                    scopes = auth.currentScopes()['scopes']
+                    createTaskScopeAvailable = ('queue:create-task:highest:{}/win*'.format(pool['domain']) in scopes)
+                    queueWorkerPoolVerificationTask = (not skipImageVerification) and createTaskScopeAvailable
                     if queueWorkerPoolVerificationTask:
                         createTask(
                             queue = queue,
@@ -464,3 +466,7 @@ for platform in includePlatforms:
                             ],
                             scopes = [],
                             taskGroupId = taskGroupId)
+                    elif not createTaskScopeAvailable:
+                        print('warn: unable to verify task claimability. available scopes:')
+                        for i in range(len(scopes)):
+                            print('- {}'.format(scopes[i]))
