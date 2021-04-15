@@ -35,7 +35,7 @@ def purge_filter(resource, resource_group_name = None):
         print('no filter mechanism identified for {}'.format(resource.__class__.__name__))
         return False
 
-azureDeployment = 'azure_beta' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
+azureDeployment = 'azure_beta'# if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
 if 'TASKCLUSTER_PROXY_URL' in os.environ:
     secretsClient = taskcluster.Secrets({ 'rootUrl': os.environ['TASKCLUSTER_PROXY_URL'] })
     secret = secretsClient.get('project/relops/image-builder/dev')['secret'][azureDeployment]

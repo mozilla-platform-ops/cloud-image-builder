@@ -83,7 +83,7 @@ print('group: {}'.format(group))
 print('key: {}'.format(key))
 
 if platform == 'azure':
-    azureDeployment = 'azure_beta' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
+    azureDeployment = 'azure_beta'# if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
     azureComputeManagementClient = ComputeManagementClient(
         #ServicePrincipalCredentials(
         #    client_id = secret['azure']['id'],

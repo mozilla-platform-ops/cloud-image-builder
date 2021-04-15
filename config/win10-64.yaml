@@ -107,7 +107,7 @@ manager:
               - eastus2
           lifecycle: spot
           owner: mcornmesser@mozilla.com
-          provider: azure
+          provider: azure2
           platform: azure
 target:
     - platform: azure

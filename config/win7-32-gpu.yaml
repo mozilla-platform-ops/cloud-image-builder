@@ -102,7 +102,7 @@ manager:
               - eastus
           lifecycle: spot
           owner: grenade@mozilla.com
-          provider: azure
+          provider: azure2
           platform: azure
 target:
     - platform: azure

@@ -107,7 +107,7 @@ manager:
               - westus
           lifecycle: spot
           owner: grenade@mozilla.com
-          provider: azure
+          provider: azure2
           platform: azure
         - domain: gecko-3
           variant: win2012-azure
@@ -120,7 +120,7 @@ manager:
           locations:
               - centralus
           owner: grenade@mozilla.com
-          provider: azure
+          provider: azure2
           platform: azure
         - domain: mpd001-1
           variant: win2012-amazon
