@@ -136,7 +136,10 @@ createTask(
 azurePurgeTaskIds = { 'default': slugid.nice() }
 if purgeRelopsResources:
     azurePurgeTaskIds['relops'] = slugid.nice()
+    azurePurgeTaskIds['rg-packer-through-cib'] = slugid.nice()
 if purgeTaskclusterResources:
+    azurePurgeTaskIds['rg-taskcluster-worker-manager-staging'] = slugid.nice()
+    azurePurgeTaskIds['rg-taskcluster-worker-manager-production'] = slugid.nice()
     azurePurgeTaskIds['taskcluster-staging-workers-us-central'] = slugid.nice()
     azurePurgeTaskIds['taskcluster-production-workers-us-central'] = slugid.nice()
 createTask(
