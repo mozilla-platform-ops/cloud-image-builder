@@ -1683,9 +1683,17 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               }
               Write-Output -InputObject ('first shutdown detected (triggered by oobe/reseal). current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
               # start instance in audit mode for bootstrapping.
+              $stopwatch = [System.Diagnostics.Stopwatch]::new();
               try {
                 $instanceStartOperation = (Start-AzVM -ResourceGroupName $target.group -Name $instanceName);
-                if ($instanceStartOperation.Status -eq 'Succeeded') {
+                $stopwatch.Start();
+                if ($instanceStartOperation -is [Microsoft.Azure.Commands.Compute.Models.PSAzureOperationResponse]) {
+                  Write-Output -InputObject ('the start-azvm operation returned a PSAzureOperationResponse with request id: {0}, reason phrase: {1}, status code: {2}, is success status code: {3}' -f $instanceStartOperation.RequestId, $instanceStartOperation.ReasonPhrase, $instanceStartOperation.StatusCode, $instanceStartOperation.IsSuccessStatusCode);
+                }
+                if ($instanceStartOperation -is [Microsoft.Azure.Commands.Compute.Models.PSComputeLongRunningOperation]) {
+                  Write-Output -InputObject ('the start-azvm operation returned a PSComputeLongRunningOperation with operation id: {0}, name: {1}, status: {2}, error: {3}, start time: {4}, end time: {5}' -f $instanceStartOperation.OperationId, $instanceStartOperation.Name, $instanceStartOperation.Status, $instanceStartOperation.Error, $instanceStartOperation.StartTime, $instanceStartOperation.EndTime);
+                }
+                if ($instanceStartOperation.IsSuccessStatusCode -or $instanceStartOperation.Status -eq 'Succeeded') {
                   Write-Output -InputObject ('instance restart triggered after sysprep reseal to audit mode (from oobe) shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
                 } else {
                   Write-Output -InputObject ('instance restart failed after sysprep reseal to audit mode (from oobe) shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
@@ -1697,9 +1705,17 @@ foreach ($target in @($config.target | ? { (($_.platform -eq $platform) -and $_.
               } catch {
                 Write-Output -InputObject ('instance restart failed after sysprep reseal to audit mode (from oobe) shutdown. current state: {0}. {1}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code, $_.Exception.Message);
               }
-              while ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -ne 'PowerState/running') {
+              while (((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -ne 'PowerState/running') -and ($stopwatch.Elapsed.TotalSeconds -lt 300)) {
                 Write-Output -InputObject ('awaiting instance running state after sysprep reseal to audit mode (from oobe) shutdown and restart. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
                 Start-Sleep -Seconds 30;
+              }
+              $stopwatch.Stop();
+              if ((Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code -ne 'PowerState/running') {
+                Write-Output -InputObject ('instance restart timed out after sysprep reseal to audit mode (from oobe) shutdown. current state: {0}' -f (Get-InstanceStatus -instanceName $instanceName -groupName $target.group -ErrorAction 'SilentlyContinue').Code);
+                if (-not $disableCleanup) {
+                  Remove-Resource -resourceId $resourceId -resourceGroupName $target.group;
+                }
+                exit 123;
               }
               $azVm = (Get-AzVm -ResourceGroupName $target.group -Name $instanceName -ErrorAction SilentlyContinue);
             }
