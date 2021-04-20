@@ -15,8 +15,8 @@ taskclusterSecretsClient = taskcluster.Secrets(taskclusterOptions)
 secret = taskclusterSecretsClient.get('project/relops/image-builder/dev')['secret']
 
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
-#azureDeployment = 'azure_alpha' if currentEnvironment == 'production' else 'azure_beta'
-azureDeployment = 'azure_beta'
+#azureDeployment = 'azure_alpha' if currentEnvironment == 'production' else 'azure_gamma'
+azureDeployment = 'azure_gamma'
 
 taskclusterWorkerManagerClient = taskcluster.WorkerManager(taskclusterOptions)
 

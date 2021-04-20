@@ -73,15 +73,15 @@ switch ($platform) {
   'azure' {
     Connect-AzAccount `
       -ServicePrincipal `
-      -Credential (New-Object System.Management.Automation.PSCredential($secret.azure_beta.app_id, (ConvertTo-SecureString `
-        -String $secret.azure_beta.password `
+      -Credential (New-Object System.Management.Automation.PSCredential($secret.azure_gamma.app_id, (ConvertTo-SecureString `
+        -String $secret.azure_gamma.password `
         -AsPlainText `
         -Force))) `
-      -TenantId $secret.azure_beta.tenant_id `
-      -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+      -TenantId $secret.azure_gamma.tenant_id `
+      -SubscriptionId $secret.azure_gamma.subscription_id | Out-Null;
     Set-AzContext `
-      -TenantId $secret.azure_beta.tenant_id `
-      -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+      -TenantId $secret.azure_gamma.tenant_id `
+      -SubscriptionId $secret.azure_gamma.subscription_id | Out-Null;
     $azcopyExePath = ('{0}\System32\azcopy.exe' -f $env:WinDir);
     $azcopyZipPath = ('{0}\azcopy.zip' -f $workFolder);
     $azcopyZipUrl = 'https://aka.ms/downloadazcopy-v10-windows';

@@ -61,15 +61,15 @@ foreach ($rm in @(
 $secret = (Invoke-WebRequest -Uri 'http://taskcluster/secrets/v1/secret/project/relops/image-builder/dev' -UseBasicParsing | ConvertFrom-Json).secret;
 Connect-AzAccount `
   -ServicePrincipal `
-  -Credential (New-Object System.Management.Automation.PSCredential($secret.azure_beta.app_id, (ConvertTo-SecureString `
-    -String $secret.azure_beta.password `
+  -Credential (New-Object System.Management.Automation.PSCredential($secret.azure_gamma.app_id, (ConvertTo-SecureString `
+    -String $secret.azure_gamma.password `
     -AsPlainText `
     -Force))) `
-  -TenantId $secret.azure_beta.tenant_id `
-  -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+  -TenantId $secret.azure_gamma.tenant_id `
+  -SubscriptionId $secret.azure_gamma.subscription_id | Out-Null;
 Set-AzContext `
-  -TenantId $secret.azure_beta.tenant_id `
-  -SubscriptionId $secret.azure_beta.subscription_id | Out-Null;
+  -TenantId $secret.azure_gamma.tenant_id `
+  -SubscriptionId $secret.azure_gamma.subscription_id | Out-Null;
 
 
 $jobs = [hashtable[]] @();

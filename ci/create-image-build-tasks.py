@@ -24,7 +24,7 @@ secrets = taskcluster.Secrets(taskclusterOptions)
 
 secret = secrets.get('project/relops/image-builder/dev')['secret']
 
-azureDeployment = 'azure_beta'# if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
+azureDeployment = 'azure_gamma'# if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'azure_alpha'
 platformClient = {
     'azure': ComputeManagementClient(
         ClientSecretCredential(
