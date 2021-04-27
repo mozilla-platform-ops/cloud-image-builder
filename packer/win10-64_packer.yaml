@@ -16,12 +16,12 @@ azure:
         - westus
         - westus2
 vm:
-    size: Standard_B2S
+    size: Standard_A8_v2
     disk_additional_size: 30
     tags:
         workerType: gecko-t-win10-64-azure
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: 4061f99
+        deploymentId: 5aeb1d2
         managed_by: packer
