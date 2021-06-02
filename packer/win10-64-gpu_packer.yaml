@@ -2,7 +2,7 @@
 image:
     publisher: MicrosoftWindowsDesktop
     offer: Windows-10
-    sku: 19h1-evd
+    sku: 20h1-evd
 azure:
     managed_image_resource_group_name: packer-through-cib
     managed_image_storage_account_type: Standard_LRS
@@ -19,5 +19,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: 03fc422
+        deploymentId: 767495e
         managed_by: packer
