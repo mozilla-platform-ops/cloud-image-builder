@@ -10,11 +10,11 @@ azure:
     locations:
         - centralus
         - northcentralus
-        - southcentralus
-        - eastus
-        - eastus2
-        - westus
-        - westus2
+        #- southcentralus
+        #- eastus
+        #- eastus2
+        #- westus
+        #- westus2
 vm:
     size: Standard_A8_v2
     disk_additional_size: 30
@@ -23,5 +23,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: 62dbb73
+        deploymentId: b10a78c
         managed_by: packer
