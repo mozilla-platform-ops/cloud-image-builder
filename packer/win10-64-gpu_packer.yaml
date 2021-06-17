@@ -9,8 +9,12 @@ azure:
     build_location: eastus
     locations:
         - centralus
+        - northcentralus
         - southcentralus
         - eastus
+        - eastus2
+        - westus
+        - westus2
 vm:
     size: Standard_NV6
     disk_additional_size: 30
