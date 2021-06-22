@@ -67,7 +67,8 @@ function Build-PackerImage {
      # The values that are label with markco in the yaml file will be replaced next week
     
 #     $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64_packer.yaml') -Raw | ConvertFrom-Yaml)
-     $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64-gpu_packer.yaml') -Raw | ConvertFrom-Yaml)
+#     $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64-gpu_packer.yaml') -Raw | ConvertFrom-Yaml)
+      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath 'win10-64-azure-2004.yaml') -Raw | ConvertFrom-Yaml)
 
      # Get taskcluster secrets
      $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
