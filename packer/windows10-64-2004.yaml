@@ -19,7 +19,7 @@ vm:
     size: Standard_F8s_v2
     disk_additional_size: 30
     tags:
-        workerType: windows10-64-2004
+        workerType: gecko-t-windows10-64-2004
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
