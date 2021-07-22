@@ -66,15 +66,14 @@ function Build-PackerImage {
      # For now push using "include pools: gecko-t/win10-64-azure" with the needed yaml file uncommented below
       
      #$yaml_file = 'win10-64-2004-gpu.yaml'
-     #$yaml_file = 'win10-64-2004-gpu-test.yaml'
+     $yaml_file = 'win10-64-2004-gpu-test.yaml'
      #$yaml_file = 'win10-64-2004.yaml'
-     $yaml_file = 'win10-64-2004-test.yaml'
+     #$yaml_file = 'win10-64-2004-test.yaml'
 
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
 
      # Get taskcluster secrets
      $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
-     # The image copy fails on authentication
      
      $Env:client_id = $secret.relops_azure.packer.app_id
      $Env:client_secret = $secret.relops_azure.packer.password
