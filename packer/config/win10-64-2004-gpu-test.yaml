@@ -15,7 +15,7 @@ vm:
     size: Standard_NV6
     disk_additional_size: 30
     tags:
-        workerType: gecko-t-win10-64-2004-gpu
+        workerType: gecko-t-win10-64-2004-gpu-test
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows

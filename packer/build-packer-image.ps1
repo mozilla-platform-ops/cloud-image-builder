@@ -63,13 +63,14 @@ function Build-PackerImage {
      
      # This ymal file is stripped down to what Packer needs for dev and testing
      # Though hard coded now it should proablaly be a variable that is passed a parameter to the function. 
-     # I am trying to have the script and json template agnostic and all unique values will come from the yaml file
-     # The values that are label with markco in the yaml file will be replaced next week
+     # For now push using "include pools: gecko-t/win10-64-azure" with the needed yaml file uncommented below
+      
+     #$yaml_file = 'win10-64-2004-gpu.yaml'
+     #$yaml_file = 'win10-64-2004-gpu-test.yaml'
+     #$yaml_file = 'win10-64-2004.yaml'
+     $yaml_file = 'win10-64-2004-test.yaml'
 
-      $yaml_file = 'win10-64-2004-gpu.yaml'
-      #$yaml_file = 'win10-64-2004.yaml'
-
-      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
+     $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
 
      # Get taskcluster secrets
      $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
@@ -94,7 +95,11 @@ function Build-PackerImage {
      $Env:location = $location
      $Env:vm_size = $yaml_data.vm.size
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
-     $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
+     # For -test images do not include deploymentID, so we can test changes without changing ci-configuration
+     # Ci-configuration -test images name will remain the same pointing at the last image created with that name
+     # For now uncommented the the needed line before building images. In future will change to a programatic switch
+     # $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
+     $Env:managed_image_name = ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-tmp3' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId)
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')

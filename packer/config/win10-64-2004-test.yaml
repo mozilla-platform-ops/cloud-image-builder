@@ -8,14 +8,18 @@ azure:
     managed_image_storage_account_type: Standard_LRS
     build_location: eastus
     locations:
+        - centralus
         - northcentralus
-        - southcentralus
-        - eastus
+        #- southcentralus
+        #- eastus
+        #- eastus2
+        #- westus
+        #- westus2
 vm:
-    size: Standard_NV6
+    size: Standard_F8s_v2
     disk_additional_size: 30
     tags:
-        workerType: gecko-t-win10-64-2004-gpu
+        workerType: gecko-t-win10-64-2004-test
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
