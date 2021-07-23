@@ -75,7 +75,7 @@ function Build-PackerImage {
      # Get taskcluster secrets
      $secret = (Invoke-WebRequest -Uri ('{0}/secrets/v1/secret/project/relops/image-builder/dev' -f $env:TASKCLUSTER_PROXY_URL) -UseBasicParsing | ConvertFrom-Json).secret;
      # Random string for temp resource group. Prevent duplicate names in an event of a bad build
-     $random = (get-random)
+     $random = (get-random -Maximum 999)
      
      $Env:client_id = $secret.relops_azure.packer.app_id
      $Env:client_secret = $secret.relops_azure.packer.password
