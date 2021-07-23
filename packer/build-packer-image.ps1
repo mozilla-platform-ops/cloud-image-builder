@@ -66,9 +66,9 @@ function Build-PackerImage {
      # For now push using "include pools: gecko-t/win10-64-azure" with the needed yaml file uncommented below
       
      #$yaml_file = 'win10-64-2004-gpu.yaml'
-     $yaml_file = 'win10-64-2004-gpu-test.yaml'
+     #$yaml_file = 'win10-64-2004-gpu-test.yaml'
      #$yaml_file = 'win10-64-2004.yaml'
-     #$yaml_file = 'win10-64-2004-test.yaml'
+     $yaml_file = 'win10-64-2004-test.yaml'
 
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
 
@@ -94,11 +94,7 @@ function Build-PackerImage {
      $Env:location = $location
      $Env:vm_size = $yaml_data.vm.size
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
-     # For -test images do not include deploymentID, so we can test changes without changing ci-configuration
-     # Ci-configuration -test images name will remain the same pointing at the last image created with that name
-     # For now uncommented the the needed line before building images. In future will change to a programatic switch
-     # $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
-     $Env:managed_image_name = ('{0}-{1}-{2}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku)
+     $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-tmp3' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId)
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
