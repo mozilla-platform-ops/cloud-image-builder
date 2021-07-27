@@ -10,11 +10,11 @@ azure:
     locations:
         - centralus
         - northcentralus
-        #- southcentralus
-        #- eastus
-        #- eastus2
-        #- westus
-        #- westus2
+        - southcentralus
+        - eastus
+        - eastus2
+        - westus
+        - westus2
 vm:
     size: Standard_F8s_v2
     disk_additional_size: 30
