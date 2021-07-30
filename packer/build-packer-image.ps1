@@ -65,9 +65,9 @@ function Build-PackerImage {
      # Though hard coded now it should proablaly be a variable that is passed a parameter to the function. 
      # For now push using "include pools: gecko-t/win10-64-azure" with the needed yaml file uncommented below
       
-     #$yaml_file = 'win10-64-2004-gpu.yaml'
+     $yaml_file = 'win10-64-2004-gpu.yaml'
      #$yaml_file = 'win10-64-2004-gpu-test.yaml'
-     $yaml_file = 'win10-64-2004.yaml'
+     #$yaml_file = 'win10-64-2004.yaml'
      #$yaml_file = 'win10-64-2004-test.yaml'
 
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
