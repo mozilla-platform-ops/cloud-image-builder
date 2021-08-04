@@ -206,6 +206,7 @@ for platform in includePlatforms:
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
                 if key in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test']:
+                    $packer = true
                     packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
                     with open(packerConfigPath, 'r') as packerConfigStream:
                         packerConfig = yaml.safe_load(packerConfigStream)
@@ -313,6 +314,7 @@ for platform in includePlatforms:
                 buildTaskId = None
                 print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
+            if (!$packer) {exit}
             for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools]:
                 machineImageBuildTaskIdsForPool = []
                 #taggingTaskIdsForPool = []
