@@ -314,7 +314,7 @@ for platform in includePlatforms:
                 buildTaskId = None
                 print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
-            if (!$packer) {exit}
+            if ($packer) {exit}
             for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools]:
                 machineImageBuildTaskIdsForPool = []
                 #taggingTaskIdsForPool = []
