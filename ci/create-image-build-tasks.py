@@ -206,7 +206,7 @@ for platform in includePlatforms:
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
                 if key in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test']:
-                    [bool] packer = true
+                    packer = true
                     packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
                     with open(packerConfigPath, 'r') as packerConfigStream:
                         packerConfig = yaml.safe_load(packerConfigStream)
