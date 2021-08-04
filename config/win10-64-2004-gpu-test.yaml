@@ -24,10 +24,9 @@ manager:
               - northcentralus
               - southcentralus
               - eastus
-			  - northeurope
-			  - southeurope
+              - northeurope
+              - southeurope
           lifecycle: spot
           owner: mcornmesser@mozilla.com
           provider: azure2
           platform: azure
-
