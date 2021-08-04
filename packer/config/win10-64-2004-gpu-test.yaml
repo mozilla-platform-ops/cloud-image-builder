@@ -11,6 +11,8 @@ azure:
         - northcentralus
         - southcentralus
         - eastus
+        - northeurope
+        - southeurope
 vm:
     size: Standard_NV6
     disk_additional_size: 30
@@ -19,5 +21,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: fee55f6
+        deploymentId: c756b1b
         managed_by: packer

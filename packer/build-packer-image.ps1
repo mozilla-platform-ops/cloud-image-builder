@@ -5,7 +5,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 param (
   [Parameter(Mandatory = $true)]
-  [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2' )]
+  [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
   [string] $location
 )
 
@@ -50,7 +50,7 @@ function Write-Log {
 function Build-PackerImage {
   param (
     [Parameter(Mandatory = $true)]
-    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2')]
+    [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
     [string] $location
   )
   begin {
@@ -65,8 +65,8 @@ function Build-PackerImage {
      # Though hard coded now it should proablaly be a variable that is passed a parameter to the function. 
      # For now push using "include pools: gecko-t/win10-64-azure" with the needed yaml file uncommented below
       
-     $yaml_file = 'win10-64-2004-gpu.yaml'
-     #$yaml_file = 'win10-64-2004-gpu-test.yaml'
+     #$yaml_file = 'win10-64-2004-gpu.yaml'
+     $yaml_file = 'win10-64-2004-gpu-test.yaml'
      #$yaml_file = 'win10-64-2004.yaml'
      #$yaml_file = 'win10-64-2004-test.yaml'
 
