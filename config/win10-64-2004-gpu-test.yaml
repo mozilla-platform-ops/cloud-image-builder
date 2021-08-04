@@ -1,0 +1,12 @@
+---
+target:
+    - platform: azure
+      region: North Central US
+    - platform: azure
+      region: South Central US
+    - platform: azure
+      region: East US
+    - platform: azure
+      region: North Europe
+    - platform: azure
+      region: South Europe
