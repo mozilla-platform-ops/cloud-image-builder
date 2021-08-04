@@ -205,8 +205,8 @@ for platform in includePlatforms:
             isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
-                if key in ['win10-64', 'win10-64-gpu']:
-                    packerConfigPath = '{}/../packer/{}_packer.yaml'.format(os.path.dirname(__file__), key)
+                if key in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test']:
+                    packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
                     with open(packerConfigPath, 'r') as packerConfigStream:
                         packerConfig = yaml.safe_load(packerConfigStream)
                         for location in packerConfig['azure']['locations']:
