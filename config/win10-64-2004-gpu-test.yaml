@@ -12,21 +12,21 @@ target:
       region: South Europe
 manager:
     pool:
-    - domain: gecko-t
-      variant: win10-64-2004-gpu-test
-      capacity:
-          minimum: 0
-          maximum: 3
-        timeout:
-          registration: 3600
-          reregistration: 86400
-        locations:
-            - northcentralus
-            - southcentralus
-            - eastus
-            - northeurope
-            - southeurope
-        lifecycle: spot
-        owner: mcornmesser@mozilla.com
-        provider: azure2
-        platform: azure
+        - domain: gecko-t
+          variant: win10-64-2004-gpu-test
+          capacity:
+            minimum: 0
+            maximum: 3
+          timeout:
+            registration: 3600
+            reregistration: 86400
+            locations:
+                - northcentralus
+                - southcentralus
+                - eastus
+                - northeurope
+                - southeurope
+          lifecycle: spot
+          owner: mcornmesser@mozilla.com
+          provider: azure2
+          platform: azure
