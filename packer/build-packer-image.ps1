@@ -7,7 +7,7 @@ param (
   [Parameter(Mandatory = $true)]
   [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
   [string] $location,
-  [string] $key
+  [string] $yaml_file
 )
 
 function Write-Log {
@@ -53,10 +53,10 @@ function Build-PackerImage {
     [Parameter(Mandatory = $true)]
     [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
     [string] $location,
-    [string] $key
+    [string] $yaml_file
   )
   begin {
-    Write-host Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 
   process {
@@ -71,7 +71,6 @@ function Build-PackerImage {
      #$yaml_file = 'win10-64-2004-gpu-test.yaml'
      #$yaml_file = 'win10-64-2004.yaml'
      #$yaml_file = 'win10-64-2004-test.yaml'
-     $yaml_file = $key
 
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
 
