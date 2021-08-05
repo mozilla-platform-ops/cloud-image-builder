@@ -44,7 +44,8 @@ includePlatforms = yaml.safe_load(open('{}/../.platforms.yml'.format(os.path.dir
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
 for KEY in includeKeys:
     is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
-
+print("CHEKCING")
+print(is_packer)
 overwriteDiskImage = False
 overwriteMachineImage = False
 
