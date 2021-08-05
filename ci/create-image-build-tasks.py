@@ -213,7 +213,6 @@ for platform in includePlatforms:
             config = yaml.safe_load(stream)
             isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
             print("INCLUDED?")
-            print(includepools)
             print(isDiskImageForIncludedPool)
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
