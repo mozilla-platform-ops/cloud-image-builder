@@ -111,16 +111,6 @@ print('[debug] auth.currentScopes:')
 for scope in auth.currentScopes()['scopes']:
     print(' - {}'.format(scope))
 
-
-for KEY in includeKeys:
-    is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
-print("CHEKCING")
-print(includeKeys)
-print(KEY)
-print(is_packer)
-print("POOLS")
-print(includePools)
-
 yamlLintTaskId = slugid.nice()
 createTask(
     queue = queue,
@@ -206,6 +196,15 @@ for resourceGroup in azurePurgeTaskIds:
         ],
         taskGroupId = taskGroupId
     )
+
+for KEY in includeKeys:
+    is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
+print("CHEKCING")
+print(includeKeys)
+print(KEY)
+print(is_packer)
+print("POOLS")
+print(includePools)
 
 for platform in includePlatforms:
     for key in includeKeys:
