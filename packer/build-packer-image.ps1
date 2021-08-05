@@ -6,8 +6,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 param (
   [Parameter(Mandatory = $true)]
   [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
-  [string] $key,
-  [string] $location
+  [string] $location,
+  [string] $key
 )
 
 function Write-Log {
@@ -52,8 +52,8 @@ function Build-PackerImage {
   param (
     [Parameter(Mandatory = $true)]
     [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
-    [string] $key,
-    [string] $location
+    [string] $location,
+    [string] $key
   )
   begin {
     Write-host Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'

@@ -243,7 +243,7 @@ for platform in includePlatforms:
                                 'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
                                 'cd cloud-image-builder',
                                 'git reset --hard {}'.format(commitSha),
-                                'powershell -File packer\\build-packer-image.ps1 {}.yaml {}'.format(key, location)
+                                'powershell -File packer\\build-packer-image.ps1 {} {}.yaml'.format(location, key)
                             ],
                             scopes = [
                                 'generic-worker:os-group:relops-3/win2019/Administrators',
