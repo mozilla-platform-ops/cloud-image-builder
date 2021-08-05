@@ -205,14 +205,14 @@ print(KEY)
 print(is_packer)
 print("POOLS")
 print(includePools)
-print(pool)
 
 for platform in includePlatforms:
     for key in includeKeys:
         configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
         with open(configPath, 'r') as stream:
             config = yaml.safe_load(stream)
-            isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
+            #isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
+            isDiskImageForIncludedPool = True
             print("INCLUDED?")
             print(isDiskImageForIncludedPool)
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
