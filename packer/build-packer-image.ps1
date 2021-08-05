@@ -109,4 +109,4 @@ function Build-PackerImage {
   }
 }
 
-Build-PackerImage -location $location
+Build-PackerImage -location $location -yaml_file $yaml_file
