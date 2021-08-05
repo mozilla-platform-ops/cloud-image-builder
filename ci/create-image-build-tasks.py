@@ -208,6 +208,7 @@ for platform in includePlatforms:
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
                 if is_packer:
+                    print("did")
                     packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
                     with open(packerConfigPath, 'r') as packerConfigStream:
                         packerConfig = yaml.safe_load(packerConfigStream)
@@ -262,6 +263,7 @@ for platform in includePlatforms:
                                 taskGroupId = taskGroupId
                             )
                 else:
+                    print("DID NOT")
                     buildTaskId = slugid.nice()
                     createTask(
                         queue = queue,
