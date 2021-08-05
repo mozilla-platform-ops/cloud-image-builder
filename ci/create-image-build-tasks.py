@@ -205,6 +205,7 @@ print(KEY)
 print(is_packer)
 print("POOLS")
 print(includePools)
+print(pool)
 
 for platform in includePlatforms:
     for key in includeKeys:
