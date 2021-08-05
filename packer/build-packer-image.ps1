@@ -70,7 +70,7 @@ function Build-PackerImage {
      #$yaml_file = 'win10-64-2004-gpu-test.yaml'
      #$yaml_file = 'win10-64-2004.yaml'
      #$yaml_file = 'win10-64-2004-test.yaml'
-     $yaml_file = ('{0}.yaml' -f $key)
+     $yaml_file = $key
 
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
 
