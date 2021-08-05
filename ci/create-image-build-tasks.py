@@ -199,17 +199,10 @@ for resourceGroup in azurePurgeTaskIds:
 
 for KEY in includeKeys:
     is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
-print("CHEKCING")
-print(includeKeys)
-print(KEY)
-print(is_packer)
-print("POOLS")
-print(includePools)
 
 for platform in includePlatforms:
     for key in includeKeys:
         if is_packer:
-            print("did")
             packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
             with open(packerConfigPath, 'r') as packerConfigStream:
                 packerConfig = yaml.safe_load(packerConfigStream)
@@ -250,7 +243,7 @@ for platform in includePlatforms:
                                 'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
                                 'cd cloud-image-builder',
                                 'git reset --hard {}'.format(commitSha),
-                                'powershell -File packer\\build-packer-image.ps1 {}'.format(location)
+                                'powershell -File packer\\build-packer-image.ps1 {}.yaml {}'.format(key, location)
                             ],
                             scopes = [
                                 'generic-worker:os-group:relops-3/win2019/Administrators',

@@ -6,6 +6,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 param (
   [Parameter(Mandatory = $true)]
   [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
+  [string] $key,
   [string] $location
 )
 
@@ -66,9 +67,10 @@ function Build-PackerImage {
      # For now push using "include pools: gecko-t/win10-64-azure" with the needed yaml file uncommented below
       
      #$yaml_file = 'win10-64-2004-gpu.yaml'
-     $yaml_file = 'win10-64-2004-gpu-test.yaml'
+     #$yaml_file = 'win10-64-2004-gpu-test.yaml'
      #$yaml_file = 'win10-64-2004.yaml'
      #$yaml_file = 'win10-64-2004-test.yaml'
+     $yaml_file = ('{0}.yaml' -f $key)
 
      $yaml_data = (Get-Content -Path (Join-Path -Path $PSScriptRoot\config -ChildPath $yaml_file) -Raw | ConvertFrom-Yaml)
 
