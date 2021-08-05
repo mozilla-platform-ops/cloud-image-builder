@@ -208,75 +208,71 @@ print(includePools)
 
 for platform in includePlatforms:
     for key in includeKeys:
-        configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
-        with open(configPath, 'r') as stream:
-            config = yaml.safe_load(stream)
-            #isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
-            isDiskImageForIncludedPool = True
-            print("INCLUDED?")
-            print(isDiskImageForIncludedPool)
-            queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
-            if queueDiskImageBuild:
-                if is_packer:
-                    print("did")
-                    packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
-                    with open(packerConfigPath, 'r') as packerConfigStream:
-                        packerConfig = yaml.safe_load(packerConfigStream)
-                        for location in packerConfig['azure']['locations']:
-                            buildTaskId = slugid.nice()
-                            createTask(
-                                queue = queue,
-                                taskId = buildTaskId,
-                                taskName = '01 :: build {} {} packer image for {}'.format(platform, key, location),
-                                taskDescription = 'build a customised {} packer image file for {} {}'.format(key, platform, location),
-                                dependencies = [ yamlLintTaskId ],
-                                maxRunMinutes = 180,
-                                retries = 1,
-                                retriggerOnExitCodes = [ 123 ],
-                                provisioner = 'relops-3',
-                                workerType = 'win2019',
-                                priority = 'high',
-                                artifacts = [
-                                    {
-                                        'type': 'file',
-                                        'name': 'public/unattend.xml',
-                                        'path': 'unattend.xml'
-                                    },
-                                    {
-                                        'type': 'file',
-                                        'name': 'public/image-bucket-resource.json',
-                                        'path': 'image-bucket-resource.json'
-                                    }
-                                ],
-                                osGroups = [
-                                    'Administrators'
-                                ],
-                                features = {
-                                    'taskclusterProxy': True,
-                                    'runAsAdministrator': True
-                                },
-                                commands = [
-                                    'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
-                                    'cd cloud-image-builder',
-                                    'git reset --hard {}'.format(commitSha),
-                                    'powershell -File packer\\build-packer-image.ps1 {}'.format(location)
-                                ],
-                                scopes = [
-                                    'generic-worker:os-group:relops-3/win2019/Administrators',
-                                    'generic-worker:run-as-administrator:relops-3/win2019',
-                                    'secrets:get:project/relops/image-builder/dev'
-                                ],
-                                routes = [
-                                    'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
-                                    'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
-                                ],
-                                taskGroupId = taskGroupId
-                            )
-                else:
-                    print("DID NOT")
+        if is_packer:
+        	print("did")
+        	packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
+        	with open(packerConfigPath, 'r') as packerConfigStream:
+        		packerConfig = yaml.safe_load(packerConfigStream)
+            	for location in packerConfig['azure']['locations']:
+            		buildTaskId = slugid.nice()
+                	createTask(
+                		queue = queue,
+                    	taskId = buildTaskId,
+                    	taskName = '01 :: build {} {} packer image for {}'.format(platform, key, location),
+                    	taskDescription = 'build a customised {} packer image file for {} {}'.format(key, platform, location),
+                    	dependencies = [ yamlLintTaskId ],
+                    	maxRunMinutes = 180,
+                    	retries = 1,
+                    	retriggerOnExitCodes = [ 123 ],
+                    	provisioner = 'relops-3',
+                    	workerType = 'win2019',
+                    	priority = 'high',
+                    	artifacts = [
+                    		{
+                        		'type': 'file',
+                            	'name': 'public/unattend.xml',
+                            	'path': 'unattend.xml'
+							},
+                        	{
+                        		'type': 'file',
+                            	'name': 'public/image-bucket-resource.json',
+                            	'path': 'image-bucket-resource.json'
+                       		}
+              			],
+						osGroups = [
+							'Administrators'
+						],
+							features = {
+								'taskclusterProxy': True,
+								'runAsAdministrator': True
+							},
+							commands = [
+								'git clone https://github.com/mozilla-platform-ops/cloud-image-builder.git',
+								'cd cloud-image-builder',
+								'git reset --hard {}'.format(commitSha),
+								'powershell -File packer\\build-packer-image.ps1 {}'.format(location)
+							],
+							scopes = [
+								'generic-worker:os-group:relops-3/win2019/Administrators',
+								'generic-worker:run-as-administrator:relops-3/win2019',
+								'secrets:get:project/relops/image-builder/dev'
+							],
+							routes = [
+								'index.project.relops.cloud-image-builder.{}.{}.revision.{}'.format(platform, key, commitSha),
+								'index.project.relops.cloud-image-builder.{}.{}.latest'.format(platform, key)
+							],
+							taskGroupId = taskGroupId
+						)
+		else:            
+        	configPath = '{}/../config/{}.yaml'.format(os.path.dirname(__file__), key)
+        	with open(configPath, 'r') as stream:
+            	config = yaml.safe_load(stream)
+            	isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
+            	queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
+            	if queueDiskImageBuild:
                     buildTaskId = slugid.nice()
                     createTask(
-                        queue = queue,
+                    	queue = queue,
                         taskId = buildTaskId,
                         taskName = '01 :: build {} {} disk image from {} {} iso'.format(platform, key, config['image']['os'], config['image']['edition']),
                         taskDescription = 'build a customised {} disk image file for {}, from iso file {} and upload to cloud storage'.format(key, platform, os.path.basename(config['iso']['source']['key'])),
@@ -323,11 +319,12 @@ for platform in includePlatforms:
                         ],
                         taskGroupId = taskGroupId
                     )
-            else:
-                buildTaskId = None
-                print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
+            	else:
+                	buildTaskId = None
+                	print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
             if is_packer: break
+
             for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools]:
                 machineImageBuildTaskIdsForPool = []
                 #taggingTaskIdsForPool = []
