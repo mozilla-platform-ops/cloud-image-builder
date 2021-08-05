@@ -12,7 +12,7 @@ azure:
         - southcentralus
         - eastus
         - northeurope
-        - southeurope
+        - westeurope
 vm:
     size: Standard_NV6
     disk_additional_size: 30
