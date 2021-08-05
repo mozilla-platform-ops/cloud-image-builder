@@ -7,7 +7,7 @@ param (
   [Parameter(Mandatory = $true)]
   [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
   [string] $location,
-  [string] $yaml_file
+  [string] $yaml_file=$args[1]
 )
 
 function Write-Log {
@@ -53,7 +53,7 @@ function Build-PackerImage {
     [Parameter(Mandatory = $true)]
     [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
     [string] $location,
-    [string] $yaml_file
+    [string] $yaml_file=$args[1]
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
