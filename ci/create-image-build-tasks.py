@@ -42,7 +42,8 @@ includeRegions = sorted(list(set([region for regions in map(lambda configPath: m
 includeEnvironments = yaml.safe_load(open('{}/../.environments.yml'.format(os.path.dirname(__file__)), 'r'))
 includePlatforms = yaml.safe_load(open('{}/../.platforms.yml'.format(os.path.dirname(__file__)), 'r'))
 currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TASKCLUSTER_ROOT_URL'] else 'production'
-is_packer = True if key in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
+for KEY in includeKeys:
+    is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
 
 overwriteDiskImage = False
 overwriteMachineImage = False
