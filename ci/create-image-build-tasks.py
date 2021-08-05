@@ -45,6 +45,8 @@ currentEnvironment = 'staging' if 'stage.taskcluster.nonprod' in os.environ['TAS
 for KEY in includeKeys:
     is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
 print("CHEKCING")
+print(includeKeys)
+print(KEY)
 print(is_packer)
 overwriteDiskImage = False
 overwriteMachineImage = False
