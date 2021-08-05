@@ -34,6 +34,8 @@ platformClient = {
         secret[azureDeployment]['subscription_id'])
 }
 
+is_packer = True if key in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test'] else False
+
 commitSha = os.getenv('GITHUB_HEAD_SHA')
 allKeyConfigPaths = glob.glob('{}/../config/win*.yaml'.format(os.path.dirname(__file__)))
 includeKeys = list(map(lambda x: pathlib.Path(x).stem, allKeyConfigPaths))
@@ -205,8 +207,7 @@ for platform in includePlatforms:
             isDiskImageForIncludedPool = any('{}/{}'.format(pool['domain'], pool['variant']) in includePools for pool in config['manager']['pool'])
             queueDiskImageBuild = (not poolDeploy) and isDiskImageForIncludedPool and (overwriteDiskImage or diskImageManifestHasChanged(platform, key, commitSha))
             if queueDiskImageBuild:
-                if key in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004-test', 'win10-64-2004-gpu-test']:
-                    packer=True
+                if is_packer == True:
                     packerConfigPath = '{}/../packer/config/{}.yaml'.format(os.path.dirname(__file__), key)
                     with open(packerConfigPath, 'r') as packerConfigStream:
                         packerConfig = yaml.safe_load(packerConfigStream)
@@ -314,7 +315,7 @@ for platform in includePlatforms:
                 buildTaskId = None
                 print('info: skipped disk image build task for {} {} {}'.format(platform, key, commitSha))
 
-            if packer == True: break
+            if is_packer == True: break
             for pool in [p for p in config['manager']['pool'] if p['platform'] == platform and '{}/{}'.format(p['domain'], p['variant']) in includePools]:
                 machineImageBuildTaskIdsForPool = []
                 #taggingTaskIdsForPool = []
