@@ -6,7 +6,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 param (
   [Parameter(Mandatory = $true)]
   [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
-  [string] $location,
+  [string] $location=$args[0],
   [string] $yaml_file=$args[1]
 )
 
@@ -52,7 +52,7 @@ function Build-PackerImage {
   param (
     [Parameter(Mandatory = $true)]
     [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
-    [string] $location,
+    [string] $location=$arg[0],
     [string] $yaml_file=$args[1]
   )
   begin {
