@@ -9,7 +9,7 @@ azure:
     build_location: eastus
     locations:
         - centralus
-        - northcentralus
+        #- northcentralus
         #- southcentralus
         #- eastus
         #- eastus2
@@ -23,5 +23,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: b839260
+        deploymentId: 94d7b70
         managed_by: packer
