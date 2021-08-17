@@ -60,7 +60,8 @@ function Build-PackerImage {
   }
 
   process {
-     
+
+     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::tls12   
      Install-Module powershell-yaml -force
      
      # This ymal file is stripped down to what Packer needs for dev and testing
