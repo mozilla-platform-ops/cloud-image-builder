@@ -5,7 +5,7 @@ image:
     sku: 20h1-evd
 azure:
     managed_image_resource_group_name: rg-packer-through-cib
-    managed_image_storage_account_type: StandardSSD_LRS
+    managed_image_storage_account_type: Standard_LRS
     build_location: eastus
     locations:
         - centralus
