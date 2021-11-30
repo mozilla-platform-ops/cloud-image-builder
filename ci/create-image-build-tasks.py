@@ -220,13 +220,6 @@ for platform in includePlatforms:
                         provisioner = 'relops-3',
                         workerType = 'win2019',
                         priority = 'high',
-                        artifacts = [
-                            {
-                                'type': 'file',
-                                'name': 'public/image-bucket-resource.json',
-                                'path': 'image-bucket-resource.json'
-                            }
-                        ],
                         osGroups = [
                             'Administrators'
                         ],
