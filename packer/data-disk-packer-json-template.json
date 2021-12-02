@@ -66,6 +66,10 @@
 	  },	
       "location": "{{user `location`}}",
       "vm_size": "{{user `vm_size`}}",
+      "disk_additional_size": [
+        "{{user `disk_additional_size`}}"
+       ],
+
       "async_resourcegroup_delete":true
     }
   ],
