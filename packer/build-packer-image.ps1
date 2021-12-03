@@ -104,6 +104,10 @@ function Build-PackerImage {
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
      .\packer.exe build -force $PSScriptRoot\packer-json-template.json
+     write-host Last exit was 
+     write-host $LASTEXITCODE
+
+
   }
   end {
     write-host Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
