@@ -102,7 +102,8 @@ function Build-PackerImage {
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId, $random)
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
-     powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
+     #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
+     .\packer.exe build -force $PSScriptRoot\packer-json-template.json
   }
   end {
     write-host Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
