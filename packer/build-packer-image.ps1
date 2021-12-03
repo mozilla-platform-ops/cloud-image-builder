@@ -104,9 +104,10 @@ function Build-PackerImage {
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
      .\packer.exe build -force $PSScriptRoot\packer-json-template.json
-     write-host Last exit was 
-     write-host $LASTEXITCODE
 
+     if ($LASTEXITCODE -ne 0) {
+       exit 99
+     }
 
   }
   end {
