@@ -96,7 +96,7 @@ function Build-PackerImage {
      $Env:deploymentId = $yaml_data.vm.tags.deploymentId
      $Env:managed_by = $yaml_data.vm.tags.managed_by
      $Env:location = $location
-     #$Env:vm_size = $yaml_data.vm.size
+     $Env:vm_size = $yaml_data.vm.size
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
      $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId, $random)
