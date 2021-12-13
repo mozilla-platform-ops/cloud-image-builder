@@ -20,8 +20,10 @@ vm:
     #disk_additional_size: 30
     tags:
         workerType: gecko-t-win10-64-2004-test
-        sourceOrganisation: mozilla-platform-ops
+        #sourceOrganisation: mozilla-platform-ops
+        sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: bff70ed
+        deploymentId: 4eee33c
+        #deploymentId: bff70ed
         managed_by: packer
