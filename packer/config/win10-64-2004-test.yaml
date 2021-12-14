@@ -24,6 +24,6 @@ vm:
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceRevision: cloud_windows
-        deploymentId: 6243648
+        deploymentId: 71456bd
         #deploymentId: bff70ed
         managed_by: packer
