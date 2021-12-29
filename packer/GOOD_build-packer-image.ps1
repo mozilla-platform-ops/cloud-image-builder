@@ -92,8 +92,7 @@ function Build-PackerImage {
      $Env:workerType = $yaml_data.vm.tags.workerType
      $Env:sourceOrganisation = $yaml_data.vm.tags.sourceOrganisation
      $Env:sourceRepository = $yaml_data.vm.tags.sourceRepository
-     #$Env:sourceRevision = $yaml_data.vm.tags.sourceRevision
-     $Env:sourceBranch = $yaml_data.vm.tags.sourceBranch
+     $Env:sourceRevision = $yaml_data.vm.tags.sourceRevision
      $Env:deploymentId = $yaml_data.vm.tags.deploymentId
      $Env:managed_by = $yaml_data.vm.tags.managed_by
      $Env:location = $location
@@ -104,8 +103,7 @@ function Build-PackerImage {
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
-     #.\packer.exe build -force $PSScriptRoot\packer-json-template.json
-     .\packer.exe build -force $PSScriptRoot\NEW_packer-json-template.json
+     .\packer.exe build -force $PSScriptRoot\packer-json-template.json
 
      if ($LASTEXITCODE -ne 0) {
        exit 99

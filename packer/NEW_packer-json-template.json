@@ -19,7 +19,7 @@
 	"workerType": "{{env `workerType`}}",
 	"sourceOrganisation": "{{env `sourceOrganisation`}}",
 	"sourceRepository": "{{env `sourceRepository`}}",
-	"sourceRevision": "{{env `sourceRevision`}}",
+	"sourceBranch": "{{env `sourceBranch`}}",
 	"deploymentId": "{{env `deploymentId`}}",
 	"managed-by": "{{env `managed_by`}}",
 	
@@ -61,7 +61,7 @@
 		  "workerType": "{{user `workerType`}}",
 		  "sourceOrganisation": "{{user `sourceOrganisation`}}",
 		  "sourceRepository": "{{user `sourceRepository`}}",
-		  "sourceRevision": "{{user `sourceRevision`}}",
+		  "sourceBranch": "{{user `sourceBranch`}}",
 		  "deploymentId": "{{user `deploymentId`}}"
 	  },	
       "location": "{{user `location`}}",
