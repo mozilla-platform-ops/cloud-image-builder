@@ -25,6 +25,6 @@ vm:
         sourceRepository: ronin_puppet
         #sourceRevision: cloud_windows
         sourceBranch: cloud_windows
-        deploymentId: 49cd940
+        deploymentId: f160361
         #deploymentId: bff70ed
         managed_by: packer
