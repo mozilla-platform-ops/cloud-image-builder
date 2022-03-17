@@ -1,0 +1,27 @@
+---
+image:
+    publisher: MicrosoftWindowsDesktop
+    offer: Windows-10
+    sku: 20h1-evd
+azure:
+    managed_image_resource_group_name: rg-packer-through-cib
+    managed_image_storage_account_type: Standard_LRS
+    build_location: eastus
+    locations:
+        - centralus
+        - northcentralus
+        - southcentralus
+        - eastus
+        - eastus2
+        - westus
+        - westus2
+vm:
+    size: Standard_F8s_v2
+    disk_additional_size: 30
+    tags:
+        workerType: gecko-t-win10-64-2004
+        sourceOrganisation: mozilla-platform-ops
+        sourceRepository: ronin_puppet
+        sourceRevision: cloud_windows
+        deploymentId: f160361
+        managed_by: packer

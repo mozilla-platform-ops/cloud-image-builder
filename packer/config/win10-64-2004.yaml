@@ -9,19 +9,23 @@ azure:
     build_location: eastus
     locations:
         - centralus
-        - northcentralus
-        - southcentralus
-        - eastus
-        - eastus2
-        - westus
-        - westus2
+        #- northcentralus
+        #- southcentralus
+        #- eastus
+        #- eastus2
+        #- westus
+        #- westus2
 vm:
     size: Standard_F8s_v2
-    disk_additional_size: 30
+    #disk_additional_size: 30
     tags:
-        workerType: gecko-t-win10-64-2004
-        sourceOrganisation: mozilla-platform-ops
+        worker_pool_id: gecko-t/win10-64-2004-base
+        workerType: gecko-t-win10-64-2004-test
+        #sourceOrganisation: mozilla-platform-ops
+        sourceOrganisation: markcor
         sourceRepository: ronin_puppet
-        sourceRevision: cloud_windows
-        deploymentId: f160361
+        #sourceRevision: cloud_windows
+        sourceBranch: cloud_windows
+        deploymentId: fe2784e
+        #deploymentId: bff70ed
         managed_by: packer
