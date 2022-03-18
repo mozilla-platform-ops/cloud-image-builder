@@ -90,6 +90,7 @@ function Build-PackerImage {
      $Env:managed_image_storage_account_type = $yaml_data.azure.managed_image_storage_account_type
      $Env:Project = $yaml_data.vm.tags.Project
      #$Env:workerType = $yaml_data.vm.tags.workerType
+     $Env:base_image = $yaml_data.vm.tags.base_image
      $Env:worker_pool_id = $yaml_data.vm.tags.worker_pool_id
      $Env:sourceOrganisation = $yaml_data.vm.tags.sourceOrganisation
      $Env:sourceRepository = $yaml_data.vm.tags.sourceRepository

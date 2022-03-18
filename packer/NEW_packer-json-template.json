@@ -16,7 +16,8 @@
 	"managed_image_storage_account_type": "{{env `managed_image_storage_account_type`}}",
 	
 	"Project": "{{env `Project`}}",
-	"workerType": "{{env `workerType`}}",
+    "base_image": "{{env `base_image`}}",
+	"worker_pool_id": "{{env `worker_pool_id`}}",
 	"sourceOrganisation": "{{env `sourceOrganisation`}}",
 	"sourceRepository": "{{env `sourceRepository`}}",
 	"sourceBranch": "{{env `sourceBranch`}}",
@@ -58,6 +59,7 @@
       "virtual_network_resource_group_name": "",
       "azure_tags": {
           "Project": "{{user `Project`}}",
+          "base_image": "{{user `base_image`}}",
 		  "worker_pool_id": "{{user `worker_pool_id`}}",
 		  "sourceOrganisation": "{{user `sourceOrganisation`}}",
 		  "sourceRepository": "{{user `sourceRepository`}}",
