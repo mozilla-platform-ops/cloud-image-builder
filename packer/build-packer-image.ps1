@@ -89,7 +89,8 @@ function Build-PackerImage {
      $Env:managed_image_resource_group_name = $yaml_data.azure.managed_image_resource_group_name
      $Env:managed_image_storage_account_type = $yaml_data.azure.managed_image_storage_account_type
      $Env:Project = $yaml_data.vm.tags.Project
-     $Env:workerType = $yaml_data.vm.tags.workerType
+     #$Env:workerType = $yaml_data.vm.tags.workerType
+     $Env:worker_pool_id = $yaml_data.vm.tags.worker_pool_id
      $Env:sourceOrganisation = $yaml_data.vm.tags.sourceOrganisation
      $Env:sourceRepository = $yaml_data.vm.tags.sourceRepository
      #$Env:sourceRevision = $yaml_data.vm.tags.sourceRevision

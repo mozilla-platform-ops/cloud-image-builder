@@ -58,7 +58,7 @@
       "virtual_network_resource_group_name": "",
       "azure_tags": {
           "Project": "{{user `Project`}}",
-		  "workerType": "{{user `workerType`}}",
+		  "worker_pool_id": "{{user `worker_pool_id`}}",
 		  "sourceOrganisation": "{{user `sourceOrganisation`}}",
 		  "sourceRepository": "{{user `sourceRepository`}}",
 		  "sourceBranch": "{{user `sourceBranch`}}",
