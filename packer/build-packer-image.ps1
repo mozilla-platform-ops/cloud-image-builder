@@ -96,6 +96,7 @@ function Build-PackerImage {
      $Env:sourceRepository = $yaml_data.vm.tags.sourceRepository
      #$Env:sourceRevision = $yaml_data.vm.tags.sourceRevision
      $Env:sourceBranch = $yaml_data.vm.tags.sourceBranch
+     $Env:bootstrapscript = ('https://raw.githubusercontent.com/{0}/{1}/{2}/provisioners/windows/azure/azure-bootstrap.ps1' -f  $Env:sourceOrganisation, $Env:sourceRepository, $Env:sourceBranch)
      $Env:deploymentId = $yaml_data.vm.tags.deploymentId
      $Env:managed_by = $yaml_data.vm.tags.managed_by
      $Env:location = $location

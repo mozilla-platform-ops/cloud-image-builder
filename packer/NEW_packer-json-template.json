@@ -21,6 +21,7 @@
 	"sourceOrganisation": "{{env `sourceOrganisation`}}",
 	"sourceRepository": "{{env `sourceRepository`}}",
 	"sourceBranch": "{{env `sourceBranch`}}",
+    "bootstrapscript": "{{env `bootstrapscript`}}", 
 	"deploymentId": "{{env `deploymentId`}}",
 	"managed-by": "{{env `managed_by`}}",
 	
@@ -84,8 +85,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Write-host Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))",
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -96,7 +96,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -107,7 +107,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -118,7 +118,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -129,7 +129,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},	
     {
