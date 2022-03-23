@@ -95,7 +95,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/{{user `sourceOrganisation`}}/{{user `sourceRepository`}}/{{user `sourceBranch`}}/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
 	  ]
 	},
     {
@@ -106,7 +106,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/{{user `sourceOrganisation`}}/{{user `sourceRepository`}}/{{user `sourceBranch`}}/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
 	  ]
 	},
     {
@@ -117,7 +117,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/{{user `sourceOrganisation`}}/{{user `sourceRepository`}}/{{user `sourceBranch`}}/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
 	  ]
 	},
     {
@@ -128,7 +128,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/{{user `sourceOrganisation`}}/{{user `sourceRepository`}}/{{user `sourceBranch`}}/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/$env:sourceOrganisation/$env:sourceRepository/$env:sourceBranch/provisioners/windows/azure/azure-bootstrap.ps1'))"
 	  ]
 	},	
     {
