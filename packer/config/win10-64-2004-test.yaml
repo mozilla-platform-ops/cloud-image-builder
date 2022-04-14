@@ -19,7 +19,7 @@ vm:
     size: Standard_F8s_v2
     #disk_additional_size: 30
     tags:
-        base_image: win10642004
+        base_image: win10642004azure
         worker_pool_id: gecko-t/win10-64-2004-base
         workerType: gecko-t-win10-64-2004-test
         #sourceOrganisation: mozilla-platform-ops
