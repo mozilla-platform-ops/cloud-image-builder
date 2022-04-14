@@ -21,7 +21,7 @@ vm:
     tags:
         base_image: win10642004azure
         worker_pool_id: gecko-t/win10-64-2004-base
-        workerType: gecko-t-win10-64-2004-test
+        workerType: gecko-t-win10-64-2004-base
         #sourceOrganisation: mozilla-platform-ops
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
