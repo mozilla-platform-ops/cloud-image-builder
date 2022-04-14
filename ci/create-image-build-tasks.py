@@ -198,7 +198,7 @@ for resourceGroup in azurePurgeTaskIds:
     )
 
 for KEY in includeKeys:
-    is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004', 'win10-64-2004-gpu-test'] else False
+    is_packer = True if KEY in ['win10-64-2004-test', 'win10-64-2004-gpu', 'win10-64-2004', 'win10-64-2004-gpu-test', 'win10-64-2004-azure'] else False
 
 for platform in includePlatforms:
     for key in includeKeys:
