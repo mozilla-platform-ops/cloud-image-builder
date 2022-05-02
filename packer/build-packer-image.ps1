@@ -92,7 +92,7 @@ function Build-PackerImage {
      #$Env:workerType = $yaml_data.vm.tags.workerType
      $Env:base_image = $yaml_data.vm.tags.base_image
      $Env:worker_pool_id = $yaml_data.vm.tags.worker_pool_id
-     $worker_pool = ($yaml_data.vm.tags.worker_pool_id.replace('/','-')
+     $worker_pool = ($yaml_data.vm.tags.worker_pool_id.replace('/','-'))
      $Env:sourceOrganisation = $yaml_data.vm.tags.sourceOrganisation
      $Env:sourceRepository = $yaml_data.vm.tags.sourceRepository
      #$Env:sourceRevision = $yaml_data.vm.tags.sourceRevision
