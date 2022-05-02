@@ -19,6 +19,7 @@ vm:
     size: Standard_F8s_v2
     #disk_additional_size: 30
     tags:
+        base_image: win10642004azure
         worker_pool_id: gecko-t/win10-64-2004-base
         workerType: gecko-t-win10-64-2004-test
         #sourceOrganisation: mozilla-platform-ops
@@ -26,6 +27,6 @@ vm:
         sourceRepository: ronin_puppet
         #sourceRevision: cloud_windows
         sourceBranch: cloud_windows
-        deploymentId: fe2784e
+        deploymentId: b9ad2bf
         #deploymentId: bff70ed
         managed_by: packer
