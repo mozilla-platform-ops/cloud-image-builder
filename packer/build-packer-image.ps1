@@ -103,10 +103,8 @@ function Build-PackerImage {
      $Env:location = $location
      $Env:vm_size = $yaml_data.vm.size
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
-     $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
+     $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $worker_pool, $location, $yaml_data.vm.tags.deploymentId, $random)
-
-     write-host $Env:temp_resource_group_name
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
