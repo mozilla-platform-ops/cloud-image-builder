@@ -92,6 +92,7 @@ function Build-PackerImage {
      #$Env:workerType = $yaml_data.vm.tags.workerType
      $Env:base_image = $yaml_data.vm.tags.base_image
      $Env:worker_pool_id = $yaml_data.vm.tags.worker_pool_id
+     $worker_pool = ($yaml_data.vm.tags.worker_pool_id.replace('/','-')
      $Env:sourceOrganisation = $yaml_data.vm.tags.sourceOrganisation
      $Env:sourceRepository = $yaml_data.vm.tags.sourceRepository
      #$Env:sourceRevision = $yaml_data.vm.tags.sourceRevision
@@ -103,7 +104,7 @@ function Build-PackerImage {
      $Env:vm_size = $yaml_data.vm.size
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
      $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
-     $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $yaml_data.vm.tags.workerType, $location, $yaml_data.vm.tags.deploymentId, $random)
+     $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $worker_pool, $location, $yaml_data.vm.tags.deploymentId, $random)
 
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
