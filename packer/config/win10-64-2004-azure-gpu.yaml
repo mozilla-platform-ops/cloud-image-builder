@@ -16,7 +16,7 @@ azure:
 vm:
     size: Standard_NV6
     tags:
-        base_image: win10642004azure
+        base_image: win10642004azuregpu
         worker_pool_id: gecko-t/win10-64-2004-base-gpu
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
