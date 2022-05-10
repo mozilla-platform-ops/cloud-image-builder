@@ -9,7 +9,7 @@ azure:
     build_location: eastus
     locations:
         - centralus
-        #- northcentralus
+        - northcentralus
         #- southcentralus
         #- eastus
         #- eastus2
@@ -27,6 +27,6 @@ vm:
         sourceRepository: ronin_puppet
         #sourceRevision: cloud_windows
         sourceBranch: cloud_windows
-        deploymentId: b9ad2bf
+        deploymentId: 5c49641
         #deploymentId: bff70ed
         managed_by: packer
