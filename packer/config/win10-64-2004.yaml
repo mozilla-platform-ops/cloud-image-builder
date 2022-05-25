@@ -15,18 +15,16 @@ azure:
         #- eastus2
         #- westus
         #- westus2
+        #- northeurope
+        #- westeurope
 vm:
     size: Standard_F8s_v2
-    #disk_additional_size: 30
     tags:
         base_image: win10642004azure
         worker_pool_id: gecko-t/win10-64-2004-base
-        workerType: gecko-t-win10-64-2004-test
-        #sourceOrganisation: mozilla-platform-ops
+        #workerType: gecko-t-win10-64-2004-base
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
-        #sourceRevision: cloud_windows
         sourceBranch: cloud_windows
-        deploymentId: 5c49641
-        #deploymentId: bff70ed
+        deploymentId: acb6d2f
         managed_by: packer

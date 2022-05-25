@@ -9,24 +9,16 @@ azure:
     build_location: eastus
     locations:
         - centralus
-        #- northcentralus
-        #- southcentralus
-        #- eastus
-        #- eastus2
-        #- westus
-        #- westus2
+        - northcentralus
+        - southcentralus
+        - northeurope
 vm:
     size: Standard_F8s_v2
-    #disk_additional_size: 30
     tags:
-        base_image: win10642004azuregpu
-        worker_pool_id: gecko-t/win10-64-2004-base
-        workerType: gecko-t-win10-64-2004-test
-        #sourceOrganisation: mozilla-platform-ops
+        base_image: win10642004azure
+        worker_pool_id: gecko-t/win10-64-2004-alpha
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
-        #sourceRevision: cloud_windows
         sourceBranch: cloud_windows
-        deploymentId: b9ad2bf
-        #deploymentId: bff70ed
+        deploymentId: bd3d676
         managed_by: packer
