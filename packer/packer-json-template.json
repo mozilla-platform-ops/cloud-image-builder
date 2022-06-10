@@ -16,10 +16,12 @@
 	"managed_image_storage_account_type": "{{env `managed_image_storage_account_type`}}",
 	
 	"Project": "{{env `Project`}}",
-	"workerType": "{{env `workerType`}}",
+    "base_image": "{{env `base_image`}}",
+	"worker_pool_id": "{{env `worker_pool_id`}}",
 	"sourceOrganisation": "{{env `sourceOrganisation`}}",
 	"sourceRepository": "{{env `sourceRepository`}}",
-	"sourceRevision": "{{env `sourceRevision`}}",
+	"sourceBranch": "{{env `sourceBranch`}}",
+    "bootstrapscript": "{{env `bootstrapscript`}}", 
 	"deploymentId": "{{env `deploymentId`}}",
 	"managed-by": "{{env `managed_by`}}",
 	
@@ -58,10 +60,11 @@
       "virtual_network_resource_group_name": "",
       "azure_tags": {
           "Project": "{{user `Project`}}",
-		  "workerType": "{{user `workerType`}}",
+          "base_image": "{{user `base_image`}}",
+		  "worker_pool_id": "{{user `worker_pool_id`}}",
 		  "sourceOrganisation": "{{user `sourceOrganisation`}}",
 		  "sourceRepository": "{{user `sourceRepository`}}",
-		  "sourceRevision": "{{user `sourceRevision`}}",
+		  "sourceBranch": "{{user `sourceBranch`}}",
 		  "deploymentId": "{{user `deploymentId`}}"
 	  },	
       "location": "{{user `location`}}",
@@ -73,11 +76,8 @@
     {
       "type": "powershell",
       "inline": [
-          "$ErrorActionPreference='Stop'",
-
-          "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://chocolatey.org/install.ps1'))",
-          "& choco feature enable -n allowGlobalConfirmation",
-          "Write-Host \"Chocolatey Installed.\""
+          "$ErrorActionPreference='SilentlyContinue'",
+          "Set-ExecutionPolicy unrestricted -force"
       ]
     },
     {
@@ -85,7 +85,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-	    "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -96,7 +96,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-	    "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -107,7 +107,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-	    "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -118,7 +118,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-	    "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
     {
@@ -129,7 +129,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-	    "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('https://raw.githubusercontent.com/mozilla-platform-ops/ronin_puppet/cloud_windows/provisioners/windows/azure/azure-bootstrap.ps1'))"
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},	
     {
