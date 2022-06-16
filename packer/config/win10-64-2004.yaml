@@ -21,7 +21,7 @@ vm:
     size: Standard_F8s_v2
     tags:
         base_image: win10642004azure
-        worker_pool_id: win10-64-2004-base
+        worker_pool_id: win10-64-2004
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
