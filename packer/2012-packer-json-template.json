@@ -99,6 +99,7 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
+        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12;",
         "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
