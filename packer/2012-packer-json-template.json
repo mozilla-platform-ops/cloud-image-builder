@@ -85,9 +85,9 @@
       "elevated_user": "SYSTEM",
       "elevated_password": "",
       "inline": [
-        "New-Item -Path '$env:systemdrive\scratch' -ItemType Directory",
-		"Invoke-WebRequest -Uri  https://s3-us-west-2.amazonaws.com/ronin-puppet-package-repo/Windows/prerequisites/Win8.1AndW2K12R2-KB3191564-x64.msu  -UseBasicParsing -OutFile $env:systemdrive\scratch\Win8.1AndW2K12R2-KB3191564-x64.msu ",
-		"wusa.exe $env:systemdrive\scratch\Win8.1AndW2K12R2-KB3191564-x64.msu /quiet /norestart ",
+        "New-Item -Path '$env:systemdrive\\scratch' -ItemType Directory",
+		"Invoke-WebRequest -Uri  https://s3-us-west-2.amazonaws.com/ronin-puppet-package-repo/Windows/prerequisites/Win8.1AndW2K12R2-KB3191564-x64.msu  -UseBasicParsing -OutFile $env:systemdrive\\scratch\\Win8.1AndW2K12R2-KB3191564-x64.msu ",
+		"wusa.exe $env:systemdrive\\scratch\\Win8.1AndW2K12R2-KB3191564-x64.msu /quiet /norestart ",
 		"start-sleep -Seconds 120"
       ]
     },
