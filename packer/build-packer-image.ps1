@@ -106,7 +106,7 @@ function Build-PackerImage {
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
      $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $worker_pool, $location, $yaml_data.vm.tags.deploymentId, $random)
-     if (($yaml_file -like "*alpha" )) {
+     if (($yaml_file -like "*alpha*" )) {
         $Env:managed_image_name = ('{0}-{1}-{2}-alpha' -f $worker_pool, $location, $yaml_data.image.sku)
      } else {
         $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
@@ -116,8 +116,11 @@ function Build-PackerImage {
      (New-Object Net.WebClient).DownloadFile('https://cloud-image-builder.s3-us-west-2.amazonaws.com/packer.exe', '.\packer.exe')
      #powershell .\packer.exe build -force $PSScriptRoot\packer-json-template.json
      #.\packer.exe build -force $PSScriptRoot\packer-json-template.json
-     .\packer.exe build -force $PSScriptRoot\2012-packer-json-template.json
-
+     if (($yaml_file -like "*2012*" )) {
+        .\packer.exe build -force $PSScriptRoot\2012-packer-json-template.json
+     } else {
+        .\packer.exe build -force $PSScriptRoot\packer-json-template.json
+     }
      if ($LASTEXITCODE -ne 0) {
        exit 99
      }
