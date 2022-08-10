@@ -95,11 +95,15 @@
       "type": "windows-restart"
     },
     {
+      "type": "windows-restart"
+    },
+    {
 	  "type": "powershell",
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
         "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12;",
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))",
         "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
@@ -111,17 +115,8 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
-        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
-	  ]
-	},
-    {
-      "type": "windows-restart"
-    },
-    {
-	  "type": "powershell",
-	  "elevated_user": "SYSTEM",
-	  "elevated_password": "",
-	  "inline": [
+        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12;",
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))",
         "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
@@ -133,6 +128,8 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
+        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12;",
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))",
         "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},
@@ -144,6 +141,8 @@
 	  "elevated_user": "SYSTEM",
 	  "elevated_password": "",
 	  "inline": [
+        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12;",
+        "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))",
         "Invoke-Expression ((New-Object -TypeName net.webclient).DownloadString('{{user `bootstrapscript`}}'))"
 	  ]
 	},	
