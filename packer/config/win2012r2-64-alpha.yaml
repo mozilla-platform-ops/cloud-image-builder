@@ -14,7 +14,7 @@ vm:
     size: Standard_F8s_v2
     tags:
         base_image: win2012r264azure
-        worker_pool_id: gecko-1-win2012-r2-64-alpha
+        worker_pool_id: gecko-1-win2012-r2-64
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: win_2012
