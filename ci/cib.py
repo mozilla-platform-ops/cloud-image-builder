@@ -103,7 +103,7 @@ def createTask(
         'metadata': {
             'name': taskName,
             'description': taskDescription,
-            'owner': 'grenade@mozilla.com',
+            'owner': 'relops-azure-provisioning@mozilla.com',
             'source':
                 'https://github.com/mozilla-platform-ops/cloud-image-builder'
         },
