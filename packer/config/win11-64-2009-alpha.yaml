@@ -19,6 +19,6 @@ vm:
         worker_pool_id: win11-64-2009
         sourceOrganisation: jwmoss
         sourceRepository: ronin_puppet
-        sourceBranch: cloud_windows
-        deploymentId: bd3d676
+        sourceBranch: windows-11
+        deploymentId: 28b53e6
         managed_by: packer
