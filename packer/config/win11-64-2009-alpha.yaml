@@ -15,7 +15,7 @@ azure:
 vm:
     size: Standard_F8s_v2
     tags:
-        base_image: win112009azure
+        base_image: win11642009azure
         worker_pool_id: win11-64-2009
         sourceOrganisation: jwmoss
         sourceRepository: ronin_puppet
