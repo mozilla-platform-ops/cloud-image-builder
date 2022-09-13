@@ -20,5 +20,5 @@ vm:
         sourceOrganisation: jwmoss
         sourceRepository: ronin_puppet
         sourceBranch: windows-11
-        deploymentId: 31086f2
+        deploymentId: 2b9a71c
         managed_by: packer
