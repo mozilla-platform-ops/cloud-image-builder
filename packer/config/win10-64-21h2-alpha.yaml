@@ -1,0 +1,24 @@
+---
+image:
+    publisher: MicrosoftWindowsDesktop
+    offer: Windows-11
+    sku: win10-21h2-avd
+azure:
+    managed_image_resource_group_name: rg-packer-through-cib
+    managed_image_storage_account_type: Standard_LRS
+    build_location: eastus
+    locations:
+        - centralus
+        - northcentralus
+        - southcentralus
+        - northeurope
+vm:
+    size: Standard_F8s_v2
+    tags:
+        base_image: win106421h2azure
+        worker_pool_id: win10-64-21h2
+        sourceOrganisation: jwmoss
+        sourceRepository: ronin_puppet
+        sourceBranch: windows-11
+        deploymentId: ca90d8d
+        managed_by: packer
