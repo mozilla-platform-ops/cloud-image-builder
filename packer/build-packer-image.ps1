@@ -106,7 +106,10 @@ function Build-PackerImage {
      $Env:disk_additional_size = $yaml_data.vm.disk_additional_size
      $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
      $Env:temp_resource_group_name = ('{0}-{1}-{2}-{3}-tmp3' -f $worker_pool, $location, $yaml_data.vm.tags.deploymentId, $random)
-     if (($yaml_file -like "*alpha*" )) {
+     # alpha 2 is temp. Should be removed in the future
+     if (($yaml_file -like "*alpha2*" )) {
+        $Env:managed_image_name = ('{0}-{1}-{2}-alpha2' -f $worker_pool, $location, $yaml_data.image.sku)
+     } elseif (($yaml_file -like "*alpha*" )) {
         $Env:managed_image_name = ('{0}-{1}-{2}-alpha' -f $worker_pool, $location, $yaml_data.image.sku)
      } else {
         $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
