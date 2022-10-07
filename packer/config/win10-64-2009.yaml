@@ -11,7 +11,12 @@ azure:
         - centralus
         - northcentralus
         - southcentralus
+        - eastus
+        - eastus2
+        - westus
+        - westus2
         - northeurope
+        - westeurope
 vm:
     size: Standard_F8s_v2
     tags:
