@@ -197,6 +197,7 @@ for resourceGroup in azurePurgeTaskIds:
         taskGroupId = taskGroupId
     )
 
+# Placing the array of keys on new lines to easily read changes in git
 for KEY in includeKeys:
     is_packer = True if KEY in [
     'win10-64-2004', 
