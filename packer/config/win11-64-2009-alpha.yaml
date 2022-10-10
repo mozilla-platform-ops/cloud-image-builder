@@ -19,6 +19,6 @@ vm:
         worker_pool_id: win11-64-2009
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
-        sourceBranch: windows-11
-        deploymentId: 9441a6e
+        sourceBranch: cloud_windows
+        deploymentId: e4f64c8
         managed_by: packer
