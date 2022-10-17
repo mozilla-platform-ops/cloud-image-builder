@@ -13,10 +13,10 @@ azure:
 vm:
     size: Standard_F16s_v2
     tags:
-        base_image: win2012compare
-        worker_pool_id: win2012-r2-64
+        base_image: win2022642009azure
+        worker_pool_id: win2022-64-2009
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: win_2012
-        deploymentId: d9f805b
+        deploymentId: c6a8766
         managed_by: packer

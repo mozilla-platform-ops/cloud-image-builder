@@ -205,7 +205,7 @@ for KEY in includeKeys:
     'win10-64-2009',
     'win10-64-2009-alpha',
     'win11-64-2009-alpha',
-    'win2012compare-alpha',
+    'win2022-64-2009-alpha',
     'win2012r2-64-alpha', 
     'win2012r2-64-alpha2'
     ] else False
