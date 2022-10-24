@@ -14,7 +14,7 @@ vm:
     size: Standard_F16s_v2
     tags:
         base_image: win2012r264azure2
-        worker_pool_id: win2012-r2-64
+        worker_pool_id: win2012-r2-64-compare
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: win_2012
