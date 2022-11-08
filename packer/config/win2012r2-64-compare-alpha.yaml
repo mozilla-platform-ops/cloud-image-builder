@@ -20,4 +20,4 @@ vm:
         sourceBranch: win_2012
         deploymentId: 6fe09cd
         managed_by: packer
-# Delete after Azure migration         
+# Delete after Azure migration 
