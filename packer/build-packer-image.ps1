@@ -5,7 +5,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 param (
   [Parameter(Mandatory = $true)]
-  [ValidateSet('centralus', 'northcentralus', 'southcentralus', 'eastus', 'eastus2', 'westus', 'westus2', 'westeurope', 'northeurope')]
+  [ValidateSet(
+  'AustraliaCentral',  
+  'centralus', 
+  'northcentralus', 
+  'southindia',
+  'westindia',
+  'westus3',
+  'southcentralus', 
+  'eastus', 
+  'eastus2', 
+  'westus', 
+  'westus2', 
+  'westeurope', 
+  'northeurope')]
   [string] $location=$args[0],
   [string] $yaml_file=$args[1]
 )
