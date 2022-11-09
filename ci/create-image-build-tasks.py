@@ -122,7 +122,7 @@ createTask(
     retries = 5,
     retriggerOnExitCodes = [ 123 ],
     provisioner = 'relops-3',
-    workerType = 'decision',
+    workerType = 'decision-gcp',
     priority = 'high',
     commands = [
         '/bin/bash',
@@ -180,7 +180,7 @@ for resourceGroup in azurePurgeTaskIds:
         retries = 5,
         retriggerOnExitCodes = [ 123 ],
         provisioner = 'relops-3',
-        workerType = 'decision',
+        workerType = 'decision-gcp',
         priority = 'high',
         features = {
             'taskclusterProxy': True
@@ -430,7 +430,7 @@ for platform in includePlatforms:
                         ],
                         dependencies = machineImageBuildTaskIdsForPool,
                         provisioner = 'relops-3',
-                        workerType = 'decision',
+                        workerType = 'decision-gcp',
                         priority = 'low',
                         features = {
                             'taskclusterProxy': True

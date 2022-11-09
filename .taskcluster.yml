@@ -20,7 +20,7 @@ tasks:
         deadline:
           $fromNow: 1 day
         provisionerId: relops-3
-        workerType: decision
+        workerType: decision-gcp
         routes:
           - index.project.relops.${event.repository.name}.decision.revision.${event.after}
           - index.project.relops.${event.repository.name}.decision.latest
