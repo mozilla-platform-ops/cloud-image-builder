@@ -26,5 +26,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
-        deploymentId: 3bfde01
+        deploymentId: 99488a2
         managed_by: packer
