@@ -8,16 +8,16 @@ azure:
     managed_image_storage_account_type: Standard_LRS
     build_location: eastus
     locations:
-        - AustraliaCentral
+        - centralindia
         - eastus
         - eastus2
         - northcentralus
         - northeurope
-        - SouthIndia
-        - WestIndia
+        - southindia
+        - westindia
         - westus
         - westus2
-        - WestUS3
+        - westus3 
 vm:
     size: Standard_F8s_v2
     tags:
@@ -26,5 +26,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
-        deploymentId: f487f21
+        deploymentId: 3bfde01
         managed_by: packer
