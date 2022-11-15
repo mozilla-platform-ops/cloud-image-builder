@@ -114,7 +114,7 @@ function Build-PackerImage {
         $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
      }
      if (($yaml_file -like "trusted*" )) {
-        $Env:subscription_id = $secret.trusted_relops_azure.subscription_id
+        $Env:subscription_id = $secret.relops_azure.trusted_subscription_id
      } else {
         $Env:subscription_id = $secret.relops_azure.subscription_id
      }
