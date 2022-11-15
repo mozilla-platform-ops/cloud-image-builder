@@ -17,7 +17,7 @@ azure:
         - westindia
         - westus
         - westus2
-        - westus3 
+        - westus3
 vm:
     size: Standard_F8s_v2
     tags:
