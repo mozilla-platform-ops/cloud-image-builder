@@ -80,7 +80,6 @@ function Build-PackerImage {
      $Env:client_id = $secret.relops_azure.packer.app_id
      $Env:client_secret = $secret.relops_azure.packer.password
      $Env:tenant_id = $secret.relops_azure.tenant_id
-     $Env:subscription_id = $secret.relops_azure.subscription_id 
      $Env:image_publisher = $yaml_data.image.publisher
      $Env:image_offer = $yaml_data.image.offer
      $Env:image_sku = $yaml_data.image.sku
@@ -113,6 +112,11 @@ function Build-PackerImage {
         $Env:managed_image_name = ('{0}-{1}-{2}-next' -f $worker_pool, $location, $yaml_data.image.sku)
      } else {
         $Env:managed_image_name = ('{0}-{1}-{2}-{3}' -f $worker_pool, $location, $yaml_data.image.sku, $yaml_data.vm.tags.deploymentId)
+     }
+     if (($yaml_file -like "TRUSTED*" )) {
+        $Env:subscription_id = $secret.trusted_relops_azure.subscription_id
+     } else {
+        $Env:subscription_id = $secret.relops_azure.subscription_id
      }
 
 

@@ -1,0 +1,27 @@
+---
+image:
+    publisher: MicrosoftWindowsServer
+    offer: WindowsServer
+    sku: 2012-R2-Datacenter
+azure:
+    managed_image_resource_group_name: rg-packer-through-cib
+    managed_image_storage_account_type: Standard_LRS
+    build_location: eastus
+    locations:
+        - centralus
+        - northcentralus
+        - eastus
+        - eastus2
+        - southcentralus
+        - westus
+        - westus2
+vm:
+    size: Standard_F16s_v2
+    tags:
+        base_image: win2012r264azure
+        worker_pool_id: win2012r2-64-l3
+        sourceOrganisation: markcor
+        sourceRepository: ronin_puppet
+        sourceBranch: win_2012
+        deploymentId: 3f515a9
+        managed_by: packer
