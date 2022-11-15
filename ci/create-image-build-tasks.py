@@ -208,7 +208,7 @@ for KEY in includeKeys:
     'win2022-64-2009-alpha',
     'win2012r2-64-l1',
     'win2012r2-64-l1-alpha',
-    'TRUSTED-win2012r2-64-l3',
+    'trusted-win2012r2-64-l3',
     'win2012r2-64-alpha', 
     'win2012r2-64-next',
     'win2012r2-64-compare-alpha'
