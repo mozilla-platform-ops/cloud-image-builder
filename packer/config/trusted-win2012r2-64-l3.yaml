@@ -9,12 +9,12 @@ azure:
     build_location: eastus
     locations:
         - centralus
-        - northcentralus
-        - eastus
-        - eastus2
-        - southcentralus
-        - westus
-        - westus2
+        #- northcentralus
+        #- eastus
+        #- eastus2
+        #- southcentralus
+        #- westus
+        #- westus2
 vm:
     size: Standard_F16s_v2
     tags:
@@ -23,5 +23,5 @@ vm:
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: win_2012
-        deploymentId: 3f515a9
+        deploymentId: 9254c34
         managed_by: packer
