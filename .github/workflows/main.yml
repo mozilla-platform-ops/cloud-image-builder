@@ -1,12 +1,21 @@
-name: Manual Deploy
+name: Build New Image
 on: [workflow_dispatch]
 
 jobs:
-    build:
-      name: Run Script
-      runs-on: windows-latest
-      steps:
-        - uses: actions/checkout@v1
-        - name: Script
-          run: .\scripts\purge-deprecated-azure-resources.ps1
-          shell: powershell
+  build:
+    name: packer
+    runs-on: windows-latest
+    steps:
+      - name: checkout code
+      - uses: actions/checkout@v1
+      - name: build win11-64-2009-alpha in eastus
+      - shell: powershell
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_SUBSCRIPTION_ID_TRUSTED: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          Import-Module .\packer\HelperScripts.psm1 -Force -Passthru
+          .\packer\build-packer-image.ps1 -location eastus -yaml_file win11-64-2009-alpha.yaml
