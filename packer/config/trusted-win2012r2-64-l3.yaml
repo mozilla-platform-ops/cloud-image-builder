@@ -23,5 +23,5 @@ vm:
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: win_2012
-        deploymentId: 4f975cd
+        deploymentId: 276ff85
         managed_by: packer
