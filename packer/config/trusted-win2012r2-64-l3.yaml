@@ -19,7 +19,7 @@ vm:
     size: Standard_F16s_v2
     tags:
         base_image: win2012r264azure
-        worker_pool_id: win2012r2-64-l3
+        worker_pool_id: trusted-win2012r2-64-l3
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: win_2012
