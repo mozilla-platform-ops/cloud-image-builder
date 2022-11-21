@@ -108,6 +108,8 @@ function Build-PackerImage {
         $Env:managed_image_name = ('{0}-{1}-{2}-alpha2' -f $worker_pool, $location, $yaml_data.image.sku)
      } elseif (($yaml_file -like "*alpha*" )) {
         $Env:managed_image_name = ('{0}-{1}-{2}-alpha' -f $worker_pool, $location, $yaml_data.image.sku)
+     } elseif (($yaml_file -like "*beta*" )) {
+      $Env:managed_image_name = ('{0}-{1}-{2}-beta' -f $worker_pool, $location, $yaml_data.image.sku)
      } elseif (($yaml_file -like "*next*" )) {
         $Env:managed_image_name = ('{0}-{1}-{2}-next' -f $worker_pool, $location, $yaml_data.image.sku)
      } else {
