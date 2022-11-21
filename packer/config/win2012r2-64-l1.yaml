@@ -20,8 +20,8 @@ vm:
     tags:
         base_image: win2012r264azure
         worker_pool_id: win2012r2-64-l1
-        sourceOrganisation: markcor
+        sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
-        sourceBranch: win_2012
-        deploymentId: 3f515a9
+        sourceBranch: cloud_windows
+        deploymentId: 5709e12
         managed_by: packer
