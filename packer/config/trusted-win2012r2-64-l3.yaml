@@ -9,12 +9,12 @@ azure:
     build_location: eastus
     locations:
         - centralus
-        #- northcentralus
-        #- eastus
-        #- eastus2
-        #- southcentralus
-        #- westus
-        #- westus2
+        - northcentralus
+        - eastus
+        - eastus2
+        - southcentralus
+        - westus
+        - westus2
 vm:
     size: Standard_F16s_v2
     tags:
