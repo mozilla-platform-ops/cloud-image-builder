@@ -212,7 +212,10 @@ for KEY in includeKeys:
     'trusted-win2012r2-64-l3',
     'win2012r2-64-alpha', 
     'win2012r2-64-next',
-    'win2012r2-64-compare-alpha'
+    'win2012r2-64-compare-alpha',
+    'win2012r2-64-vs-l1-alpha',
+    'win2012r2-64-vs-l1',
+    'trusted-win2012r2-64-vs-l3'
     ] else False
 
 for platform in includePlatforms:
