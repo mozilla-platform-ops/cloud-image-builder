@@ -15,7 +15,6 @@ azure:
         - northeurope
         - southindia
         - southcentralus
-        - westindia
         - westus
         - westus2
         - westus3
@@ -27,5 +26,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
-        deploymentId: 2afd8d6
+        deploymentId: bcd17dc
         managed_by: packer
