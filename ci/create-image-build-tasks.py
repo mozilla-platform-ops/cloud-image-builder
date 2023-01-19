@@ -214,6 +214,7 @@ for KEY in includeKeys:
     'win2012r2-64-next',
     'win2012r2-64-compare-alpha',
     'win2012r2-64-vs-l1-alpha',
+    'win2012r2-64-vs-py2-l1-alpha',
     'win2012r2-64-vs-l1',
     'trusted-win2012r2-64-vs-l3'
     ] else False
