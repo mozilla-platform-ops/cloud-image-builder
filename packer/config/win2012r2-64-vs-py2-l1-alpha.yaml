@@ -19,7 +19,7 @@ vm:
     size: Standard_F16s_v2
     tags:
         base_image: win2012r264azurevspy2
-        worker_pool_id: win2012r2-64-vs-l1
+        worker_pool_id: win2012r2-64-vs-py2-l1
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
