@@ -204,6 +204,7 @@ for KEY in includeKeys:
     'win10-64-2004-alpha', 
     'win10-64-2009',
     'win10-64-2009-alpha',
+    'win11-64-2009',
     'win11-64-2009-alpha',
     'win11-64-2009-beta',
     'win2022-64-2009-alpha',
