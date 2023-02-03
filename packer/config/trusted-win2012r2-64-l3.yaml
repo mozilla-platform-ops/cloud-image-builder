@@ -8,13 +8,13 @@ azure:
     managed_image_storage_account_type: Standard_LRS
     build_location: eastus
     locations:
-        - centralus
-        - northcentralus
-        - eastus
-        - eastus2
-        - southcentralus
+        #- centralus
+        #- northcentralus
+        #- eastus
+        #- eastus2
+        #- southcentralus
         - westus
-        - westus2
+        #- westus2
 vm:
     size: Standard_F16s_v2
     tags:
