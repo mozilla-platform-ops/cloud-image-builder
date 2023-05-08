@@ -2,21 +2,22 @@
 image:
     publisher: MicrosoftWindowsDesktop
     offer: Windows-10
-    sku: win10-21h2-avd
+    sku: win10-22h2-avd
 azure:
     managed_image_resource_group_name: rg-packer-through-cib
     managed_image_storage_account_type: Standard_LRS
     build_location: eastus
     locations:
-        - centralus
-        - northcentralus
-        - southcentralus
+        - centralindia
         - eastus
         - eastus2
+        - northcentralus
+        - northeurope
+        - southindia
+        - southcentralus
         - westus
         - westus2
-        - northeurope
-        - westeurope
+        - westus3
 vm:
     size: Standard_F8s_v2
     tags:
@@ -25,5 +26,5 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
-        deploymentId: c7b5588
+        deploymentId: 668c5d9
         managed_by: packer
