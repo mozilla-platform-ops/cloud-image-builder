@@ -3,6 +3,7 @@ image:
     publisher: MicrosoftWindowsDesktop
     offer: Windows-11
     sku: win11-22h2-avd
+    version: 22621.1105.230107
 azure:
     managed_image_resource_group_name: rg-packer-through-cib
     managed_image_storage_account_type: Standard_LRS
@@ -23,8 +24,8 @@ vm:
     tags:
         base_image: win11642009azure
         worker_pool_id: win11-64-2009
-        sourceOrganisation: jwmoss
+        sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: cloud_windows
-        deploymentId: 647a61b
+        deploymentId: 669c5d9
         managed_by: packer

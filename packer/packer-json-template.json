@@ -8,6 +8,7 @@
 	"image_publisher": "{{env `image_publisher`}}",
 	"image_offer": "{{env `image_offer`}}",
 	"image_sku": "{{env `image_sku`}}",
+  "image_version": "{{env `image_version`}}",
 	
 	"managed_image_name": "{{env `managed_image_name`}}",
 	"managed_image_resource_group_name": "{{env `managed_image_resource_group_name`}}",

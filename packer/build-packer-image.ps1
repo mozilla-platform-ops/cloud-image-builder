@@ -83,6 +83,7 @@ function Build-PackerImage {
      $Env:image_publisher = $yaml_data.image.publisher
      $Env:image_offer = $yaml_data.image.offer
      $Env:image_sku = $yaml_data.image.sku
+     $ENV:image_version = $yaml_data.image.version
      $Env:managed_image_resource_group_name = $yaml_data.azure.managed_image_resource_group_name
      $Env:managed_image_storage_account_type = $yaml_data.azure.managed_image_storage_account_type
      $Env:Project = $yaml_data.vm.tags.Project
