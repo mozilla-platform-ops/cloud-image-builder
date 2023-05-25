@@ -47,6 +47,7 @@
       "image_publisher": "{{user `image_publisher`}}",
       "image_offer": "{{user `image_offer`}}",
       "image_sku": "{{user `image_sku`}}",
+      "image_version": "{{user `image_version`}}",
       "communicator": "winrm",
       "winrm_use_ssl": "true",
       "winrm_insecure": "true",
