@@ -3,7 +3,7 @@ image:
     publisher: MicrosoftWindowsDesktop
     offer: Windows-11
     sku: win11-22h2-avd
-    version: 22621.1105.230107
+    version: latest
 azure:
     managed_image_resource_group_name: rg-packer-through-cib
     managed_image_storage_account_type: Standard_LRS
