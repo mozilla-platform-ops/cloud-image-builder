@@ -17,6 +17,6 @@ vm:
         worker_pool_id: win2022-64-2009
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
-        sourceBranch: win_2012
-        deploymentId: 2750b7c
+        sourceBranch: 2022
+        deploymentId: 0013cc4
         managed_by: packer
