@@ -18,5 +18,5 @@ vm:
         sourceOrganisation: markcor
         sourceRepository: ronin_puppet
         sourceBranch: 2022
-        deploymentId: 6c232a4
+        deploymentId: 4c796bc
         managed_by: packer
