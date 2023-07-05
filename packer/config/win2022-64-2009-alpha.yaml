@@ -15,8 +15,8 @@ vm:
     tags:
         base_image: win2022642009azure
         worker_pool_id: win2022-64-2009
-        sourceOrganisation: markcor
+        sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
-        sourceBranch: 2022
-        deploymentId: da72acf
+        sourceBranch: bug1838725
+        deploymentId: 47997bc
         managed_by: packer
