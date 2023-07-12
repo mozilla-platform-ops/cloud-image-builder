@@ -209,6 +209,7 @@ for KEY in includeKeys:
     'win11-64-2009-tc-alpha',
     'win2022-64-2009-alpha',
     'win2022-64-2009-l1',
+    'trusted-win2022-64-2009-l3',
     'win2012r2-64-l1',
     'win2012r2-64-l1-alpha',
     'trusted-win2012r2-64-l3',
