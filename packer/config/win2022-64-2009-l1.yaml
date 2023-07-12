@@ -14,7 +14,7 @@ azure:
         - eastus2
         - southcentralus
         - westus
-        - westus2        
+        - westus2 
 vm:
     size: Standard_F16s_v2
     tags:
