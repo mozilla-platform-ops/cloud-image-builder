@@ -18,7 +18,7 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
         sourceBranch: relops607
-        deploymentId: d435465
+        deploymentId: c06c8bc
 #        sourceBranch: bug1838725
 #        deploymentId: d44b764
         managed_by: packer
