@@ -9,6 +9,15 @@ import yaml
 from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
+import subprocess
+import sys
+
+package_name = "slugid"  # Replace with the desired package name
+
+# Execute the pip command to install the package
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', package_name])
+
+import slugid
 
 
 def extract_pools(config_path):
