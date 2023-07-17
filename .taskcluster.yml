@@ -49,7 +49,7 @@ tasks:
           source: ${event.repository.html_url}
         payload:
           maxRunTime: 600
-          image: python:latest
+          image: python:3.9
           features:
             taskclusterProxy: true
           env:
