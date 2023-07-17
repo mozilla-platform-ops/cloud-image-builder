@@ -2,7 +2,7 @@ import glob
 import json
 import os
 import pathlib
-import slugid
+#import slugid
 import taskcluster
 import urllib.request
 import yaml
