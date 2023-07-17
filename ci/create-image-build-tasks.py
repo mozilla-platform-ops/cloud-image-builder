@@ -9,8 +9,6 @@ import yaml
 from cib import createTask, diskImageManifestHasChanged, machineImageManifestHasChanged, machineImageExists
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
-import subprocess
-import sys
 
 
 def extract_pools(config_path):
