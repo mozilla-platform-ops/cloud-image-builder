@@ -2,8 +2,8 @@
 image:
     publisher: MicrosoftWindowsServer
     offer: WindowsServer
-    #sku: 2022-datacenter-azure-edition
-    sku: 2022-datacenter-azure-edition-core
+    sku: 2022-datacenter-azure-edition
+    #sku: 2022-datacenter-azure-edition-core
 azure:
     managed_image_resource_group_name: rg-packer-through-cib
     managed_image_storage_account_type: Standard_LRS
