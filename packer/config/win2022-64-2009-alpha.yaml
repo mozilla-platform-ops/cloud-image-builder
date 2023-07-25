@@ -18,8 +18,8 @@ vm:
         worker_pool_id: win2022-64-2009
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
-        sourceBranch: relops607
-        deploymentId: dae97ea
+        sourceBranch: cloud_windows
+        deploymentId: d302c03
 #        sourceBranch: bug1838725
 #        deploymentId: d44b764
         managed_by: packer
