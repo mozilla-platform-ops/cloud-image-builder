@@ -20,7 +20,7 @@ vm:
         sourceOrganisation: mozilla-platform-ops
         sourceRepository: ronin_puppet
 #        sourceBranch: cloud_windows
-        deploymentId: 85d7090
+        deploymentId: 93cfd6c
         sourceBranch: bug1845790
 #        deploymentId: d44b764
         managed_by: packer
