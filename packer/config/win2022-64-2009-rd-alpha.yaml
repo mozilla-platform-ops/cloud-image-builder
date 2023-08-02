@@ -1,0 +1,26 @@
+---
+image:
+    publisher: MicrosoftWindowsServer
+    offer: WindowsServer
+    sku: 2022-datacenter-azure-edition
+    #sku: 2022-datacenter-azure-edition-core
+azure:
+    managed_image_resource_group_name: rg-packer-through-cib
+    managed_image_storage_account_type: Standard_LRS
+    build_location: eastus
+    locations:
+        - centralus
+        - northcentralus
+vm:
+    #size: Standard_F16s_v2
+    size: Standard_F32s_v2
+    tags:
+        base_image: win2022642009rdazure
+        worker_pool_id: win2022-64-2009-rd
+        sourceOrganisation: mozilla-platform-ops
+        sourceRepository: ronin_puppet
+#        sourceBranch: cloud_windows
+        deploymentId: 202ff2c
+        sourceBranch: bug1845790
+#        deploymentId: d44b764
+        managed_by: packer
