@@ -12,8 +12,8 @@ azure:
         - centralus
         - northcentralus
 vm:
-    #size: Standard_F16s_v2
-    size: Standard_F32s_v2
+    size: Standard_F16s_v2
+    #size: Standard_F32s_v2
     tags:
         base_image: win2022642009rdazure
         worker_pool_id: win2022-64-2009-rd
