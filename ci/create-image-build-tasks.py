@@ -211,6 +211,7 @@ for KEY in includeKeys:
     'win2022-64-2009-rd-alpha',
     'win2022-64-2009-l1',
     'trusted-win2022-64-2009-l3',
+    'win2022642009azurevs',
     'win2012r2-64-l1',
     'win2012r2-64-l1-alpha',
     'trusted-win2012r2-64-l3',
