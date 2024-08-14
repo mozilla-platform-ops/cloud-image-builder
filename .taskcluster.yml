@@ -14,7 +14,7 @@ tasks:
       else: ${event.repository.html_url}
   in:
     $match:
-      (tasks_for == "github-push"):
+      (tasks_for == "github-push" && event.ref == "refs/heads/main"):
         taskId:
           $eval: as_slugid("decision")
         deadline:
